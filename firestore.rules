@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'createdAt', 'updatedAt'])
+        && data.email is string && data.email.size() <= 256
+        && data.createdAt == request.time
+        && data.updatedAt == request.time
+        && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100))
+        && (!('riskProfile' in data) || (data.riskProfile is string && data.riskProfile.size() <= 100))
+        && (!('quizCompleted' in data) || data.quizCompleted is bool);
+    }
+    
+    function isUpdateValidUser() {
+      return incoming().updatedAt == request.time
+        && incoming().createdAt == existing().createdAt
+        && incoming().email == existing().email
+        && (!('displayName' in incoming()) || (incoming().displayName is string && incoming().displayName.size() <= 100))
+        && (!('riskProfile' in incoming()) || (incoming().riskProfile is string && incoming().riskProfile.size() <= 100))
+        && (!('quizCompleted' in incoming()) || incoming().quizCompleted is bool);
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+      
+      allow create: if isSignedIn() 
+        && isValidId(userId) 
+        && request.auth.uid == userId 
+        && isValidUser(incoming());
+
+      allow update: if isSignedIn() 
+        && isValidId(userId) 
+        && request.auth.uid == userId 
+        && isUpdateValidUser()
+        && incoming().diff(existing()).affectedKeys().hasOnly(['riskProfile', 'quizCompleted', 'updatedAt', 'displayName']);
+    }
+  }
+}

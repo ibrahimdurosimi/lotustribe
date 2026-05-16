@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --color-lotus-red: #B5121B;
+  --color-lotus-dark: #121212;
+  --color-genz-pink: #FF66A1;
+  --color-genz-blue: #4A90E2;
+  --color-genz-lime: #DFFF00;
+  --color-genz-purple: #C282FA;
+}
+
+@layer utilities {
+  .neo-shadow {
+    box-shadow: 4px 4px 0px 0px rgba(18, 18, 18, 1);
+  }
+  .neo-shadow-sm {
+    box-shadow: 2px 2px 0px 0px rgba(18, 18, 18, 1);
+  }
+  .neo-border {
+    border: 2px solid rgba(18, 18, 18, 1);
+  }
+  .neo-btn {
+    font-family: var(--font-display);
+    font-weight: 700;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    border: 2px solid rgba(18, 18, 18, 1);
+    box-shadow: 4px 4px 0px 0px rgba(18, 18, 18, 1);
+    transition: transform 150ms ease-in-out;
+  }
+  .neo-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 4px 4px 0px 0px rgba(18, 18, 18, 1);
+  }
+  .neo-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+}
