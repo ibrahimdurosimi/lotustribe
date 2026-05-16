@@ -229,8 +229,6 @@ export const LMSDashboard = () => {
   );
 };
 
-import { coursesData } from './data/courses';
-
 export const LMSCourses = () => {
   const [filter, setFilter] = React.useState('all');
 

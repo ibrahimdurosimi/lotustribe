@@ -11,9 +11,12 @@ import {
   Award,
   Flame,
   Menu,
+  Shield,
   X,
   LogOut,
-  ChevronLeft
+  ChevronLeft,
+  ChevronRight,
+  BookOpen
 } from 'lucide-react';
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { auth, loginWithGoogle, logout, db, handleFirestoreError, OperationType } from './lib/firebase';
@@ -28,7 +31,7 @@ interface AuthContextType {
   userProfile: any;
   refreshProfile: () => void;
 }
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true, userProfile: null, refreshProfile: () => {} });
+export const AuthContext = createContext<AuthContextType>({ user: null, loading: true, userProfile: null, refreshProfile: () => {} });
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -77,19 +80,19 @@ const Navbar = () => {
     <nav className="fixed w-full z-50 p-4 pointer-events-none">
       <div className="max-w-6xl mx-auto bg-white neo-border neo-shadow rounded-2xl pointer-events-auto flex justify-between items-center px-6 py-4">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 cursor-pointer">
-          <div className="w-8 h-8 bg-lotus-red rounded-lg neo-border flex items-center justify-center transform -rotate-6">
-            <Zap className="w-5 h-5 text-white" fill="currentColor" />
-          </div>
-          <span className="font-display font-bold text-2xl tracking-tighter text-lotus-dark uppercase">
-            Lotus<span className="text-lotus-red">Tribe</span>
-          </span>
+        <Link to="/" className="flex items-center gap-2 cursor-pointer group">
+          <img src="/lotus-logo.png" alt="Lotus Tribe Logo" className="h-8 md:h-10 transform group-hover:-rotate-2 group-hover:scale-105 transition-all" />
         </Link>
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8 font-display font-semibold">
-          <Link to="/" className="hover:text-genz-pink transition-colors hover:-translate-y-0.5 inline-block transform duration-150">Home</Link>
-          <Link to="/quiz" className="hover:text-genz-blue transition-colors hover:-translate-y-0.5 inline-block transform duration-150">Vibe Check</Link>
+          <div className="relative group perspective-1000">
+            <Link to="/invest" className="hover:text-genz-pink transition-colors cursor-pointer inline-block">Invest <ChevronRight className="inline w-4 h-4 transform group-hover:rotate-90 transition-transform" /></Link>
+            <div className="absolute top-full left-0 mt-2 w-48 bg-white neo-border neo-shadow-sm rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left -rotate-x-12 group-hover:rotate-x-0">
+              <Link to="/invest/fif" className="block px-4 py-3 hover:bg-genz-lime hover:font-bold border-b-2 border-black/5 last:border-b-0 transition-colors">Low Risk (FIF)</Link>
+              <Link to="/invest/halal" className="block px-4 py-3 hover:bg-genz-pink hover:font-bold transition-colors">Moderate Risk (Halal)</Link>
+            </div>
+          </div>
           <Link to="/learn" className="hover:text-genz-purple transition-colors hover:-translate-y-0.5 inline-block transform duration-150">Learn</Link>
           <Link to="/learn/community" className="hover:text-genz-pink transition-colors hover:-translate-y-0.5 inline-block transform duration-150">Community</Link>
           
@@ -107,9 +110,12 @@ const Navbar = () => {
               </button>
             </div>
           ) : (
-            <button onClick={loginWithGoogle} className="neo-btn bg-genz-lime text-lotus-dark px-6 py-2 text-sm uppercase translate-y-0">
-              Log In / Join
-            </button>
+            <div className="flex items-center gap-3">
+              <button onClick={loginWithGoogle} className="hover:underline font-bold text-sm uppercase">Log In</button>
+              <button onClick={loginWithGoogle} className="neo-btn bg-[#C10202] text-white px-6 py-2 text-sm uppercase translate-y-0">
+                Get Started
+              </button>
+            </div>
           )}
         </div>
 
@@ -129,8 +135,11 @@ const Navbar = () => {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           className="md:hidden absolute top-24 left-4 right-4 bg-white neo-border neo-shadow rounded-2xl p-6 flex flex-col gap-4 pointer-events-auto"
         >
-          <Link to="/" className="font-display font-bold text-xl uppercase py-2 border-b-2 border-black" onClick={() => setIsOpen(false)}>Home</Link>
-          <Link to="/quiz" className="font-display font-bold text-xl uppercase py-2 border-b-2 border-black" onClick={() => setIsOpen(false)}>Vibe Check</Link>
+          <div className="flex flex-col gap-2">
+            <span className="font-display font-bold text-xl uppercase py-2 border-b-2 border-black text-[#C10202]">Invest</span>
+            <Link to="/invest/fif" className="pl-4 font-display font-bold text-lg uppercase py-1" onClick={() => setIsOpen(false)}>Low Risk (FIF)</Link>
+            <Link to="/invest/halal" className="pl-4 font-display font-bold text-lg uppercase py-1" onClick={() => setIsOpen(false)}>Moderate Risk (Halal)</Link>
+          </div>
           <Link to="/learn" className="font-display font-bold text-xl uppercase py-2 border-b-2 border-black" onClick={() => setIsOpen(false)}>Learn</Link>
           <Link to="/learn/community" className="font-display font-bold text-xl uppercase py-2 border-b-2 border-black" onClick={() => setIsOpen(false)}>Community</Link>
           {user ? (
@@ -159,11 +168,16 @@ const Navbar = () => {
 
 const Hero = () => {
   return (
-    <section className="relative pt-40 pb-20 overflow-hidden bg-[#fafafa]">
-      {/* Fun background blobs */}
-      <div className="absolute top-20 -left-20 w-64 h-64 bg-genz-lime rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
-      <div className="absolute top-40 -right-20 w-72 h-72 bg-genz-pink rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
-      <div className="absolute -bottom-20 left-1/2 w-80 h-80 bg-genz-blue rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-4000"></div>
+    <section className="relative pt-48 pb-28 overflow-hidden bg-[#fafafa]">
+      {/* Gen Z Nigerian Background Image Pattern */}
+      <div 
+        className="absolute inset-0 z-0 opacity-10 pointer-events-none bg-cover bg-center grayscale mix-blend-multiply" 
+        style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1596726917637-2900750438ea?w=2564&q=80&auto=format&fit=crop")' }}
+      ></div>
+      
+      {/* Accent glow overlay to blend */}
+      <div className="absolute inset-0 bg-white/40 backdrop-blur-md z-0 pointer-events-none"></div>
+      <div className="absolute top-20 right-0 w-96 h-96 bg-[#C10202] rounded-full mix-blend-multiply filter blur-[120px] opacity-10 pointer-events-none z-0"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -173,32 +187,36 @@ const Hero = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="inline-block px-4 py-1.5 rounded-full bg-lotus-dark text-white font-display font-bold text-sm tracking-wider uppercase mb-6 neo-shadow-sm rotate-2">
-              🔥 Built for Gen Z
+            <div className="inline-block px-4 py-1.5 rounded-full bg-[#C10202] text-white font-display font-bold text-sm tracking-wider uppercase mb-6 neo-shadow-sm rotate-2">
+              🔥 Built for the Future
             </div>
             <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold text-lotus-dark leading-[0.9] tracking-tighter mb-6 uppercase">
-              Investing <br/> <span className="text-genz-pink inline-block -rotate-2">without</span> the <br/> boring stuff.
+              Investing <br/> <span className="text-[#C10202] inline-block -rotate-2">Redefined</span> for <br/> your generation.
             </h1>
             <p className="text-xl text-gray-700 mb-8 max-w-lg font-medium">
-              Halal, SEC-regulated investing that actually makes sense. Take the quiz, level up your knowledge, and build wealth with the squad.
+              Halal, SEC-regulated investing that actually makes sense. Level up your financial literacy, track your portfolio, and build enduring wealth.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button className="neo-btn bg-genz-lime text-lotus-dark text-lg flex items-center justify-center gap-2 group">
-                Start Playing 🎮
-              </button>
-              <button className="neo-btn bg-white text-lotus-dark text-lg flex items-center justify-center">
-                Explore Funds
-              </button>
+              <Link to="/quiz">
+                <button className="neo-btn w-full bg-[#C10202] text-white text-lg flex items-center justify-center gap-2 group">
+                  Take the Vibe Check 🎯
+                </button>
+              </Link>
+              <Link to="/invest">
+                <button className="neo-btn w-full bg-white text-lotus-dark text-lg flex items-center justify-center">
+                  Explore Funds
+                </button>
+              </Link>
             </div>
             
             <div className="mt-10 flex items-center gap-4 bg-white p-3 rounded-xl neo-border inline-flex neo-shadow-sm">
               <div className="flex -space-x-4">
-                <img className="w-10 h-10 rounded-full neo-border" src="https://i.pravatar.cc/100?img=1" alt="avatar" />
-                <img className="w-10 h-10 rounded-full neo-border" src="https://i.pravatar.cc/100?img=2" alt="avatar" />
-                <img className="w-10 h-10 rounded-full neo-border" src="https://i.pravatar.cc/100?img=3" alt="avatar" />
+                <img className="w-10 h-10 rounded-full neo-border object-cover" src="https://images.unsplash.com/photo-1531123897727-8f129e1ebfa8?q=80&w=100&auto=format&fit=crop" alt="avatar" />
+                <img className="w-10 h-10 rounded-full neo-border object-cover" src="https://images.unsplash.com/photo-1506803682981-6e718a9dd3ee?q=80&w=100&auto=format&fit=crop" alt="avatar" />
+                <img className="w-10 h-10 rounded-full neo-border object-cover" src="https://images.unsplash.com/photo-1543269664-7eef42226a21?q=80&w=100&auto=format&fit=crop" alt="avatar" />
               </div>
               <div className="font-display font-bold text-sm">
-                +10,000 Gen Z investors <br/> already joined!
+                +10,000 Next-Gen Investors <br/> already joined!
               </div>
             </div>
           </motion.div>
@@ -207,58 +225,69 @@ const Hero = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="relative h-[550px] w-full flex items-center justify-center"
+            className="relative h-[550px] w-full flex items-center justify-center perspective-1000"
           >
-            {/* Main Phone Mockup */}
-            <div className="w-[300px] h-[600px] bg-lotus-dark rounded-[2.5rem] neo-border neo-shadow p-3 relative z-20 overflow-hidden transform -rotate-3">
-              <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden relative flex flex-col">
-                <div className="bg-genz-blue p-6 pb-12 text-white">
-                   <div className="flex justify-between items-center mb-6">
-                      <Menu className="w-6 h-6" />
-                      <div className="w-10 h-10 rounded-full bg-genz-pink neo-border neo-shadow-sm flex items-center justify-center font-bold text-lotus-dark">
-                        LV2
-                      </div>
-                   </div>
-                   <h2 className="font-display font-bold text-3xl mb-1">₦ 150,450.00</h2>
-                   <p className="opacity-80 font-medium flex items-center gap-1"><TrendingUp className="w-4 h-4"/> +12% this month</p>
-                </div>
-                <div className="flex-1 bg-white rounded-t-[2rem] -mt-6 p-6 relative">
-                   <div className="w-full bg-gray-100 h-2 rounded-full mb-6 mt-2 relative">
-                     <div className="absolute top-0 left-0 bg-genz-purple h-full rounded-full w-2/3"></div>
-                   </div>
-                   <p className="font-bold text-center mb-4 uppercase tracking-wide text-xs text-gray-500">Your Badges</p>
-                   <div className="flex justify-center gap-4">
-                      <div className="w-16 h-16 rounded-2xl bg-yellow-100 neo-border neo-shadow-sm flex items-center justify-center transform -rotate-6">
-                        <Trophy className="w-8 h-8 text-yellow-500" />
-                      </div>
-                      <div className="w-16 h-16 rounded-2xl bg-red-100 neo-border neo-shadow-sm flex items-center justify-center transform rotate-6 scale-110">
-                        <Flame className="w-8 h-8 text-red-500" />
-                      </div>
-                      <div className="w-16 h-16 rounded-2xl bg-blue-100 neo-border neo-shadow-sm flex items-center justify-center transform -rotate-3">
-                        <Award className="w-8 h-8 text-blue-500" />
-                      </div>
-                   </div>
-                </div>
-              </div>
+            {/* Dashboard Mockup */}
+            <div className="w-[450px] h-[320px] bg-white rounded-xl neo-border neo-shadow p-0 relative z-20 overflow-hidden transform rotate-2 hover:rotate-0 transition-transform duration-500">
+               {/* header */}
+               <div className="bg-gray-50 border-b border-black/10 py-3 px-4 flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                     <div className="w-6 h-6 rounded-md bg-[#C10202] text-white flex items-center justify-center font-bold text-[10px]">LT</div>
+                     <span className="font-display font-bold text-sm">Portfolio Overview</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                     <span className="text-xs font-bold text-gray-500">₦150,450.00</span>
+                     <div className="w-6 h-6 rounded-full bg-genz-lime neo-border text-xs flex items-center justify-center">+</div>
+                  </div>
+               </div>
+               {/* body */}
+               <div className="p-4 grid grid-cols-2 gap-4">
+                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+                     <p className="text-xs font-bold text-blue-600 mb-1 uppercase tracking-wider">Halal Eq.</p>
+                     <p className="text-lg font-bold">₦120k</p>
+                     <div className="mt-2 h-1 w-full bg-blue-200 rounded-full overflow-hidden"><div className="w-3/4 h-full bg-blue-500"></div></div>
+                  </div>
+                  <div className="bg-green-50 border border-green-100 rounded-lg p-3">
+                     <p className="text-xs font-bold text-green-600 mb-1 uppercase tracking-wider">Fixed Inc.</p>
+                     <p className="text-lg font-bold">₦30k</p>
+                     <div className="mt-2 h-1 w-full bg-green-200 rounded-full overflow-hidden"><div className="w-1/4 h-full bg-green-500"></div></div>
+                  </div>
+               </div>
+               {/* chart area */}
+               <div className="px-4">
+                  <div className="w-full h-24 bg-gray-50 rounded-lg border border-gray-100 flex items-end px-2 gap-2 pt-4">
+                     {/* Fake chart bars */}
+                     {[30, 40, 35, 50, 45, 60, 75, 65, 80, 95].map((h, i) => (
+                        <div key={i} className="flex-1 bg-[#C10202]/20 rounded-t-sm" style={{ height: `${h}%` }}></div>
+                     ))}
+                  </div>
+               </div>
+            </div>
+
+            {/* LMS / Module Mockup (Floating behind) */}
+            <div className="absolute -bottom-10 -right-4 w-[280px] h-[200px] bg-white rounded-xl neo-border neo-shadow-sm p-4 z-30 transform -rotate-6 hover:rotate-0 transition-transform duration-500">
+               <div className="flex gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-lg bg-genz-pink text-white flex items-center justify-center">
+                     <BookOpen className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-display font-bold text-sm leading-tight">Module 3</h4>
+                    <p className="text-xs font-bold text-gray-500">Ethical Investing</p>
+                  </div>
+               </div>
+               <div className="bg-gray-100 w-full h-2 rounded-full mb-2"><div className="bg-[#C10202] h-full w-1/2 rounded-full"></div></div>
+               <p className="text-[10px] uppercase font-bold text-right text-gray-400 mb-4">50% Completed</p>
+               <button className="w-full neo-btn py-2 text-xs bg-genz-lime">Continue Lesson</button>
             </div>
 
             {/* Floating assets */}
             <motion.div 
-              animate={{ y: [0, -15, 0] }}
-              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-              className="absolute top-20 right-0 bg-genz-lime neo-border neo-shadow px-4 py-3 rounded-2xl z-30 transform rotate-12 flex items-center gap-2"
+              animate={{ y: [0, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+              className="absolute top-10 -left-6 bg-white neo-border neo-shadow px-4 py-3 rounded-xl z-30 transform -rotate-12 flex items-center gap-2"
             >
-              <span className="text-2xl">💸</span>
-              <span className="font-display font-bold text-lotus-dark uppercase tracking-tight">Dividends!</span>
-            </motion.div>
-
-            <motion.div 
-              animate={{ y: [0, 15, 0] }}
-              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", delay: 1 }}
-              className="absolute bottom-20 left-0 bg-genz-pink text-white neo-border neo-shadow px-4 py-3 rounded-2xl z-30 transform -rotate-6 flex items-center gap-2"
-            >
-              <Users className="w-5 h-5 text-lotus-dark" />
-              <span className="font-display font-bold text-lotus-dark uppercase tracking-tight">Tribe Active</span>
+              <Award className="w-5 h-5 text-[#C10202]" />
+              <span className="font-display font-bold text-xs uppercase tracking-tight">Level 5 Investor</span>
             </motion.div>
           </motion.div>
         </div>
@@ -267,120 +296,92 @@ const Hero = () => {
   );
 };
 
-const FeatureVibeCheck = () => {
-  return (
-    <section id="vibe-check" className="py-24 bg-white border-y-4 border-black relative overflow-hidden">
-      {/* Marquee background pattern */}
-      <div className="absolute top-0 w-full overflow-hidden border-b-2 border-black bg-genz-lime py-2 whitespace-nowrap flex z-0">
-        <div className="animate-marquee font-display font-bold uppercase tracking-widest flex whitespace-nowrap">
-          {Array(20).fill("• TAKE THE PROFILE TEST • VIBE CHECK YOUR MONEY ").map((text, i) => (
-            <span key={i} className="mx-4">{text}</span>
-          ))}
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 relative z-10">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
-          <div className="order-2 md:order-1 relative">
-             <div className="grid grid-cols-2 gap-4">
-                <div className="bg-blue-100 p-6 rounded-3xl neo-border neo-shadow transform -rotate-6 hover:rotate-0 transition-transform cursor-pointer">
-                  <div className="text-5xl mb-4">🐢</div>
-                  <h3 className="font-display font-bold text-xl mb-1">Steady Saver</h3>
-                  <p className="text-sm font-medium">Low risk, plays it safe.</p>
-                </div>
-                <div className="bg-red-100 p-6 rounded-3xl neo-border neo-shadow transform rotate-3 translate-y-8 hover:translate-y-4 transition-transform cursor-pointer">
-                  <div className="text-5xl mb-4">🚀</div>
-                  <h3 className="font-display font-bold text-xl mb-1">Risk Taker</h3>
-                  <p className="text-sm font-medium">High risk, high reward.</p>
-                </div>
-                <div className="bg-purple-100 p-6 rounded-3xl neo-border neo-shadow transform mt-4 rotate-2 hover:scale-105 transition-transform cursor-pointer col-span-2">
-                  <div className="flex items-center gap-4">
-                     <div className="text-5xl">🧠</div>
-                     <div>
-                       <h3 className="font-display font-bold text-xl mb-1">Calculated Thinker</h3>
-                       <p className="text-sm font-medium">The balanced approach.</p>
-                     </div>
-                  </div>
-                </div>
-             </div>
-          </div>
-          <div className="order-1 md:order-2">
-            <div className="inline-block px-4 py-1.5 rounded-full bg-black text-white font-display font-bold text-sm tracking-wider uppercase mb-6 neo-shadow rotate-1">
-              Step 1: Vibe Check
-            </div>
-            <h2 className="text-4xl md:text-5xl font-display font-extrabold text-lotus-dark uppercase leading-none mb-6">
-              What kind of <span className="text-genz-blue border-b-8 border-genz-blue">investor</span> are you?
-            </h2>
-            <p className="text-lg font-medium text-gray-700 mb-8">
-              No boring forms here. Swipe, tap, and answer fun questions to discover your investor personality. We'll match you with halal investments that fit your exact vibe.
-            </p>
-            <Link to="/quiz" className="neo-btn bg-genz-blue text-white hover:bg-blue-600 flex items-center justify-center gap-3 w-fit">
-              <TestTube className="w-5 h-5" /> Take the Quiz
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
+import { coursesData } from './data/courses';
 
 const FeatureLearnEarn = () => {
+  const [activeLevel, setActiveLevel] = useState<string>('All');
+  const [showCount, setShowCount] = useState<number>(6);
+
+  const levels = ['All', 'Beginner', 'Intermediate', 'Advanced'];
+  
+  const filteredCourses = coursesData.filter(c => 
+    activeLevel === 'All' ? true : c.level === activeLevel
+  );
+
   return (
-    <section id="learn" className="py-24 bg-[#111] text-white">
+    <section id="learn" className="py-32 bg-[#111] text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-block px-4 py-1.5 rounded-full bg-genz-pink text-lotus-dark font-display font-bold text-sm tracking-wider uppercase mb-6 neo-shadow -rotate-2">
+          <div className="inline-block px-5 py-2 rounded-full bg-genz-pink text-lotus-dark font-display font-bold text-sm tracking-wider uppercase mb-8 neo-shadow -rotate-2">
             Learning Hub
           </div>
-          <h2 className="text-4xl md:text-6xl font-display font-extrabold uppercase leading-none mb-6">
-            Level up your <br/><span className="text-genz-lime">money knowledge.</span>
+          <h2 className="text-5xl md:text-7xl font-display font-extrabold uppercase leading-none mb-8">
+            Create Wealth <br/><span className="text-genz-lime">Improve Intelligence.</span>
           </h2>
-          <p className="text-lg font-medium text-gray-400">
-            Gamified lessons. Earn XP. Collect badges. Because learning about halal finance shouldn't feel like school.
+          <p className="text-xl font-medium text-gray-400">
+            Gamified lessons. Earn XP. Collect badges. Discover halal investments and build a wealthy mindset with the LOTUS Tribe.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          <Link to="/learn" className="bg-[#222] p-8 rounded-[2rem] neo-border hover:-translate-y-2 transition-transform relative group block">
-            <div className="absolute top-4 right-4 bg-yellow-400 text-black font-bold px-3 py-1 rounded-full text-xs uppercase neo-border border-2">Level 1</div>
-            <div className="w-16 h-16 rounded-2xl bg-white neo-border flex items-center justify-center mb-6 transform group-hover:rotate-12 transition-transform">
-              <span className="text-3xl">🌱</span>
-            </div>
-            <h3 className="font-display font-bold text-2xl mb-3">Crypto vs Halal</h3>
-            <p className="text-gray-400 font-medium mb-6">Understand what makes an investment Shariah-compliant.</p>
-            <div className="w-full bg-black h-3 rounded-full overflow-hidden neo-border border-white/20">
-               <div className="bg-genz-lime h-full w-full"></div>
-            </div>
-            <p className="text-xs font-bold text-right mt-2 text-genz-lime">COMPLETED! +500 XP</p>
-          </Link>
-
-          <Link to="/learn" className="bg-[#222] p-8 rounded-[2rem] neo-border border-genz-pink hover:-translate-y-2 transition-transform relative group block">
-            <div className="absolute top-4 right-4 bg-genz-pink text-black font-bold px-3 py-1 rounded-full text-xs uppercase neo-border border-2">Level 2</div>
-            <div className="w-16 h-16 rounded-2xl bg-white neo-border flex items-center justify-center mb-6 transform group-hover:-rotate-12 transition-transform">
-              <span className="text-3xl">📊</span>
-            </div>
-            <h3 className="font-display font-bold text-2xl mb-3">Mutual Funds 101</h3>
-            <p className="text-gray-400 font-medium mb-6">How do they work? Why are they safer than individual stocks?</p>
-            <div className="w-full bg-black h-3 rounded-full overflow-hidden neo-border border-white/20">
-               <div className="bg-genz-pink h-full w-[60%]"></div>
-            </div>
-            <p className="text-xs font-bold text-right mt-2 text-genz-pink">IN PROGRESS</p>
-          </Link>
-
-          <Link to="/learn" className="bg-[#222] opacity-70 p-8 rounded-[2rem] neo-border hover:-translate-y-2 transition-transform relative block">
-            <div className="absolute inset-0 flex items-center justify-center z-10 backdrop-blur-sm rounded-[2rem]">
-              <div className="bg-black text-white px-4 py-2 font-display font-bold uppercase rounded-lg neo-border">Locked 🔒</div>
-            </div>
-            <div className="w-16 h-16 rounded-2xl bg-white neo-border flex items-center justify-center mb-6">
-              <span className="text-3xl">👑</span>
-            </div>
-            <h3 className="font-display font-bold text-2xl mb-3">Building a Portfolio</h3>
-            <p className="text-gray-400 font-medium mb-6">Advanced strategies for long-term wealth creation.</p>
-            <div className="w-full bg-black h-3 rounded-full overflow-hidden neo-border border-white/20">
-               <div className="bg-gray-500 h-full w-0"></div>
-            </div>
-          </Link>
+        {/* Category Filter */}
+        <div className="flex flex-wrap justify-center gap-4 mb-16">
+           {levels.map(level => (
+              <button
+                 key={level}
+                 onClick={() => setActiveLevel(level)}
+                 className={`px-6 py-2 rounded-2xl font-bold font-display uppercase tracking-wide transition-all ${activeLevel === level ? 'bg-genz-lime text-black border-2 border-black shadow-[4px_4px_0_0_#000] transform -translate-y-1' : 'bg-[#222] text-gray-400 border-2 border-transparent hover:border-gray-600'}`}
+              >
+                 {level}
+              </button>
+           ))}
         </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+          <AnimatePresence>
+          {filteredCourses.slice(0, showCount).map((course, idx) => (
+             <motion.div 
+               key={course.id}
+               initial={{ opacity: 0, y: 30 }}
+               animate={{ opacity: 1, y: 0 }}
+               exit={{ opacity: 0, scale: 0.9 }}
+               transition={{ delay: idx * 0.1 }}
+             >
+               <Link to={`/learn/courses/${course.id}`} className={`bg-[#222] p-8 md:p-10 rounded-[2.5rem] neo-border hover:-translate-y-3 transition-transform relative group block h-full flex flex-col ${idx % 3 === 2 ? 'border-pink-400' : ''}`}>
+                 <div className="absolute top-6 right-6 bg-white text-black font-bold px-4 py-1.5 rounded-full text-xs uppercase neo-border border-2 shadow-sm">
+                   {course.level}
+                 </div>
+                 <div className={`w-20 h-20 rounded-3xl ${course.color} ${course.accent.replace('bg-', 'text-')} neo-border flex items-center justify-center mb-8 transform group-hover:rotate-12 transition-transform shadow-inner`}>
+                   <span className="text-4xl">{course.badgeIcon}</span>
+                 </div>
+                 <h3 className="font-display font-bold text-2xl md:text-3xl mb-4 text-white leading-tight">{course.title}</h3>
+                 
+                 {/* Preview Snippet */}
+                 <p className="text-gray-400 font-medium mb-8 text-base md:text-lg flex-1">
+                   {course.lessons[0]?.content.replace(/<[^>]*>?/gm, '').substring(0, 100)}...
+                 </p>
+                 
+                 <div className="mt-auto">
+                   <div className="flex justify-between items-center mb-2">
+                     <span className="text-sm font-bold text-gray-500">{course.lessons.length} Lessons</span>
+                     <span className={`text-sm font-bold ${course.accent.replace('bg-', 'text-')}`}>+ {course.xp} XP</span>
+                   </div>
+                   <div className="w-full bg-black h-3 rounded-full overflow-hidden neo-border border-white/20">
+                      <div className={`${course.accent} h-full w-0 group-hover:w-1/3 transition-all duration-700`}></div>
+                   </div>
+                 </div>
+               </Link>
+             </motion.div>
+          ))}
+          </AnimatePresence>
+        </div>
+
+        {filteredCourses.length > showCount && (
+           <div className="text-center mt-16">
+              <button onClick={() => setShowCount(prev => prev + 6)} className="neo-btn bg-white text-black text-lg">
+                 Load More Courses
+              </button>
+           </div>
+        )}
       </div>
     </section>
   );
@@ -388,34 +389,34 @@ const FeatureLearnEarn = () => {
 
 const FeatureCommunity = () => {
   return (
-    <section id="squad" className="py-24 bg-genz-lime relative border-b-4 border-black overflow-hidden">
+    <section id="squad" className="py-32 bg-genz-lime relative border-b-4 border-black overflow-hidden">
       {/* Decorative stars */}
-      <div className="absolute top-10 left-10 text-4xl">✨</div>
-      <div className="absolute bottom-20 right-20 text-5xl">⭐️</div>
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="absolute top-10 left-10 text-4xl hidden lg:block">✨</div>
+      <div className="absolute bottom-20 right-20 text-5xl hidden lg:block">⭐️</div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid md:grid-cols-2 gap-16 items-center">
           <div>
-            <div className="inline-block px-4 py-1.5 rounded-full bg-white text-black font-display font-bold text-sm tracking-wider uppercase mb-6 neo-shadow -rotate-3">
+            <div className="inline-block px-5 py-2 rounded-full bg-white text-black font-display font-bold text-sm tracking-wider uppercase mb-8 neo-shadow -rotate-3">
               The Squad
             </div>
-            <h2 className="text-4xl md:text-6xl font-display font-extrabold text-lotus-dark uppercase leading-[0.9] tracking-tighter mb-6">
+            <h2 className="text-5xl md:text-7xl font-display font-extrabold text-lotus-dark uppercase leading-[0.9] tracking-tighter mb-8">
               Don't invest <br/> <span className="bg-white px-2 neo-border inline-block mt-2 transform rotate-2">alone.</span>
             </h2>
-            <p className="text-xl font-medium text-lotus-dark mb-8">
+            <p className="text-2xl font-medium text-lotus-dark mb-10 max-w-lg">
               Join the Lotus Tribe community. Ask questions, flex your badges, attend exclusive virtual events, and grow your wealth alongside thousands of others.
             </p>
-            <Link to="/learn/community" className="neo-btn bg-black text-white px-8 py-4 flex items-center gap-3 w-fit text-lg">
-              <MessageCircle className="w-6 h-6" /> Enter the Chat
+            <Link to="/learn/community" className="neo-btn bg-black text-white px-10 py-5 flex items-center gap-3 w-fit text-xl">
+              <MessageCircle className="w-7 h-7" /> Enter the Chat
             </Link>
           </div>
 
-          <div className="relative">
+          <div className="relative mt-12 md:mt-0 lg:ml-12">
             {/* Mock Chat UI */}
             <div className="bg-white rounded-3xl neo-border neo-shadow p-6 pointer-events-none">
               
               <div className="flex gap-4 mb-6">
-                <img src="https://i.pravatar.cc/100?img=4" className="w-12 h-12 rounded-full neo-border" alt="" />
+                <img src="https://images.unsplash.com/photo-1531123897727-8f129e1ebfa8?q=80&w=150&auto=format&fit=crop" className="w-12 h-12 rounded-full neo-border object-cover" alt="Aisha" />
                 <div className="bg-gray-100 rounded-2xl rounded-tl-none p-4 neo-border w-fit relative">
                   <p className="font-bold mb-1 text-sm">@Aisha_Invests <span className="text-xs bg-yellow-300 px-1 rounded neo-border ml-2">LVL 4</span></p>
                   <p className="font-medium text-sm">Just hit my first ₦100k in the Halal Fixed Income Fund! 🎉</p>
@@ -423,18 +424,18 @@ const FeatureCommunity = () => {
               </div>
 
               <div className="flex gap-4 mb-6 flex-row-reverse">
-                <img src="https://i.pravatar.cc/100?img=5" className="w-12 h-12 rounded-full neo-border" alt="" />
+                <img src="https://images.unsplash.com/photo-1543269664-7eef42226a21?q=80&w=150&auto=format&fit=crop" className="w-12 h-12 rounded-full neo-border object-cover" alt="You" />
                 <div className="bg-genz-blue text-white rounded-2xl rounded-tr-none p-4 neo-border w-fit">
                   <p className="font-bold mb-1 text-sm text-white/90">@You</p>
-                  <p className="font-medium text-sm">Let's goooo! 🔥 Any tips on staying consistent?</p>
+                  <p className="font-medium text-sm">Omo, that's huge! 🔥 Any tips on staying consistent?</p>
                 </div>
               </div>
 
               <div className="flex gap-4">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/ce/Transparent.gif" className="w-12 h-12 rounded-full neo-border bg-lotus-red flex items-center justify-center relative after:content-['LC'] after:absolute after:font-display after:font-bold after:text-white" alt="Lotus Admin" />
-                <div className="bg-red-50 rounded-2xl rounded-tl-none p-4 neo-border border-lotus-red w-fit">
-                  <p className="font-bold mb-1 text-sm text-lotus-red">@LotusCapital <span className="text-xs bg-black text-white px-1 rounded neo-border ml-2">MOD</span></p>
-                  <p className="font-medium text-sm">Pro tip: Set up auto-invests every Friday after Jumu'ah! 🕌💸</p>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/ce/Transparent.gif" className="w-12 h-12 rounded-full neo-border bg-[#C10202] flex items-center justify-center relative after:content-['LT'] after:absolute after:font-display after:font-bold after:text-white" alt="Lotus Tribe Admin" />
+                <div className="bg-red-50 rounded-2xl rounded-tl-none p-4 neo-border border-[#C10202] w-fit">
+                  <p className="font-bold mb-1 text-sm text-[#C10202]">@LotusTribe <span className="text-xs bg-black text-white px-1 rounded neo-border ml-2">MOD</span></p>
+                  <p className="font-medium text-sm">Pro tip: Set up automated deductions on payday! 💸🚀</p>
                 </div>
               </div>
 
@@ -457,28 +458,25 @@ const FeatureCommunity = () => {
 
 const Footer = () => {
   return (
-    <footer className="bg-white pt-16 pb-8">
+    <footer className="bg-white pt-24 pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div className="flex flex-col md:flex-row justify-between items-center bg-lotus-dark p-8 md:p-12 rounded-3xl neo-border neo-shadow text-white mb-16">
-          <div className="mb-8 md:mb-0 text-center md:text-left">
-            <h3 className="font-display font-extrabold text-4xl mb-2 uppercase">Ready to join?</h3>
-            <p className="font-medium text-gray-400">Stop scrolling, start investing.</p>
+        <div className="flex flex-col md:flex-row justify-between items-center bg-lotus-dark p-10 md:p-16 rounded-[2.5rem] neo-border neo-shadow text-white mb-20">
+          <div className="mb-10 md:mb-0 text-center md:text-left">
+            <h3 className="font-display font-extrabold text-5xl mb-4 uppercase">Ready to join?</h3>
+            <p className="font-medium text-gray-400 text-xl">Stop scrolling, start investing.</p>
           </div>
-          <button className="neo-btn bg-genz-pink text-black text-xl px-10 hover:bg-white hover:text-black">
+          <button className="neo-btn bg-genz-pink text-black text-2xl px-12 py-5 hover:bg-white hover:text-black">
             CREATE FREE ACCOUNT
           </button>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12 font-medium">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16 font-medium">
           <div>
-            <div className="flex items-center gap-1 mb-6">
-              <Zap className="w-5 h-5 text-lotus-red" fill="currentColor" />
-              <span className="font-display font-bold text-xl tracking-tighter text-lotus-dark uppercase">
-                Lotus<span className="text-lotus-red">Tribe</span>
-              </span>
+            <div className="flex items-center gap-1 mb-8">
+              <img src="/lotus-logo.png" alt="Lotus Tribe Logo" className="h-10" />
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-base text-gray-600 leading-relaxed">
               A digital investment platform for the next generation, powered by Lotus Capital Limited.
             </p>
           </div>
@@ -511,16 +509,13 @@ const Footer = () => {
         </div>
 
         {/* Disclaimer box */}
-        <div className="bg-gray-100 p-6 rounded-2xl neo-border text-xs text-gray-600 font-medium leading-relaxed mb-8">
-          <p className="font-bold text-black uppercase mb-2">🚨 The Serious Stuff (read this):</p>
+        <div className="bg-gray-100 p-6 rounded-2xl neo-border text-xs text-gray-500 font-medium leading-relaxed mb-8">
+          <p className="font-bold text-gray-700 uppercase mb-2">Legal Disclaimer</p>
           <p className="mb-2">
-            Lotus Tribe is a mobile-first digital investment platform owned and operated by Lotus Capital Limited, a Fund/Portfolio Manager duly licensed and regulated by the Securities and Exchange Commission (SEC), Nigeria. 
-          </p>
-          <p className="mb-2">
-            All funds offered on the platform are Shariah-compliant and regulated by the SEC, Nigeria.
+            Lotus Tribe is a mobile-first digital investment platform owned and operated by Lotus Capital Limited, a Fund/Portfolio Manager duly licensed and regulated by the Securities and Exchange Commission (SEC), Nigeria. Lotus Tribe is a distribution platform that provides access to Lotus Capital’s mutual funds, including the Lotus Halal Investment Fund and the Lotus Fixed Income Fund (FIF). All funds offered on the platform are Shariah-compliant and regulated by the SEC, Nigeria.
           </p>
           <p>
-            <strong>Risk Warning:</strong> We don't give direct investment advice (do your own research!). The value of investments can go up or down. You might get back less than you put in. Past wins do not guarantee future wins. If unsure, talk to a real financial advisor.
+            Lotus Tribe is designed to make ethical investing accessible to a new generation of investors by providing simple access to investments, financial education resources, and a community-driven approach to wealth building. The platform does not provide investment advice, and investors are responsible for their own investment decisions. The value of investments may go up or down, and investors may receive back less than the amount originally invested. If in doubt, please seek advice from an independent financial adviser.
           </p>
         </div>
 
@@ -752,14 +747,221 @@ const QuizPage = () => {
   );
 };
 
+import { Calculator, InvestFIF, InvestHalal } from './Funds';
+
+const FeatureProducts = () => {
+  return (
+    <section id="funds" className="py-32 bg-[#fafafa] relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <div className="inline-block px-5 py-2 rounded-full bg-lotus-dark text-white font-display font-bold text-sm tracking-wider uppercase mb-8 neo-shadow-sm rotate-2">
+            The Funds
+          </div>
+          <h2 className="text-5xl md:text-7xl font-display font-extrabold uppercase leading-none mb-8 text-black">
+            Grow your <span className="text-lotus-red border-b-8 border-lotus-red pb-1">wealth.</span>
+          </h2>
+          <p className="text-xl font-medium text-gray-700">
+            Halal investment products structured for your goals. Start with ₦5,000. Regulated, transparent, and built for the next generation.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-12 mb-20">
+          {/* FIF Fund Card */}
+          <div className="bg-genz-lime p-10 md:p-12 rounded-[2.5rem] neo-border neo-shadow flex flex-col justify-between group hover:-translate-y-2 transition-transform">
+             <div>
+                <div className="flex justify-between items-start mb-8">
+                   <div className="bg-white px-4 py-1.5 rounded-full font-bold text-sm uppercase neo-border border-2">Low Risk</div>
+                   <div className="w-16 h-16 bg-white rounded-2xl neo-border flex items-center justify-center transform group-hover:rotate-12 transition-transform">
+                     <Shield className="w-8 h-8 text-black" />
+                   </div>
+                </div>
+                <h3 className="font-display font-bold text-4xl mb-4 text-black uppercase leading-tight">Lotus Non-Interest Fixed Income Fund</h3>
+                <p className="font-medium text-lg text-black/80 mb-8">Short & medium term goals. Quarterly payouts. Protect your capital while beating inflation.</p>
+             </div>
+             
+             <div className="space-y-4">
+                <div className="bg-white/50 p-4 rounded-xl font-medium flex justify-between items-center neo-border border-2 border-black/20">
+                   <span>FY 2025 Return</span>
+                   <span className="font-bold text-xl">15.00%</span>
+                </div>
+                <Link to="/invest/fif" className="neo-btn bg-black text-white w-full uppercase flex items-center justify-center gap-2 text-lg">
+                   Explore FIF <ArrowRight size={20} />
+                </Link>
+             </div>
+          </div>
+
+          {/* Halal Fund Card */}
+          <div className="bg-genz-pink p-10 md:p-12 rounded-[2.5rem] neo-border neo-shadow flex flex-col justify-between group hover:-translate-y-2 transition-transform">
+             <div>
+                <div className="flex justify-between items-start mb-8">
+                   <div className="bg-white px-4 py-1.5 rounded-full font-bold text-sm uppercase neo-border border-2">Moderate Risk</div>
+                   <div className="w-16 h-16 bg-white rounded-2xl neo-border flex items-center justify-center transform group-hover:-rotate-12 transition-transform">
+                     <TrendingUp className="w-8 h-8 text-black" />
+                   </div>
+                </div>
+                <h3 className="font-display font-bold text-4xl mb-4 text-black uppercase leading-tight">Lotus Halal Investment Fund</h3>
+                <p className="font-medium text-lg text-black/80 mb-8">Long term growth. Diversified portfolio. Create sustained wealth for the future.</p>
+             </div>
+             
+             <div className="space-y-4">
+                <div className="bg-white/50 p-4 rounded-xl font-medium flex justify-between items-center neo-border border-2 border-black/20">
+                   <span>FY 2025 Return</span>
+                   <span className="font-bold text-xl">36.76%</span>
+                </div>
+                <Link to="/invest/halal" className="neo-btn bg-black text-white w-full uppercase flex items-center justify-center gap-2 text-lg">
+                   Explore Halal Fund <ArrowRight size={20} />
+                </Link>
+             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const FeatureBenefits = () => {
+  const benefits = [
+    { title: "Investor Personality", desc: "Understand your investor behaviour through our unique profiling process.", icon: "🎯" },
+    { title: "Automated Investments", desc: "Set up your personalized account and enjoy convenient and flexible automated investments.", icon: "⚡" },
+    { title: "Financial Freedom", desc: "Grow your wealth with Lotus Tribe and fulfil your financial aspirations effectively.", icon: "🚀" },
+    { title: "Community", desc: "Join our community, share insights and support one another in your investment journeys.", icon: "🤝" },
+    { title: "Financial Literacy", desc: "Be a part of the tribe and gain access to financial intelligence and Halal finance knowledge.", icon: "📚" },
+    { title: "Halal Investments", desc: "Access to Lotus Capital Halal investment options that ensures investments are in line with your values.", icon: "☪️" }
+  ];
+
+  return (
+    <section className="py-24 bg-lotus-dark text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-display font-extrabold uppercase mb-4">
+            Why Join the <span className="text-[#C10202]">Tribe?</span>
+          </h2>
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto">Everything you need to build enduring wealth, aligned with your values.</p>
+        </div>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {benefits.map((benefit, idx) => (
+            <div key={idx} className="bg-white/5 neo-border border-white/10 p-6 rounded-2xl hover:bg-white/10 transition-colors">
+              <div className="text-4xl mb-4">{benefit.icon}</div>
+              <h3 className="font-display font-bold text-xl uppercase mb-2">{benefit.title}</h3>
+              <p className="text-gray-400 leading-relaxed text-sm">{benefit.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const FAQSection = () => {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const faqs = [
+    {
+      q: "What makes Lotus different from other investing apps?",
+      a: "We blend financial education with real, SEC-regulated investment opportunities—specifically focusing on Halal, ethical products. Plus, we've designed it to be simple, engaging, and transparent."
+    },
+    {
+      q: "Is Lotus Capital regulated?",
+      a: "Yes! Lotus Capital is fully regulated by the Securities and Exchange Commission (SEC) of Nigeria, ensuring your investments are secure and managed according to best practices."
+    },
+    {
+      q: "Can I withdraw my money at any time?",
+      a: "Absolutely. Our funds offer competitive liquidity. You can request a withdrawal from your dashboard, and it will be processed according to the specific fund's terms (typically within a few business days)."
+    },
+    {
+      q: "What does 'Halal Investing' mean?",
+      a: "It means we invest your money in ethical, socially responsible assets that comply with Islamic finance principles. No interest (riba), no gambling, and no investments in harmful industries (like alcohol or weapons)."
+    }
+  ];
+
+  return (
+    <section className="py-24 bg-white">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <div className="inline-block px-5 py-2 rounded-full bg-gray-100 font-bold uppercase text-xs tracking-wider mb-4 border border-gray-200">
+            Got Questions?
+          </div>
+          <h2 className="text-4xl md:text-5xl font-display font-extrabold uppercase">
+            Frequently Asked <span className="text-[#C10202]">Vibes</span>
+          </h2>
+        </div>
+        
+        <div className="flex flex-col gap-4">
+          {faqs.map((faq, idx) => (
+            <div 
+              key={idx} 
+              className={`p-6 rounded-2xl neo-border cursor-pointer transition-all ${openIndex === idx ? 'bg-genz-lime neo-shadow-sm' : 'bg-gray-50 hover:bg-gray-100'}`}
+              onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+            >
+              <div className="flex justify-between items-center">
+                <h3 className="font-display font-bold text-lg md:text-xl">{faq.q}</h3>
+                <div className={`transform transition-transform ${openIndex === idx ? 'rotate-180' : ''}`}>
+                  <ChevronRight className="w-5 h-5 rotate-90" />
+                </div>
+              </div>
+              {openIndex === idx && (
+                <p className="mt-4 text-gray-800 font-medium leading-relaxed">
+                  {faq.a}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const FeatureUnleash = () => {
+  return (
+    <section className="bg-[#C10202] text-white py-24 md:py-32 relative overflow-visible" style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <div className="relative order-2 md:order-1 h-[400px] md:h-[500px]">
+             <img src="/lotus-guy.png" className="absolute bottom-[-150px] left-1/2 -translate-x-1/2 md:translate-x-0 md:-left-10 lg:-left-20 w-[120%] max-w-[600px] md:max-w-[700px] lg:max-w-[1000px] object-contain drop-shadow-2xl z-20 pointer-events-none" alt="Lotus Guy" />
+          </div>
+          <div className="space-y-6 order-1 md:order-2 relative z-30">
+            <h2 className="text-5xl md:text-7xl font-display font-extrabold uppercase leading-[0.9] tracking-tighter">
+              Unleash Your <br/>Inner Investor – <br/>the Halal way
+            </h2>
+            <p className="text-xl font-medium text-white/90 leading-relaxed">
+               Create Wealth and improve your financial intelligence with LOTUS Tribe the digital first investment App powered by LOTUS Capital.
+            </p>
+            <p className="text-lg text-white/80 leading-relaxed">
+               At LOTUS Tribe, we believe in the digital first approach towards creating wealth. We have therefore created this fun, flexible and secure platform for your investing activities. Our team of experts are also like the "financial bodyguards" ensuring that your investments are managed responsibly and ethically.
+            </p>
+            <div className="pt-6">
+               <button className="bg-white text-[#C10202] font-bold uppercase px-8 py-4 rounded-xl text-lg hover:bg-gray-100 transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] active:shadow-none active:translate-y-1 active:translate-x-1">
+                 Join the Tribe | Invest Right
+               </button>
+               <p className="mt-4 font-display font-bold text-sm uppercase opacity-90 tracking-widest">
+                 powered by Lotus Capital
+               </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const HomePage = () => {
    return (
-      <>
+      <div className="overflow-x-hidden">
         <Hero />
-        <FeatureVibeCheck />
+        <FeatureUnleash />
+        <FeatureBenefits />
+        <div className="bg-[#fafafa]">
+          <FeatureProducts />
+          <div className="pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto -mt-10 relative z-20">
+            <Calculator />
+          </div>
+        </div>
         <FeatureLearnEarn />
         <FeatureCommunity />
-      </>
+        <FAQSection />
+      </div>
    );
 };
 
@@ -767,6 +969,10 @@ const LMSWrapper = () => {
    const { user, loading } = useContext(AuthContext);
    return <LMSLayout user={user} loading={loading} loginWithGoogle={loginWithGoogle} />;
 };
+
+import { InvestLanding } from './Invest';
+import { InvestOnboarding } from './InvestOnboarding';
+import { InvestDashboard } from './Dashboard';
 
 export default function App() {
   return (
@@ -777,6 +983,11 @@ export default function App() {
           <Routes>
              <Route path="/" element={<HomePage />} />
              <Route path="/quiz" element={<QuizPage />} />
+             <Route path="/invest" element={<InvestLanding />} />
+             <Route path="/invest/onboarding" element={<InvestOnboarding />} />
+             <Route path="/dashboard" element={<InvestDashboard />} />
+             <Route path="/invest/fif" element={<InvestFIF />} />
+             <Route path="/invest/halal" element={<InvestHalal />} />
              
              {/* LMS Routes */}
              <Route path="/learn" element={<LMSWrapper />}>
