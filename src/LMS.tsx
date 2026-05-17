@@ -1,340 +1,500 @@
-import React, { useContext } from 'react';
-import { Routes, Route, Link, useLocation, Navigate, Outlet, useParams } from 'react-router-dom';
-import { motion } from 'motion/react';
+import React, { useContext, useState, useEffect } from 'react';
+import { Routes, Route, Link, useLocation, Navigate, Outlet, useParams, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   BookOpen, 
-  LayoutDashboard, 
   MessageCircle, 
   Trophy, 
-  Flame, 
   Clock, 
-  Target, 
   ChevronRight,
+  ChevronLeft,
   PlayCircle,
+  Check,
+  Bookmark,
+  ArrowUp,
+  ArrowLeft,
+  ArrowRight,
   CheckCircle2,
-  Lock
+  Flame,
+  LayoutDashboard,
+  Users,
+  Award,
+  Lock,
+  Star,
+  Share2,
+  ShieldAlert
 } from 'lucide-react';
-import { auth, loginWithGoogle } from './lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { auth, loginWithGoogle, db, collection, query, getDocs, orderBy } from './lib/firebase';
 import { coursesData } from './data/courses';
 
-// Add the AuthContext import or create a placeholder if it's exported from App.tsx
-// To avoid circular dependency, we might need to pass down user as prop, or we can export AuthContext from App.tsx. 
-// Better yet, let's just use firebase auth directly or we will export AuthContext from App.tsx.
+const useLMSData = () => {
+  const [courses, setCourses] = useState<any[]>(coursesData);
+  const [modules, setModules] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-// Let's create a responsive layout
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const cq = query(collection(db, 'courses'), orderBy('id'));
+        const mq = query(collection(db, 'modules'), orderBy('order', 'asc'));
+        
+        const [cSnap, mSnap] = await Promise.all([getDocs(cq), getDocs(mq)]);
+        
+        if (!cSnap.empty) {
+          setCourses(cSnap.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() })));
+        }
+        if (!mSnap.empty) {
+          setModules(mSnap.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() })));
+        }
+      } catch (err) {
+        console.error("Error fetching LMS data from DB", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  return { courses, modules, loading };
+};
+
 export const LMSLayout = ({ user, loading, loginWithGoogle }: any) => {
   const location = useLocation();
 
   if (loading) {
-    return <div className="min-h-screen pt-32 pb-20 flex items-center justify-center font-display font-bold text-2xl">Loading...</div>;
+    return <div className="min-h-screen pt-32 pb-20 flex items-center justify-center font-display font-bold text-2xl animate-pulse text-lotus-red uppercase">Loading Tribe Data...</div>;
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen pt-32 pb-20 flex flex-col items-center justify-center bg-[#fafafa] px-4">
-        <div className="bg-white p-8 rounded-3xl neo-border neo-shadow text-center max-w-md w-full">
-          <div className="text-6xl mb-6">🔒</div>
-          <h2 className="font-display font-bold text-3xl uppercase mb-4">Login Required</h2>
-          <p className="font-medium text-gray-600 mb-8">Join the Tribe to access courses, track your learning, and earn badges!</p>
-          <button onClick={loginWithGoogle} className="neo-btn bg-genz-lime text-lotus-dark w-full uppercase text-xl">
-            Log In with Google
+      <div className="min-h-screen pt-32 pb-20 flex flex-col items-center justify-center bg-genz-purple/10 px-4 font-sans">
+        <div className="bg-white p-10 md:p-14 rounded-[3rem] neo-border neo-shadow text-center max-w-md w-full">
+          <div className="text-7xl mb-8">🎓</div>
+          <h2 className="font-display font-extrabold text-4xl mb-6 uppercase tracking-tight text-lotus-dark">Join the Tribe</h2>
+          <p className="text-gray-500 font-medium mb-10 leading-relaxed text-lg">Access the learning hub, collect XP, and join a community of next-gen ethical investors.</p>
+          <button onClick={loginWithGoogle} className="neo-btn bg-lotus-dark text-white w-full uppercase text-xl py-5 flex items-center justify-center gap-3">
+            Get Infinite Access <ArrowRight size={20} />
           </button>
         </div>
       </div>
     );
   }
 
+  const adminEmails = ['ibrahimdurosimi@gmail.com'];
+  const isAdmin = user && adminEmails.includes(user.email || '');
+
   const navItems = [
-    { name: 'Dashboard', path: '/learn', icon: <LayoutDashboard className="w-6 h-6" /> },
-    { name: 'Courses', path: '/learn/courses', icon: <BookOpen className="w-6 h-6" /> },
-    { name: 'Community', path: '/learn/community', icon: <MessageCircle className="w-6 h-6" /> },
-    { name: 'Achievements', path: '/learn/achievements', icon: <Trophy className="w-6 h-6" /> }
+    { name: 'Home', path: '/learn', icon: <LayoutDashboard className="w-5 h-5"/> },
+    { name: 'Courses', path: '/learn/courses', icon: <BookOpen className="w-5 h-5"/> },
+    { name: 'Achievements', path: '/learn/achievements', icon: <Award className="w-5 h-5"/> }
   ];
 
+  if (isAdmin) {
+    navItems.push({ name: 'Admin', path: '/learn/admin', icon: <ShieldAlert className="w-5 h-5 text-lotus-red"/> });
+  }
+
   return (
-    <div className="min-h-screen bg-[#fafafa] pt-24 pb-20 md:pb-0 font-sans text-lotus-dark flex justify-center">
-      <div className="flex flex-col md:flex-row w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 gap-8 mt-8">
-        
-        {/* Desktop Sidebar */}
-        <aside className="hidden md:flex flex-col w-64 shrink-0 h-[calc(100vh-140px)] sticky top-32">
-          <div className="bg-white rounded-3xl neo-border neo-shadow p-6 flex-1 flex flex-col gap-2">
-            <h2 className="font-display font-bold text-xl uppercase mb-6 text-gray-500">Learning Hub</h2>
-            {navItems.map((item) => (
-              <Link 
-                key={item.name} 
-                to={item.path}
-                className={`flex items-center gap-4 px-4 py-3 rounded-2xl font-bold transition-all ${
-                  (location.pathname === item.path || (item.path !== '/learn' && location.pathname.startsWith(item.path)))
-                    ? 'bg-genz-lime neo-border shadow-[2px_2px_0_0_#121212] translate-y-[-2px]' 
-                    : 'hover:bg-gray-100 text-gray-600 hover:text-black'
-                }`}
-              >
-                {item.icon}
-                {item.name}
+    <div className="min-h-screen bg-gray-50 font-sans text-lotus-dark mt-24">
+      {/* Top Navbar */}
+      <nav className="fixed top-0 left-0 right-0 z-40 p-4 pointer-events-none">
+        <div className="max-w-7xl mx-auto bg-white/80 backdrop-blur-md neo-border neo-shadow rounded-3xl pointer-events-auto flex justify-between items-center px-6 py-4 border border-white/50 shadow-xl">
+           <Link to="/" className="font-display font-black text-2xl uppercase italic tracking-tighter text-lotus-red hover:scale-105 transition-transform flex items-center gap-2">
+             <div className="w-8 h-8 rounded-lg bg-lotus-red text-white flex items-center justify-center font-bold text-xs not-italic">LT</div>
+             LEARN
+           </Link>
+           <div className="hidden md:flex items-center gap-2">
+             {navItems.map(item => {
+               const isActive = location.pathname === item.path || (item.path !== '/learn' && location.pathname.startsWith(item.path));
+               return (
+                 <Link 
+                   key={item.name} 
+                   to={item.path}
+                   className={`flex items-center gap-2 font-display font-semibold uppercase text-xs px-5 py-2.5 rounded-full transition-all ${
+                     isActive ? 'bg-lotus-dark text-white shadow-md' : 'bg-transparent text-gray-500 hover:text-lotus-dark hover:bg-gray-100'
+                   }`}
+                 >
+                   {item.icon} {item.name}
+                 </Link>
+               )
+             })}
+           </div>
+           
+           <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-2 bg-genz-lime/50 border border-lotus-dark/10 px-4 py-1.5 rounded-full text-xs font-bold uppercase">
+                 🔥 7-Day 
+              </div>
+              <Link to="/dashboard" className="transition-transform hover:scale-110">
+                <img src={user?.photoURL || `https://ui-avatars.com/api/?name=${user.email}`} className="w-10 h-10 rounded-full border-2 border-lotus-red shadow-sm" alt="Avatar"/>
               </Link>
-            ))}
+           </div>
+        </div>
+      </nav>
 
-            <div className="mt-auto bg-gray-50 rounded-2xl p-4 border-2 border-dashed border-gray-200">
-               <div className="flex items-center gap-3 mb-2">
-                 <div className="w-10 h-10 bg-genz-pink rounded-xl flex items-center justify-center neo-border">
-                   <Flame className="w-6 h-6 text-white" />
-                 </div>
-                 <div>
-                   <div className="font-bold text-sm">3 Day Streak!</div>
-                   <div className="text-xs text-gray-500 font-medium">Keep it up 🔥</div>
-                 </div>
-               </div>
-            </div>
-          </div>
-        </aside>
-
-        {/* Main Content Area */}
-        <main className="flex-1 w-full max-w-full overflow-hidden mb-16 md:mb-0">
-          <Outlet />
-        </main>
-
-        {/* Mobile Bottom Nav */}
-        <nav className="md:hidden fixed bottom-4 left-4 right-4 bg-white neo-border neo-shadow rounded-2xl p-2 z-50 flex justify-around">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path || (item.path !== '/learn' && location.pathname.startsWith(item.path));
-            return (
-              <Link 
-                key={item.name} 
-                to={item.path}
-                className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
-                  isActive ? 'bg-genz-lime text-black border-2 border-black' : 'text-gray-500'
-                }`}
-              >
-                {item.icon}
-                <span className="text-[10px] font-bold uppercase">{item.name}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-      </div>
+      {/* Main Content Area */}
+      <main className="w-full max-w-7xl mx-auto px-4 md:px-6 py-12 pb-32 pt-8">
+        <Outlet />
+      </main>
     </div>
   );
 };
 
+import { AuthContext } from './App';
+
 export const LMSDashboard = () => {
+  const { user, userProfile } = useContext(AuthContext);
+  const { courses } = useLMSData();
+  const firstName = user?.displayName ? user.displayName.split(' ')[0] : 'Explorer';
+  const xp = userProfile?.xp || 0;
+  const level = userProfile?.level || 1;
+  const nextLevelXp = level * 1000;
+  const xpPercentage = Math.min(100, Math.round((xp / nextLevelXp) * 100));
+
   return (
-    <div className="flex flex-col gap-8 pb-10">
-      
-      {/* Welcome & Stats Row */}
-      <div className="bg-genz-purple text-white p-8 rounded-3xl neo-border neo-shadow relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 text-8xl opacity-20 transform rotate-12 pointer-events-none">🎓</div>
-        <h1 className="font-display font-extrabold text-3xl md:text-4xl uppercase mb-2">Welcome Back!</h1>
-        <p className="font-medium text-white/90 text-lg mb-8">Ready to level up your financial IQ today?</p>
+    <div className="flex flex-col gap-12">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="inline-block px-4 py-1.5 rounded-full bg-genz-lime text-lotus-dark font-display font-bold text-xs tracking-wider uppercase mb-6 shadow-sm">
+            Level {level} Investor
+          </div>
+          <h1 className="font-display font-extrabold text-5xl md:text-7xl text-lotus-dark mb-4 uppercase tracking-tighter leading-[0.95]">Wassup, <br/>{firstName}.</h1>
+          <p className="text-gray-500 font-medium text-xl max-w-md leading-relaxed">Ready to secure the bag? Let's keep that financial glow up going.</p>
+        </motion.div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 text-center">
-             <div className="text-3xl mb-1">🔥</div>
-             <div className="font-display font-bold text-2xl">3</div>
-             <div className="text-xs uppercase font-bold text-white/80 tracking-wider">Day Streak</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 text-center">
-             <div className="text-3xl mb-1">⏱️</div>
-             <div className="font-display font-bold text-2xl">12</div>
-             <div className="text-xs uppercase font-bold text-white/80 tracking-wider">Hrs Studied</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 text-center">
-             <div className="text-3xl mb-1">🏆</div>
-             <div className="font-display font-bold text-2xl">4</div>
-             <div className="text-xs uppercase font-bold text-white/80 tracking-wider">Badges</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 text-center">
-             <div className="text-3xl mb-1">📈</div>
-             <div className="font-display font-bold text-2xl">LVL 4</div>
-             <div className="text-xs uppercase font-bold text-white/80 tracking-wider">Invest Rank</div>
-          </div>
+        <div className="w-full md:w-80 bg-white neo-border p-6 rounded-[2.5rem] shrink-0 shadow-lg border border-gray-100">
+           <div className="flex justify-between items-center text-xs font-bold text-gray-500 mb-3 uppercase tracking-widest">
+              <span>Next Level Goal</span>
+              <span className="text-lotus-red">{xp} / {nextLevelXp} XP</span>
+           </div>
+           <div className="w-full bg-gray-100 h-4 rounded-full overflow-hidden border border-gray-200">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${xpPercentage}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="bg-lotus-red h-full"
+              ></motion.div>
+           </div>
         </div>
       </div>
 
-      {/* Continue Learning */}
-      <div>
-        <h2 className="font-display font-bold text-2xl uppercase mb-4 flex items-center gap-2">
-          <PlayCircle className="w-6 h-6 text-genz-pink" /> Jump Back In
-        </h2>
-        <Link to="/learn/courses/your-money-glow-up" className="bg-white rounded-3xl p-6 neo-border neo-shadow flex flex-col md:flex-row items-center gap-6 cursor-pointer hover:-translate-y-1 transition-transform group block">
-           <div className="w-full md:w-48 h-32 bg-gray-100 rounded-2xl neo-border flex items-center justify-center shrink-0 relative overflow-hidden">
-             <div className="absolute inset-0 bg-green-500 opacity-20"></div>
-             <span className="text-5xl relative z-10">🌱</span>
-           </div>
-           <div className="flex-1 w-full">
-             <div className="flex justify-between items-start mb-2">
-               <div>
-                  <div className="inline-block px-3 py-1 bg-gray-100 text-gray-800 font-bold text-xs uppercase rounded-full border border-gray-200 mb-2">
-                    Beginner
+      {/* Hero Lesson Card */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.98 }} 
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-genz-purple rounded-[3.5rem] neo-border neo-shadow flex flex-col md:flex-row overflow-hidden group border-white/50 shadow-2xl"
+      >
+         <div className="p-10 md:p-16 flex-1 flex flex-col justify-center">
+            <div className="inline-flex items-center gap-2 bg-white/50 backdrop-blur-sm px-5 py-2 rounded-full text-xs font-bold font-display uppercase border border-white/20 mb-10 w-fit shadow-sm">
+               <PlayCircle className="w-4 h-4 text-lotus-dark" /> Continue Learning
+            </div>
+            <h2 className="font-display font-bold text-4xl md:text-6xl mb-6 text-lotus-dark tracking-tighter uppercase leading-[0.9] group-hover:tracking-tight transition-all duration-500">Your Money <br/> Glow Up</h2>
+            <p className="text-lotus-dark/70 font-medium mb-10 max-w-md text-xl leading-relaxed">
+              Why 'Rich' is boring. 'Wealthy' is freedom. Learn the 3-Bucket Principle.
+            </p>
+            <div className="flex flex-wrap items-center gap-6 mt-auto">
+               <Link to="/learn/courses/your-money-glow-up" className="neo-btn bg-lotus-dark text-white px-10 py-5 uppercase flex items-center justify-center gap-3 text-lg">
+                 Resume Course <ArrowRight className="w-5 h-5"/>
+               </Link>
+            </div>
+         </div>
+         <div className="hidden md:flex w-5/12 p-10 items-center justify-center bg-white/20 backdrop-blur-sm border-l border-white/10 relative overflow-hidden">
+           <div className="text-[12rem] group-hover:rotate-12 group-hover:scale-110 transition-transform duration-700 select-none drop-shadow-2xl">🌱</div>
+           <div className="absolute top-0 right-0 p-8 opacity-20"><Star size={40} className="animate-pulse" /></div>
+         </div>
+      </motion.div>
+
+      <div className="grid lg:grid-cols-3 gap-10 lg:gap-14">
+         {/* Recommended Courses */}
+         <div className="lg:col-span-2">
+            <div className="flex justify-between items-center mb-10 border-b border-gray-100 pb-6">
+               <h3 className="font-display font-extrabold text-3xl uppercase text-lotus-dark">Up Next</h3>
+               <Link to="/learn/courses" className="text-sm font-bold uppercase text-lotus-red hover:underline flex items-center gap-1">
+                 View all <ChevronRight className="w-4 h-4" />
+               </Link>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-8">
+               {courses.slice(1, 4).map((course, idx) => (
+                 <Link to={`/learn/courses/${course.id}`} key={course.id} className={`bg-white rounded-[2.5rem] neo-border neo-shadow-sm p-8 flex flex-col justify-between hover:-translate-y-2 transition-transform cursor-pointer h-full border border-gray-100`}>
+                    <div className="flex justify-between items-start mb-8">
+                       <div className={`w-16 h-16 rounded-[1.25rem] neo-border ${course.color} flex items-center justify-center text-4xl shadow-inner border-lotus-dark/5`}>{course.badgeIcon}</div>
+                       <span className="bg-gray-50 border border-gray-100 px-4 py-1 text-[10px] font-bold uppercase rounded-full text-gray-400">Explore</span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-[10px] text-gray-400 tracking-widest uppercase mb-3 px-1">{course.module}</p>
+                      <h4 className="font-display font-bold text-2xl text-lotus-dark mb-8 uppercase leading-tight line-clamp-2 px-1">{course.title}</h4>
+                    </div>
+                    <div className="flex justify-between items-center mt-auto pt-6 border-t border-dashed border-gray-100">
+                      <span className="text-xs font-bold text-gray-400 uppercase flex items-center gap-2 px-1"><BookOpen className="w-4 h-4 text-lotus-red/40"/> {course.lessons.length} Lessons</span>
+                      <span className="text-xs font-bold text-lotus-red uppercase">+{course.xp} XP</span>
+                    </div>
+                 </Link>
+               ))}
+            </div>
+         </div>
+
+         {/* Sidebar Stats */}
+         <div className="space-y-10">
+            <div className="bg-lotus-dark rounded-[3rem] neo-border neo-shadow p-10 text-white relative overflow-hidden">
+               <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
+               <div className="text-xs font-display font-bold uppercase tracking-[0.2em] text-genz-lime mb-8 flex items-center gap-3"><Trophy className="w-5 h-5"/> Tribe Stats</div>
+               <div className="flex justify-between items-end mb-10 pb-10 border-b border-white/10">
+                  <div>
+                    <div className="text-xs font-bold text-gray-400 uppercase mb-3 tracking-widest">Total XP Earned</div>
+                    <div className="text-6xl font-display font-black text-white line-clamp-1 tracking-tighter">{xp}</div>
                   </div>
-                  <h3 className="font-display font-bold text-xl md:text-2xl mb-1">Your Money Glow Up</h3>
+                  <div className="text-5xl hover:scale-125 hover:rotate-12 transition-transform select-none">⚡</div>
                </div>
-               <span className="font-bold text-gray-500 text-sm">33%</span>
-             </div>
-             <p className="text-gray-600 font-medium text-sm mb-4">Why "Rich" is boring and "Wealthy" is freedom.</p>
-             <div className="w-full bg-gray-100 h-3 rounded-full neo-border overflow-hidden">
-               <div className="bg-green-500 h-full w-[33%]"></div>
-             </div>
-           </div>
-           <div className="hidden md:flex w-12 h-12 rounded-full bg-black text-white items-center justify-center neo-border shadow-sm transform group-hover:scale-110 transition-transform">
-             <ChevronRight className="w-6 h-6" />
-           </div>
-        </Link>
-      </div>
-
-      {/* Recent Badges & Community Highlights Grid */}
-      <div className="grid md:grid-cols-2 gap-8">
-        <div>
-           <h2 className="font-display font-bold text-xl uppercase mb-4">Recent Badges</h2>
-           <div className="bg-white rounded-3xl p-6 neo-border neo-shadow flex gap-4 overflow-x-auto">
-              <div className="text-center min-w-[80px]">
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-green-100 neo-border shadow-sm flex items-center justify-center mb-2">
-                   <Target className="w-8 h-8 text-green-600" />
-                </div>
-                <div className="text-xs font-bold leading-tight">First<br/>Steps</div>
-              </div>
-              <div className="text-center min-w-[80px]">
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-yellow-100 neo-border shadow-sm flex items-center justify-center mb-2">
-                   <Trophy className="w-8 h-8 text-yellow-500" />
-                </div>
-                <div className="text-xs font-bold leading-tight">Quiz<br/>Master</div>
-              </div>
-              <div className="text-center min-w-[80px]">
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center mb-2 opacity-50">
-                   <Lock className="w-6 h-6 text-gray-400" />
-                </div>
-                <div className="text-xs font-bold text-gray-400 leading-tight">Pro<br/>Investor</div>
-              </div>
-           </div>
-        </div>
-
-        <div>
-           <h2 className="font-display font-bold text-xl uppercase mb-4">Community Highlights</h2>
-           <div className="bg-genz-lime rounded-3xl p-6 neo-border neo-shadow">
-             <div className="flex gap-3 mb-4">
-               <img src="https://i.pravatar.cc/100?img=12" className="w-10 h-10 rounded-full neo-border" alt="" />
-               <div className="bg-white rounded-xl p-3 neo-border text-sm font-medium">
-                 <p className="font-bold text-xs mb-1">@Zara_trades</p>
-                 Should I invest in Sukuk or Halal Equity right now?
+               <div className="grid grid-cols-2 gap-y-10 gap-x-6">
+                  <div>
+                    <div className="text-[10px] text-gray-400 font-bold uppercase mb-3 tracking-widest">Daily Streak</div>
+                    <div className="text-2xl font-display font-bold text-white flex items-center gap-2">1 Day <span className="animate-pulse">🔥</span></div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-gray-400 font-bold uppercase mb-3 tracking-widest">Modules Done</div>
+                    <div className="text-2xl font-display font-bold text-white">{userProfile?.completedCourses?.length || 0} / 14</div>
+                  </div>
                </div>
-             </div>
-             <Link to="/learn/community" className="block text-center font-bold text-sm bg-black text-white py-2 rounded-xl neo-border hover:bg-gray-800 transition-colors">
-               View Discussion
-             </Link>
-           </div>
-        </div>
+            </div>
+
+            <div className="bg-genz-pink rounded-[2.5rem] neo-border neo-shadow p-8 border-lotus-dark/5">
+                <h4 className="font-display font-bold text-lg uppercase mb-4 text-lotus-dark">Quick Tip</h4>
+                <p className="text-lotus-dark/60 text-sm font-medium leading-relaxed">
+                  Did you know? Ethical investors outperform the market over 10-year periods by avoiding high-debt volatility.
+                </p>
+            </div>
+
+            <div>
+               <div className="flex justify-between items-center mb-6 border-b-2 border-black pb-4">
+                  <h3 className="font-display font-extrabold text-2xl uppercase">Badges</h3>
+                  <Link to="/learn/achievements" className="text-gray-500 font-bold text-sm uppercase hover:text-black hover:underline underline-offset-4">See all</Link>
+               </div>
+               <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-white rounded-[1.5rem] neo-border p-4 flex flex-col items-center justify-center text-center aspect-square shadow-sm hover:scale-105 transition-transform cursor-pointer border-[3px]">
+                     <div className="text-3xl mb-2">🌱</div>
+                     <div className="text-[10px] font-bold uppercase leading-tight font-display tracking-tight">Seedling</div>
+                  </div>
+                  <div className="bg-white rounded-[1.5rem] neo-border p-4 flex flex-col items-center justify-center text-center aspect-square shadow-sm hover:scale-105 transition-transform cursor-pointer border-[3px]">
+                     <div className="text-3xl mb-2">🔥</div>
+                     <div className="text-[10px] font-bold uppercase leading-tight font-display tracking-tight">7-Day<br/>Streak</div>
+                  </div>
+                  <div className="bg-gray-100 rounded-[1.5rem] neo-border p-4 flex flex-col items-center justify-center text-center aspect-square opacity-60 grayscale border-dashed border-2">
+                     <div className="text-3xl mb-2">🐻</div>
+                     <div className="text-[10px] font-bold uppercase leading-tight font-display tracking-tight text-gray-500">Locked</div>
+                  </div>
+               </div>
+            </div>
+         </div>
       </div>
     </div>
   );
 };
 
 export const LMSCourses = () => {
-  const [filter, setFilter] = React.useState('all');
+  const { courses, modules, loading } = useLMSData();
+  const moduleSummaries: Record<string, string> = {
+    "MODULE 0": "The foundation. We unlearn the lies about money and align your wealth with ethical and halal principles. It's time for the wake-up call.",
+    "MODULE 1": "Building your toolkit. Understand stocks, ETFs, and the reality of the crypto world. Everything you need to start your real investment journey.",
+    "MODULE 2": "Playing the long game. Mastering compound interest, risk management, and the core Lotus philosophy of impact-first investing.",
+    "MODULE 3": "Levelling up. From real estate for renters to navigating the complexities of taxes and market analysis like a pro.",
+    "MODULE 4": "The final stage. Claim your identity and learn how to lead and grow within the Lotus Tribe community."
+  };
 
   return (
-    <div className="pb-10">
-      <h1 className="font-display font-extrabold text-4xl uppercase mb-8">Course Hub</h1>
-      
-      <div className="flex gap-4 mb-8 overflow-x-auto pb-2 scrollbar-none">
-         <button onClick={() => setFilter('all')} className={`${filter === 'all' ? 'bg-black text-white hover:bg-gray-800' : 'bg-white text-gray-600 hover:bg-gray-100'} font-bold py-2 px-6 rounded-xl neo-border transition-colors whitespace-nowrap`}>All Courses</button>
-         <button onClick={() => setFilter('beginner')} className={`${filter === 'beginner' ? 'bg-black text-white hover:bg-gray-800' : 'bg-white text-gray-600 hover:bg-gray-100'} font-bold py-2 px-6 rounded-xl neo-border transition-colors whitespace-nowrap`}>Beginner</button>
-         <button onClick={() => setFilter('intermediate')} className={`${filter === 'intermediate' ? 'bg-black text-white hover:bg-gray-800' : 'bg-white text-gray-600 hover:bg-gray-100'} font-bold py-2 px-6 rounded-xl neo-border transition-colors whitespace-nowrap`}>Intermediate</button>
-      </div>
-
-      <div className="grid gap-6">
-        {coursesData.filter(c => filter === 'all' || c.level.toLowerCase() === filter).map((course) => (
-          <div key={course.id} className="bg-white rounded-3xl p-6 neo-border neo-shadow flex flex-col md:flex-row items-center gap-6 transition-transform hover:-translate-y-1">
-            <div className={`w-20 h-20 rounded-2xl ${course.color} neo-border flex items-center justify-center shrink-0 text-4xl`}>
-              {course.badgeIcon}
+    <div className="max-w-7xl mx-auto">
+       <div className="mb-20 bg-white p-12 md:p-20 rounded-[4rem] neo-border neo-shadow border-gray-100 relative overflow-hidden">
+         <div className="absolute top-0 right-0 w-64 h-64 bg-genz-lime/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+         <div className="relative z-10">
+            <div className="inline-block px-4 py-1.5 rounded-full bg-genz-lime text-lotus-dark font-display font-bold text-xs tracking-wider uppercase mb-8 shadow-sm">
+                The Learning Hub
             </div>
-            
-            <div className="flex-1 w-full text-center md:text-left">
-               <div className="flex flex-col justify-center items-center md:items-start mb-2">
-                 <div className="inline-block px-3 py-1 bg-gray-100 font-bold text-xs uppercase rounded-full border border-gray-200 mb-2 text-gray-600">
-                    {course.level} • {course.xp} XP
+            <h1 className="font-display font-black text-6xl md:text-8xl text-lotus-dark leading-[0.9] uppercase tracking-tighter max-w-4xl mb-8">
+              Welcome to the <br/><span className="text-lotus-red">Knowledge Tribe.</span>
+            </h1>
+            <p className="text-gray-500 font-medium text-xl max-w-3xl leading-relaxed mb-10">
+              Wealth isn't just about what's in your bank; it's about what you know. Master the money game from mindset to mastery. 
+              Collect badges and XP while learning exactly how to build enduring, halal wealth from our ethical tribe masters.
+            </p>
+         </div>
+       </div>
+
+       <div className="space-y-24">
+          {loading ? (
+             <div className="p-20 text-center font-display font-bold text-2xl animate-pulse text-gray-400 uppercase">Synchronizing knowledge...</div>
+          ) : modules.length > 0 ? (
+            modules.map((mod) => {
+               const moduleName = `${mod.id}: ${mod.title}`;
+               const modCourses = courses.filter(c => c.module === moduleName || c.module.startsWith(mod.id));
+               if (modCourses.length === 0) return null;
+               
+               const summary = moduleSummaries[mod.id] || "";
+
+               return (
+                 <div key={mod.firestoreId}>
+                    <div className="mb-12">
+                       <div className="flex items-center gap-6 mb-4">
+                          <h2 className="font-display font-extrabold text-3xl md:text-5xl uppercase text-lotus-dark tracking-tighter shrink-0">{moduleName}</h2>
+                          <div className="h-px bg-gray-200 flex-1"></div>
+                       </div>
+                       <p className="text-gray-500 font-medium text-lg max-w-3xl leading-relaxed">
+                          {summary}
+                       </p>
+                    </div>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                       {modCourses.map((course) => (
+                          <Link to={`/learn/courses/${course.id}`} key={course.firestoreId || course.id} className="group">
+                             <div className={`bg-white rounded-[2.5rem] neo-border hover:-translate-y-2 transition-all duration-500 cursor-pointer h-full flex flex-col overflow-hidden neo-shadow border-gray-100 shadow-xl group-hover:shadow-2xl`}>
+                                 <div className={`w-full h-44 ${course.color} border-b border-lotus-dark/5 flex items-center justify-center text-7xl shadow-inner relative overflow-hidden`}>
+                                    <motion.span whileHover={{ scale: 1.2, rotate: 12 }} className="relative z-10 drop-shadow-lg">{course.badgeIcon}</motion.span>
+                                 </div>
+                                  <div className="p-10 flex flex-col flex-1 bg-white">
+                                     <div className="flex justify-between items-start mb-6">
+                                        <span className="bg-gray-50 border border-gray-100 text-gray-500 text-[10px] font-bold uppercase px-4 py-1 rounded-full shadow-sm">{course.level}</span>
+                                        <span className="text-xs font-bold text-lotus-red uppercase tracking-wider">{course.xp} XP</span>
+                                     </div>
+                                     <h3 className="font-display font-bold text-2xl text-lotus-dark mb-6 uppercase leading-tight group-hover:text-lotus-red transition-colors">{course.title}</h3>
+                                     <div className="mt-auto pt-8 border-t border-dashed border-gray-100 flex items-center justify-between text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                                        <span className="flex items-center gap-2"><BookOpen size={16} /> {course.lessons?.length || 0} lessons</span>
+                                        <CheckCircle2 size={16} />
+                                     </div>
+                                  </div>
+                             </div>
+                          </Link>
+                       ))}
+                    </div>
                  </div>
-                 <h3 className="font-display font-bold text-2xl mb-1">{course.title}</h3>
-                 <p className="text-gray-500 font-medium text-sm">{course.module}</p>
+               )
+            })
+          ) : (
+            <div className="p-20 text-center bg-white neo-border rounded-[4rem] border-dashed border-2 border-gray-100 flex flex-col items-center">
+               <div className="text-6xl mb-8">🏗️</div>
+               <h3 className="font-display font-black text-3xl uppercase text-lotus-dark mb-4">The Library is currently empty.</h3>
+               <p className="text-gray-500 font-medium max-w-md mx-auto mb-10">You've successfully switched to a dynamic database! To see your original courses, you just need to initialize them in the Admin panel.</p>
+               <div className="flex gap-4">
+                  <Link to="/learn/admin" className="neo-btn bg-lotus-dark text-white px-10 py-4 rounded-2xl uppercase font-bold text-sm shadow-xl">
+                     Go to Admin Panel
+                  </Link>
+                  <button onClick={() => window.location.href='/learn/admin?action=bootstrap'} className="neo-btn bg-genz-lime text-lotus-dark px-10 py-4 rounded-2xl uppercase font-bold text-sm border-2 border-black">
+                     Restore Originals Now
+                  </button>
                </div>
             </div>
-
-            <Link to={`/learn/courses/${course.id}`} className={`w-full md:w-auto text-center block neo-btn bg-genz-lime text-black hover:bg-green-400`}>
-              Start Course
-            </Link>
-          </div>
-        ))}
-      </div>
+          )}
+       </div>
     </div>
   );
 };
 
-export const LMSCommunity = () => {
+import { completeLesson } from './lib/userService';
+
+export const LMSCoursePlayer = () => {
+  const { courseId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const { courses, loading } = useLMSData();
+  const [activeLessonIdx, setActiveLessonIdx] = useState(0);
+  const [isCompleting, setIsCompleting] = useState(false);
+  
+  const course = courses.find(c => c.id === courseId) || coursesData[0];
+  const lesson = course.lessons[activeLessonIdx];
+
+  const goNext = async () => {
+     if (user && !isCompleting) {
+        setIsCompleting(true);
+        try {
+           const xpPerLesson = Math.round(course.xp / course.lessons.length);
+           await completeLesson(user.uid, course.id, activeLessonIdx, xpPerLesson);
+        } catch (e) { console.error(e); } finally { setIsCompleting(false); }
+     }
+     if (activeLessonIdx < course.lessons.length - 1) setActiveLessonIdx(activeLessonIdx + 1);
+  };
+  
+  const finishCourse = async () => {
+     if (user && !isCompleting) {
+        setIsCompleting(true);
+        try {
+           const xpPerLesson = Math.round(course.xp / course.lessons.length);
+           await completeLesson(user.uid, course.id, activeLessonIdx, xpPerLesson);
+        } catch(e) { console.error(e); } finally { setIsCompleting(false); }
+     }
+     navigate('/learn/courses');
+  };
+
   return (
-    <div className="pb-10">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <h1 className="font-display font-extrabold text-4xl uppercase">The Squad</h1>
-        <button className="neo-btn bg-genz-lime text-black w-full md:w-auto">Ask a Question</button>
+    <div className="max-w-6xl mx-auto h-full flex flex-col lg:px-4">
+      <div className="mb-10 flex justify-between items-center">
+        <button onClick={() => navigate('/learn/courses')} className="group inline-flex items-center gap-3 text-sm font-bold uppercase text-gray-400 hover:text-lotus-dark transition-colors">
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform"/> Back to Library
+        </button>
+        <div className="bg-white neo-border px-6 py-2 rounded-full font-bold text-xs uppercase shadow-sm">
+           Progress: {Math.round(((activeLessonIdx + 1) / course.lessons.length) * 100)}%
+        </div>
       </div>
 
-      <div className="bg-genz-blue text-white rounded-3xl p-8 neo-border neo-shadow mb-8 relative overflow-hidden">
-         <div className="absolute top-0 right-0 p-8 text-8xl opacity-10 transform translate-x-4 rotate-12">🎪</div>
-         <div className="inline-block bg-white text-black text-xs font-bold uppercase px-3 py-1 rounded-lg neo-border mb-4">Upcoming Event</div>
-         <h2 className="font-display font-bold text-3xl mb-2">Live Q&A: Navigating market pullbacks</h2>
-         <p className="font-medium mb-6 max-w-xl">Join our lead portfolio managers as they discuss Shariah-compliant strategies during economic downturns.</p>
-         <button className="neo-btn bg-white text-black">RSVP Now</button>
-      </div>
-
-      <div className="flex flex-col gap-6">
-         {/* Post 1 */}
-         <div className="bg-white rounded-3xl p-6 neo-border neo-shadow">
-            <div className="flex items-center gap-3 mb-4">
-              <img src="https://i.pravatar.cc/100?img=12" className="w-12 h-12 rounded-full neo-border" alt="" />
-              <div>
-                <div className="font-bold">Zara_trades</div>
-                <div className="text-xs text-gray-500 font-medium">2 hours ago</div>
-              </div>
-              <div className="ml-auto bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full neo-border">
-                Mutual Funds
-              </div>
+      <div className="grid lg:grid-cols-[1fr_380px] gap-12 items-start mt-4">
+         <div className="order-2 lg:order-1 pt-2">
+            <div className="flex items-center gap-6 mb-10">
+               <div className={`${course.color} w-20 h-20 rounded-[1.5rem] border border-lotus-dark/5 flex items-center justify-center text-4xl shadow-inner shrink-0`}>{course.badgeIcon}</div>
+               <div>
+                  <p className="font-bold text-[10px] text-gray-400 tracking-[0.2em] uppercase mb-1">{course.title}</p>
+                  <h1 className="font-display font-extrabold text-4xl md:text-5xl leading-none text-lotus-dark uppercase tracking-tight">{lesson.title}</h1>
+               </div>
             </div>
-            <h3 className="font-display font-bold text-xl mb-2">Should I invest in Sukuk or Halal Equity right now?</h3>
-            <p className="text-gray-600 font-medium mb-4 text-sm leading-relaxed">
-              I have some spare cash this month and I'm torn between the Fixed Income Fund and the pure Equity Fund. I'm a "Calculated Thinker". What's the squad doing?
-            </p>
-            <div className="flex gap-4 border-t-2 border-gray-100 pt-4">
-              <button className="flex items-center gap-2 font-bold text-sm text-gray-500 hover:text-lotus-red transition-colors">
-                 <Flame className="w-5 h-5" /> 24
-              </button>
-              <button className="flex items-center gap-2 font-bold text-sm text-gray-500 hover:text-black transition-colors">
-                 <MessageCircle className="w-5 h-5" /> 8 Replies
-              </button>
+
+            <div className="space-y-12">
+               {lesson.videoUrl && (
+                  <div className="aspect-video w-full rounded-[2.5rem] overflow-hidden neo-border neo-shadow-sm bg-black">
+                     <iframe 
+                        className="w-full h-full"
+                        src={lesson.videoUrl.replace('watch?v=', 'embed/')} 
+                        title="Lesson Video"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                     ></iframe>
+                  </div>
+               )}
+
+               {lesson.imageUrl && (
+                  <div className="w-full rounded-[2.5rem] overflow-hidden neo-border neo-shadow-sm">
+                     <img src={lesson.imageUrl} className="w-full object-cover" alt="Lesson Visual" />
+                  </div>
+               )}
+
+               <div className="neo-border neo-shadow bg-white rounded-[3rem] p-10 md:p-16 mb-12 prose prose-lg max-w-none border border-gray-100 shadow-2xl">
+                  <div className="markdown-body" dangerouslySetInnerHTML={{ __html: lesson.content }} />
+               </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-20">
+               <button onClick={() => activeLessonIdx > 0 && setActiveLessonIdx(activeLessonIdx - 1)} disabled={activeLessonIdx === 0} className="px-8 py-5 border border-gray-200 rounded-full font-bold uppercase text-gray-400 hover:text-lotus-dark disabled:opacity-30 transition-all flex items-center gap-3 w-full sm:w-auto justify-center">
+                  <ArrowLeft className="w-5 h-5" /> Previous
+               </button>
+               {activeLessonIdx < course.lessons.length - 1 ? (
+                 <button onClick={goNext} disabled={isCompleting} className="neo-btn bg-lotus-dark text-white px-10 py-5 rounded-full uppercase flex items-center justify-center gap-3 disabled:opacity-50 w-full sm:w-auto shadow-xl">
+                    Next Lesson <ArrowRight className="w-5 h-5" />
+                 </button>
+               ) : (
+                 <button onClick={finishCourse} disabled={isCompleting} className="neo-btn bg-lotus-red text-white px-10 py-5 rounded-full uppercase flex items-center justify-center gap-3 shadow-xl">
+                    Finish Course <Trophy className="w-5 h-5" />
+                 </button>
+               )}
             </div>
          </div>
 
-         {/* Post 2 */}
-         <div className="bg-white rounded-3xl p-6 neo-border neo-shadow">
-            <div className="flex items-center gap-3 mb-4">
-              <img src="https://i.pravatar.cc/100?img=33" className="w-12 h-12 rounded-full neo-border" alt="" />
-              <div>
-                <div className="font-bold">Ahmed_Hustle</div>
-                <div className="text-xs text-gray-500 font-medium">5 hours ago</div>
-              </div>
-              <div className="ml-auto bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full neo-border">
-                Celebration
-              </div>
-            </div>
-            <h3 className="font-display font-bold text-xl mb-2">Just got my "Pro Investor" badge! 🎉🏆</h3>
-            <p className="text-gray-600 font-medium mb-4 text-sm leading-relaxed">
-              Finished all the advanced modules today. Seriously, understanding Portfolio Diversification basically leveled up my whole perspective on money. Let's goooo!
-            </p>
-            <div className="flex gap-4 border-t-2 border-gray-100 pt-4">
-              <button className="flex items-center gap-2 font-bold text-sm text-lotus-red">
-                 <Flame className="w-5 h-5 fill-current" /> 112
-              </button>
-              <button className="flex items-center gap-2 font-bold text-sm text-gray-500 hover:text-black transition-colors">
-                 <MessageCircle className="w-5 h-5" /> 15 Replies
-              </button>
+         <div className="order-1 lg:order-2 w-full lg:sticky lg:top-32 space-y-6">
+            <div className="bg-white border-[3px] border-black rounded-[2rem] overflow-hidden neo-shadow-sm">
+               <div className="p-6 bg-gray-50 border-b-2 border-black font-display font-extrabold uppercase text-xl text-black flex items-center gap-2">
+                  <Bookmark className="w-5 h-5" /> Syllabus
+               </div>
+               <div className="p-4 space-y-2">
+                  {course.lessons.map((l: any, idx: number) => (
+                    <button key={l.id} onClick={() => setActiveLessonIdx(idx)} className={`w-full text-left p-4 rounded-xl transition-all border-2 relative ${idx === activeLessonIdx ? 'bg-genz-pink text-black border-black shadow-[4px_4px_0_0_#121212] -translate-y-1' : 'bg-white border-transparent'}`}>
+                       <p className={`font-bold ${idx === activeLessonIdx ? 'text-black' : 'text-gray-400 text-sm'}`}>{idx + 1}. {l.title}</p>
+                       <p className="text-[10px] font-bold uppercase mt-2 opacity-70 flex items-center gap-1">
+                          {idx < activeLessonIdx ? <CheckCircle2 className="w-3 h-3"/> : <Clock className="w-3 h-3"/>} {l.readTime}
+                       </p>
+                    </button>
+                  ))}
+               </div>
             </div>
          </div>
       </div>
@@ -343,198 +503,97 @@ export const LMSCommunity = () => {
 };
 
 export const LMSAchievements = () => {
-  const badges = [
-    { title: 'First Steps', icon: '👶', earned: true, date: 'May 10', bg: 'bg-blue-100' },
-    { title: 'Quiz Master', icon: '🧠', earned: true, date: 'May 12', bg: 'bg-purple-100' },
-    { title: '7-Day Streak', icon: '🔥', earned: false, bg: 'bg-orange-100' },
-    { title: 'Bookworm', icon: '📚', earned: false, bg: 'bg-green-100', progress: '3/5 Courses' },
-    { title: 'Pro Investor', icon: '👑', earned: false, bg: 'bg-yellow-100' },
-    { title: 'Community Pillar', icon: '🤝', earned: false, bg: 'bg-pink-100' },
-  ];
+  const { userProfile } = useContext(AuthContext);
+  const { courses } = useLMSData();
+  const completedIds = userProfile?.completedCourses || [];
+  
+  const allBadges = courses.map(course => ({
+    id: course.id,
+    title: course.badgeName,
+    icon: course.badgeIcon,
+    courseTitle: course.title,
+    color: course.color,
+    isUnlocked: completedIds.includes(course.id)
+  }));
 
-  return (
-    <div className="pb-10">
-      <h1 className="font-display font-extrabold text-4xl uppercase mb-8">Trophy Room</h1>
-      
-      <div className="bg-white rounded-3xl p-8 neo-border neo-shadow mb-12 flex flex-col md:flex-row items-center gap-8">
-        <div className="w-32 h-32 rounded-full bg-genz-pink neo-border flex items-center justify-center shrink-0">
-           <Trophy className="w-16 h-16 text-white" />
-        </div>
-        <div className="text-center md:text-left flex-1">
-          <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Current Status</p>
-          <h2 className="font-display font-bold text-4xl mb-2">Level 4 <span className="text-gray-400">/ 10</span></h2>
-          <div className="w-full bg-gray-100 h-4 rounded-full overflow-hidden neo-border border-gray-300 mt-4 mb-2">
-            <div className="bg-genz-pink h-full w-[45%]"></div>
-          </div>
-          <p className="font-bold text-sm text-gray-500 text-right">450 / 1000 XP to Level 5</p>
-        </div>
-      </div>
+  const unlockedCount = allBadges.filter(b => b.isUnlocked).length;
+  const remainingCount = allBadges.length - unlockedCount;
 
-      <h3 className="font-display font-bold text-2xl uppercase mb-6">Your Badges</h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-         {badges.map((badge, idx) => (
-           <div key={idx} className={`bg-white rounded-3xl p-6 text-center ${badge.earned ? 'neo-border neo-shadow' : 'border-2 border-dashed border-gray-300 opacity-60'} flex flex-col items-center justify-center min-h-[220px]`}>
-              <div className={`w-20 h-20 rounded-2xl ${badge.bg} ${badge.earned && 'neo-border'} flex items-center justify-center text-4xl mb-4 relative`}>
-                {badge.icon}
-                {!badge.earned && (
-                  <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                    <Lock className="w-8 h-8 text-gray-600" />
-                  </div>
-                )}
-              </div>
-              <h4 className="font-display font-bold text-lg mb-1 leading-tight">{badge.title}</h4>
-              {badge.earned ? (
-                <p className="text-xs font-bold text-green-500 uppercase tracking-wide mt-auto">Earned {badge.date}</p>
-              ) : (
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-auto">
-                  {badge.progress ? badge.progress : 'Locked'}
-                </p>
-              )}
-           </div>
-         ))}
-      </div>
-    </div>
-  );
-};
-
-export const LMSCoursePlayer = () => {
-  const { courseId } = useParams();
-  const [currentLessonIdx, setCurrentLessonIdx] = React.useState(0);
-  const [showQuiz, setShowQuiz] = React.useState(false);
-  const [quizAnswers, setQuizAnswers] = React.useState<{ [key: number]: boolean }>({});
-  const [quizScore, setQuizScore] = React.useState<number | null>(null);
-
-  const course = coursesData.find(c => c.id === courseId);
-
-  if (!course) {
-    return <div className="p-10 font-display text-2xl font-bold bg-white neo-border">Course not found.</div>;
-  }
-
-  const lesson = course.lessons[currentLessonIdx];
-
-  const handleNext = () => {
-    if (currentLessonIdx < course.lessons.length - 1) {
-      setCurrentLessonIdx(prev => prev + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleShare = (badge: any) => {
+    const text = `I just unlocked the ${badge.title} ${badge.icon} badge on Lotus Tribe! Learning to build ethical, halal wealth. Join the tribe! 🚀`;
+    const url = window.location.origin;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: 'Lotus Tribe Achievement',
+        text: text,
+        url: url,
+      }).catch(err => console.log('Error sharing', err));
     } else {
-      setShowQuiz(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Fallback: Twitter
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`);
     }
   };
 
-  const handleQuizAnswer = (qIdx: number, isCorrect: boolean) => {
-    setQuizAnswers(prev => ({ ...prev, [qIdx]: isCorrect }));
-  };
-
-  const submitQuiz = () => {
-    const score = course.quiz.reduce((acc, _, idx) => acc + (quizAnswers[idx] ? 1 : 0), 0);
-    setQuizScore(score);
-  };
-
-  if (showQuiz) {
-    return (
-      <div className="pb-10">
-        <div className="mb-6 flex items-center justify-between">
-          <button onClick={() => setShowQuiz(false)} className="text-gray-500 font-bold hover:text-black flex items-center gap-2">
-            &larr; Back to Lessons
-          </button>
-        </div>
-        
-        <div className="bg-white rounded-3xl p-8 md:p-12 neo-border neo-shadow mb-8">
-          {quizScore === null ? (
-            <>
-              <div className="flex items-center gap-3 mb-8">
-                <div className={`w-12 h-12 rounded-xl ${course.color} neo-border flex items-center justify-center text-2xl`}>{course.badgeIcon}</div>
-                <h1 className="font-display font-extrabold text-3xl md:text-5xl uppercase">Quiz: {course.title}</h1>
-              </div>
-              
-              <div className="space-y-12">
-                {course.quiz.map((q, idx) => (
-                  <div key={idx}>
-                    <h3 className="font-bold text-xl mb-4">{idx + 1}. {q.question}</h3>
-                    <div className="space-y-3">
-                      {q.options.map((opt, oIdx) => (
-                        <label key={oIdx} className="flex items-center gap-3 p-4 border-2 border-gray-100 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
-                          <input 
-                            type="radio" 
-                            name={`q-${idx}`} 
-                            className="w-5 h-5 text-lotus-red focus:ring-lotus-red"
-                            onChange={() => handleQuizAnswer(idx, opt.isCorrect)}
-                          />
-                          <span className="font-medium">{opt.text}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-12">
-                <button onClick={submitQuiz} className="neo-btn bg-genz-blue text-white w-full md:w-auto uppercase">
-                  Submit Quiz & Earn XP
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-10">
-              <div className="text-8xl mb-6">🏆</div>
-              <h2 className="font-display font-extrabold text-4xl uppercase mb-4 text-genz-purple">Quiz Completed!</h2>
-              <p className="text-2xl font-bold mb-2">You scored {quizScore} out of {course.quiz.length}</p>
-              
-              {quizScore === course.quiz.length ? (
-                <>
-                  <p className="text-gray-600 font-medium mb-8">Flawless victory! You earned the <strong>{course.badgeName}</strong> badge and {course.xp} XP.</p>
-                  <Link to="/learn/courses" className="neo-btn bg-genz-lime text-black uppercase block max-w-sm mx-auto">
-                    Back to Courses
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <p className="text-gray-600 font-medium mb-8">Good try, but you need a perfect score to earn the badge. Review the material and try again!</p>
-                  <button onClick={() => { setQuizScore(null); setQuizAnswers({}); setShowQuiz(false); setCurrentLessonIdx(0); }} className="neo-btn bg-gray-100 text-black uppercase block max-w-sm mx-auto">
-                    Retake Course
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="pb-10">
-      <div className="mb-6 flex items-center justify-between">
-        <Link to="/learn/courses" className="text-gray-500 font-bold hover:text-black flex items-center gap-2">
-          &larr; Back to Courses
-        </Link>
-        <div className="font-bold text-sm bg-genz-pink text-white px-3 py-1 rounded-full neo-border">
-          Lesson {currentLessonIdx + 1} of {course.lessons.length}
-        </div>
-      </div>
-      
-      <div className="bg-white rounded-3xl p-8 md:p-12 neo-border neo-shadow mb-8">
-        <h1 className="font-display font-extrabold text-3xl md:text-5xl uppercase mb-4">{lesson.title}</h1>
-        <div className="flex items-center gap-2 text-gray-500 font-bold text-sm mb-8 uppercase tracking-wider">
-          <Clock className="w-4 h-4" /> {lesson.readTime} read
-        </div>
+    <div className="max-w-7xl mx-auto">
+       <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-20 border-b border-gray-200 pb-12">
+          <div className="max-w-2xl">
+             <h1 className="font-display font-black text-5xl md:text-7xl text-lotus-dark leading-none uppercase tracking-tighter mb-6">
+               Flex your <span className="bg-genz-lime px-4 pb-2 inline-block -rotate-2 rounded-2xl shadow-sm">medals.</span>
+             </h1>
+             <p className="text-gray-500 font-medium text-xl leading-relaxed">
+               Every time you complete a course, you earn a badge. Collect them all to reach the Full Lotus rank and join the elite elders of the tribe.
+             </p>
+          </div>
+          <div className="flex gap-8 md:pt-6 bg-white neo-border neo-shadow p-8 rounded-[3rem] border border-gray-100">
+             <div className="text-center">
+                 <div className="text-6xl font-display font-black text-lotus-dark mb-2 leading-none">{unlockedCount}</div>
+                <div className="text-[10px] font-bold text-gray-400 tracking-[0.2em] uppercase">Collected</div>
+             </div>
+             <div className="w-px bg-gray-100"></div>
+             <div className="text-center">
+                <div className="text-6xl font-display font-black text-gray-200 mb-2 leading-none">{remainingCount}</div>
+                <div className="text-[10px] font-bold text-gray-400 tracking-[0.2em] uppercase">Remaining</div>
+             </div>
+          </div>
+       </div>
 
-        <div className="prose prose-lg max-w-none font-medium text-gray-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: lesson.content }} />
-
-        <div className="mt-12 flex justify-between items-center border-t-2 border-gray-100 pt-8">
-           <button 
-             onClick={() => { if(currentLessonIdx > 0) { setCurrentLessonIdx(prev => prev - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
-             className={`font-bold uppercase tracking-wide text-gray-500 hover:text-black transition-colors ${currentLessonIdx === 0 ? 'invisible' : ''}`}
-           >
-             &larr; Previous Lesson
-           </button>
-           
-           <button onClick={handleNext} className="neo-btn bg-black text-white gap-2 flex items-center shadow-none transform translate-y-1">
-             {currentLessonIdx < course.lessons.length - 1 ? 'Next Lesson' : 'Take Quiz'} <ChevronRight className="w-5 h-5"/>
-           </button>
-        </div>
-      </div>
+       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {allBadges.map((badge) => (
+             <div 
+               key={badge.id} 
+               className={`bg-white rounded-[3rem] p-10 flex flex-col h-full items-center text-center transition-all duration-500 ${
+                 badge.isUnlocked 
+                   ? 'neo-border neo-shadow hover:-translate-y-2 cursor-pointer border-gray-100 shadow-xl' 
+                   : 'border-2 border-dashed border-gray-200 opacity-60 grayscale scale-95'
+               }`}
+             >
+                <div className={`w-28 h-28 rounded-full flex items-center justify-center text-6xl mb-8 shadow-inner relative ${badge.isUnlocked ? badge.color + ' border border-lotus-dark/5' : 'bg-gray-50 border border-gray-100'}`}>
+                   {badge.icon}
+                   {badge.isUnlocked && (
+                     <div className="absolute -bottom-2 -right-2 bg-genz-pink text-lotus-dark text-[10px] font-bold px-3 py-1 rounded-full uppercase border border-lotus-dark/10 rotate-12 shadow-md">Unlocked</div>
+                   )}
+                </div>
+                <h4 className={`font-display font-extrabold uppercase text-2xl mb-2 leading-tight ${badge.isUnlocked ? 'text-lotus-dark' : 'text-gray-400'}`}>{badge.title}</h4>
+                <p className={`text-sm font-bold mb-auto leading-relaxed ${badge.isUnlocked ? 'text-gray-500' : 'text-gray-400 opacity-60'}`}>{badge.courseTitle}</p>
+                
+                {badge.isUnlocked ? (
+                  <button 
+                    onClick={() => handleShare(badge)}
+                    className="mt-8 flex items-center gap-2 text-xs font-bold uppercase text-lotus-red hover:underline group"
+                  >
+                    <Share2 size={16} className="group-hover:rotate-12 transition-transform" /> Share Achievement
+                  </button>
+                ) : (
+                  <div className="mt-8 flex items-center gap-2 opacity-30">
+                    <Lock size={16} />
+                    <span className="text-[10px] uppercase font-bold tracking-widest">Keep Learning</span>
+                  </div>
+                )}
+             </div>
+          ))}
+       </div>
     </div>
   );
 };

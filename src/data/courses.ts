@@ -910,5 +910,117 @@ export const coursesData: Course[] = [
        }
     ],
     quiz: []
+  },
+  {
+    id: "halal-finance-deep-dive",
+    module: "MODULE 4: THE LOTUS TRIBE SPECIAL",
+    title: "Halal Finance: The Deep Dive",
+    badgeIcon: "⚖️",
+    badgeName: "Ethical Scholar",
+    xp: 400,
+    level: "Advanced",
+    color: "bg-emerald-100",
+    accent: "bg-emerald-500",
+    lessons: [
+       {
+          id: "lesson-h-1",
+          title: "The Pillars of Shari'ah Finance",
+          readTime: "4 minutes",
+          content: `
+            <p>Halal finance isn't just about avoiding pork or alcohol. It's a complete economic philosophy built on justice and risk-sharing.</p>
+            <h3 class="font-display font-bold text-xl mt-6 mb-2">The Four No-Nos:</h3>
+            <ul class="list-decimal pl-5 mt-4 space-y-3">
+              <li><strong>Riba (Interest):</strong> Money should not breed money without productive work. Charging interest is viewed as exploitative.</li>
+              <li><strong>Gharar (Uncertainty):</strong> Contracts must be clear. No gambling on "hidden" outcomes or overly complex derivatives.</li>
+              <li><strong>Maysir (Gambling):</strong> Pure speculation where one's gain is andother's loss without creating value is prohibited.</li>
+              <li><strong>Haram Industries:</strong> No investment in tobacco, alcohol, conventional banking (interest-based), gambling, or weaponry.</li>
+            </ul>
+            <div class="bg-emerald-50 p-6 rounded-2xl mt-8 border border-emerald-100">
+               <p class="font-bold mb-2">The Golden Rule:</p>
+               <p class="text-sm italic">"The buyer and seller should share the risk and the reward."</p>
+            </div>
+          `
+       }
+    ],
+    quiz: []
+  },
+  {
+    id: "young-couples-wealth",
+    module: "MODULE 2: THE STRATEGY",
+    title: "Wealth for Young Couples",
+    badgeIcon: "💍",
+    badgeName: "Tribe Builder",
+    xp: 300,
+    level: "Intermediate",
+    color: "bg-pink-100",
+    accent: "bg-pink-500",
+    lessons: [
+       {
+          id: "lesson-yc-1",
+          title: "The 'Join or Separate' Debate",
+          readTime: "3 minutes",
+          content: `
+            <p>Money is the #1 cause of stress in young marriages. Getting aligned early is a superpower.</p>
+            <h3 class="font-display font-bold text-xl mt-6 mb-2">The 3-Account Strategy:</h3>
+            <ul class="list-disc pl-5 mt-4 space-y-2">
+              <li><strong>Yours:</strong> Personal spending, no questions asked.</li>
+              <li><strong>Mine:</strong> My personal spending, no questions asked.</li>
+              <li><strong>Ours:</strong> Rent, groceries, utility, and JOINT investments.</li>
+            </ul>
+            <p class="mt-6">In Halal finance, a woman's wealth is hers alone, while a husband is responsible for the family's maintenance. However, building <strong>joint wealth</strong> for a house or children's education is highly encouraged.</p>
+          `
+       }
+    ],
+    quiz: []
+  },
+  {
+    id: "undergrad-side-hustle",
+    module: "MODULE 0: THE WAKE UP",
+    title: "The Undergrad Guide",
+    badgeIcon: "🎓",
+    badgeName: "Early Bird",
+    xp: 150,
+    level: "Beginner",
+    color: "bg-sky-100",
+    accent: "bg-sky-500",
+    lessons: [
+       {
+          id: "lesson-ug-1",
+          title: "Starting with ₦5,000",
+          readTime: "2 minutes",
+          content: `
+            <p>Being a student is the best time to start. Why? Because you have <strong>Time</strong>.</p>
+            <p class="mt-4">If you start with just ₦5,000 a month in the Lotus FIF, by the time you graduate, you'll have a habit that is worth more than the money itself.</p>
+            <div class="bg-gray-100 p-4 rounded-xl mt-6 border-dashed border-2 border-gray-300">
+               <p class="text-center font-bold">"Compound interest is the 8th wonder of the world. He who understands it, earns it... he who doesn't, pays it."</p>
+            </div>
+          `
+       }
+    ],
+    quiz: []
+  },
+  {
+    id: "mid-level-pivot",
+    module: "MODULE 3: ADVANCED MOVES",
+    title: "The Mid-Level Pivot",
+    badgeIcon: "🚀",
+    badgeName: "Growth Ace",
+    xp: 350,
+    level: "Advanced",
+    color: "bg-indigo-100",
+    accent: "bg-indigo-500",
+    lessons: [
+       {
+          id: "lesson-ml-1",
+          title: "Escaping the Salary Trap",
+          readTime: "4 minutes",
+          content: `
+            <p>You've been working for 5-8 years. Your salary is good, but your expenses have grown too. This is lifestyle creep.</p>
+            <h3 class="font-display font-bold text-xl mt-6 mb-2">Priority: Passive Income</h3>
+            <p>At this stage, your goal should be building asset streams that could eventually replace your salary. Think about Halal Equities and Sukuk (Islamic Bonds) that pay regular profit shares.</p>
+          `
+       }
+    ],
+    quiz: []
   }
 ];

@@ -41,7 +41,15 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
 };
 
 export const InvestDashboard = () => {
-    const { user } = useContext(AuthContext);
+    const { user, userProfile } = useContext(AuthContext);
+
+    const fifBalance = userProfile?.fifBalance || 0;
+    const halalBalance = userProfile?.halalBalance || 0;
+    const totalBalance = fifBalance + halalBalance;
+    const totalEarnings = 0; // Stub for actual earnings
+    
+    const halalPercent = totalBalance > 0 ? Math.round((halalBalance / totalBalance) * 100) : 50;
+    const fifPercent = totalBalance > 0 ? Math.round((fifBalance / totalBalance) * 100) : 50;
 
     return (
         <DashboardLayout>
@@ -70,13 +78,13 @@ export const InvestDashboard = () => {
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
                         <p className="text-gray-400 font-medium mb-2 uppercase tracking-wider text-sm flex items-center justify-between relative z-10">
                             Total Balance
-                            <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-lg text-xs font-bold">+ 12.4% All Time</span>
+                            <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-lg text-xs font-bold">+ 0.0% All Time</span>
                         </p>
-                        <h2 className="text-5xl md:text-6xl font-display font-extrabold text-white mb-2 relative z-10">₦1,245,000.00</h2>
+                        <h2 className="text-5xl md:text-6xl font-display font-extrabold text-white mb-2 relative z-10">₦{totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
                         <div className="flex items-center gap-2 mt-8 relative z-10">
                            <div className="bg-white/10 px-4 py-2 rounded-xl text-sm font-medium border border-white/20">
                              <span className="text-gray-400 block text-xs">Total Earnings</span>
-                             <span className="text-green-400 font-bold">+ ₦135,000</span>
+                             <span className="text-green-400 font-bold">+ ₦{totalEarnings}</span>
                            </div>
                            <div className="bg-white/10 px-4 py-2 rounded-xl text-sm font-medium border border-white/20">
                              <span className="text-gray-400 block text-xs">Pending Deposits</span>
@@ -90,17 +98,17 @@ export const InvestDashboard = () => {
                         <div className="flex-1 flex flex-col justify-center">
                             {/* Simple simulated chart layout */}
                             <div className="flex items-end h-24 gap-2 mb-4">
-                                <div className="w-1/2 bg-genz-pink rounded-t-xl h-[70%]"></div>
-                                <div className="w-1/2 bg-genz-lime rounded-t-xl h-[30%] border border-black/10"></div>
+                                <div className="w-1/2 bg-genz-pink rounded-t-xl transition-all" style={{ height: `${halalPercent}%` }}></div>
+                                <div className="w-1/2 bg-genz-lime rounded-t-xl border border-black/10 transition-all" style={{ height: `${fifPercent}%` }}></div>
                             </div>
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center text-sm">
                                     <div className="flex items-center gap-2 font-bold"><div className="w-3 h-3 rounded-full bg-genz-pink"></div> Halal Equity</div>
-                                    <span>70%</span>
+                                    <span>{halalPercent}%</span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
                                     <div className="flex items-center gap-2 font-bold"><div className="w-3 h-3 rounded-full bg-genz-lime border border-black/10"></div> FIF (Fixed Income)</div>
-                                    <span>30%</span>
+                                    <span>{fifPercent}%</span>
                                 </div>
                             </div>
                         </div>
@@ -121,12 +129,12 @@ export const InvestDashboard = () => {
                         </div>
                         <div className="mb-2">
                             <p className="text-gray-500 text-sm font-medium uppercase mb-1">Current Value</p>
-                            <p className="text-3xl font-display font-bold">₦871,500.00</p>
+                            <p className="text-3xl font-display font-bold">₦{halalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                         </div>
                         <div className="flex justify-between items-end mt-4 pt-4 border-t-2 border-gray-50">
                             <div>
                                 <p className="text-xs text-gray-500 font-bold uppercase mb-1">Total Return</p>
-                                <p className="text-sm font-bold text-green-500">+ ₦96,500 (12.4%)</p>
+                                <p className="text-sm font-bold text-green-500">+ ₦0 (0.0%)</p>
                             </div>
                             <button className="text-sm font-bold bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl transition-colors">Manage</button>
                         </div>
@@ -143,12 +151,12 @@ export const InvestDashboard = () => {
                         </div>
                         <div className="mb-2">
                             <p className="text-gray-500 text-sm font-medium uppercase mb-1">Current Value</p>
-                            <p className="text-3xl font-display font-bold">₦373,500.00</p>
+                            <p className="text-3xl font-display font-bold">₦{fifBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                         </div>
                         <div className="flex justify-between items-end mt-4 pt-4 border-t-2 border-gray-50">
                             <div>
                                 <p className="text-xs text-gray-500 font-bold uppercase mb-1">Total Return</p>
-                                <p className="text-sm font-bold text-green-500">+ ₦38,500 (11.5%)</p>
+                                <p className="text-sm font-bold text-green-500">+ ₦0 (0.0%)</p>
                             </div>
                             <button className="text-sm font-bold bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl transition-colors">Manage</button>
                         </div>

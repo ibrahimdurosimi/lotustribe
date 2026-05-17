@@ -5,6 +5,9 @@
       "description": "User profile containing their quiz result and risk profile.",
       "type": "object",
       "properties": {
+        "uid": {
+          "type": "string"
+        },
         "email": {
           "type": "string",
           "description": "The user's email."
@@ -20,6 +23,33 @@
         },
         "quizCompleted": {
           "type": "boolean"
+        },
+        "xp": {
+          "type": "number"
+        },
+        "level": {
+          "type": "number"
+        },
+        "completedLessons": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "completedCourses": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "badges": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "fifBalance": {
+          "type": "number"
+        },
+        "halalBalance": {
+          "type": "number"
+        },
+        "totalInvested": {
+          "type": "number"
         },
         "createdAt": {
           "type": "timestamp"

@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate, Link } from 'react-router-dom';
+import { Routes, Route, useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowRight,
@@ -16,35 +16,37 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  Sparkles
 } from 'lucide-react';
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { auth, loginWithGoogle, logout, db, handleFirestoreError, OperationType } from './lib/firebase';
+import { syncUserProfile, UserProfile } from './lib/userService';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { LMSLayout, LMSDashboard, LMSCourses, LMSCoursePlayer, LMSCommunity, LMSAchievements } from './LMS';
+import { LMSLayout, LMSDashboard, LMSCourses, LMSCoursePlayer, LMSAchievements } from './LMS';
+import { Community } from './Community';
+import { ScrollToTop } from './components/ScrollToTop';
+import { AdminDashboard } from './Admin';
 
 // --- Auth Context ---
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  userProfile: any;
+  userProfile: UserProfile | null;
   refreshProfile: () => void;
 }
 export const AuthContext = createContext<AuthContextType>({ user: null, loading: true, userProfile: null, refreshProfile: () => {} });
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (uid: string) => {
+  const fetchProfile = async (currentUser: User) => {
     try {
-      const docRef = doc(db, 'users', uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setUserProfile(docSnap.data());
-      }
+      const profile = await syncUserProfile(currentUser);
+      setUserProfile(profile);
     } catch (e) {
       console.error(e);
     }
@@ -54,7 +56,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        fetchProfile(currentUser.uid);
+        fetchProfile(currentUser);
       } else {
         setUserProfile(null);
       }
@@ -64,7 +66,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, userProfile, refreshProfile: () => user && fetchProfile(user.uid) }}>
+    <AuthContext.Provider value={{ user, loading, userProfile, refreshProfile: () => user && fetchProfile(user) }}>
       {children}
     </AuthContext.Provider>
   );
@@ -75,6 +77,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, userProfile } = useContext(AuthContext);
+
+  const location = useLocation();
+  const isLearnRoute = location.pathname.startsWith('/learn');
+
+  if (isLearnRoute) return null;
 
   return (
     <nav className="fixed w-full z-50 p-4 pointer-events-none">
@@ -94,7 +101,7 @@ const Navbar = () => {
             </div>
           </div>
           <Link to="/learn" className="hover:text-genz-purple transition-colors hover:-translate-y-0.5 inline-block transform duration-150">Learn</Link>
-          <Link to="/learn/community" className="hover:text-genz-pink transition-colors hover:-translate-y-0.5 inline-block transform duration-150">Community</Link>
+          <Link to="/community" className="hover:text-genz-pink transition-colors hover:-translate-y-0.5 inline-block transform duration-150">Community</Link>
           
           {user ? (
             <div className="flex items-center gap-4">
@@ -141,7 +148,7 @@ const Navbar = () => {
             <Link to="/invest/halal" className="pl-4 font-display font-bold text-lg uppercase py-1" onClick={() => setIsOpen(false)}>Moderate Risk (Halal)</Link>
           </div>
           <Link to="/learn" className="font-display font-bold text-xl uppercase py-2 border-b-2 border-black" onClick={() => setIsOpen(false)}>Learn</Link>
-          <Link to="/learn/community" className="font-display font-bold text-xl uppercase py-2 border-b-2 border-black" onClick={() => setIsOpen(false)}>Community</Link>
+          <Link to="/community" className="font-display font-bold text-xl uppercase py-2 border-b-2 border-black" onClick={() => setIsOpen(false)}>Community</Link>
           {user ? (
              <div className="flex items-center justify-between pt-4">
                <div className="flex items-center gap-3">
@@ -168,16 +175,16 @@ const Navbar = () => {
 
 const Hero = () => {
   return (
-    <section className="relative pt-48 pb-28 overflow-hidden bg-[#fafafa]">
-      {/* Gen Z Nigerian Background Image Pattern */}
+    <section className="relative pt-48 pb-28 overflow-hidden bg-[#1A1A1A]">
+      {/* Financial Pattern Background */}
       <div 
-        className="absolute inset-0 z-0 opacity-10 pointer-events-none bg-cover bg-center grayscale mix-blend-multiply" 
-        style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1596726917637-2900750438ea?w=2564&q=80&auto=format&fit=crop")' }}
+        className="absolute inset-0 z-0 opacity-100 pointer-events-none" 
+        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'%3E%3Ctext x='15' y='35' font-size='28' font-family='sans-serif' font-weight='bold'%3E%26%238358%3B%3C/text%3E%3Ctext x='75' y='85' font-size='24' font-family='sans-serif' font-weight='bold'%3E%25%3C/text%3E%3Cpath d='M30,90 L40,75 L50,85 L65,60 L75,70 L90,40' stroke='%23ffffff' stroke-width='3' stroke-opacity='0.05' fill='none' /%3E%3Ccircle cx='90' cy='40' r='3' fill='%23ffffff' fill-opacity='0.04' /%3E%3Ccircle cx='60' cy='30' r='10' stroke='%23ffffff' stroke-width='2' stroke-opacity='0.05' fill='none' /%3E%3Ccircle cx='60' cy='30' r='4' fill='%23ffffff' fill-opacity='0.04' /%3E%3Cpath d='M100,100 L100,80 L110,80 L110,100 Z' fill='%23ffffff' fill-opacity='0.04' /%3E%3Cpath d='M85,100 L85,90 L95,90 L95,100 Z' fill='%23ffffff' fill-opacity='0.04' /%3E%3Cpath d='M70,100 L70,85 L80,85 L80,100 Z' fill='%23ffffff' fill-opacity='0.04' /%3E%3C/g%3E%3C/svg%3E")` }}
       ></div>
       
       {/* Accent glow overlay to blend */}
-      <div className="absolute inset-0 bg-white/40 backdrop-blur-md z-0 pointer-events-none"></div>
-      <div className="absolute top-20 right-0 w-96 h-96 bg-[#C10202] rounded-full mix-blend-multiply filter blur-[120px] opacity-10 pointer-events-none z-0"></div>
+      <div className="absolute inset-0 bg-[#1A1A1A]/20 backdrop-blur-[2px] z-0 pointer-events-none"></div>
+      <div className="absolute top-20 right-0 w-96 h-96 bg-[#C10202] rounded-full mix-blend-screen filter blur-[120px] opacity-20 pointer-events-none z-0"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -190,10 +197,10 @@ const Hero = () => {
             <div className="inline-block px-4 py-1.5 rounded-full bg-[#C10202] text-white font-display font-bold text-sm tracking-wider uppercase mb-6 neo-shadow-sm rotate-2">
               🔥 Built for the Future
             </div>
-            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold text-lotus-dark leading-[0.9] tracking-tighter mb-6 uppercase">
+            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white leading-[0.9] tracking-tighter mb-6 uppercase">
               Investing <br/> <span className="text-[#C10202] inline-block -rotate-2">Redefined</span> for <br/> your generation.
             </h1>
-            <p className="text-xl text-gray-700 mb-8 max-w-lg font-medium">
+            <p className="text-xl text-gray-300 mb-8 max-w-lg font-medium">
               Halal, SEC-regulated investing that actually makes sense. Level up your financial literacy, track your portfolio, and build enduring wealth.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -209,13 +216,13 @@ const Hero = () => {
               </Link>
             </div>
             
-            <div className="mt-10 flex items-center gap-4 bg-white p-3 rounded-xl neo-border inline-flex neo-shadow-sm">
+            <div className="mt-10 flex items-center gap-4 bg-white/5 backdrop-blur-sm p-3 rounded-xl border border-white/10 inline-flex shadow-xl">
               <div className="flex -space-x-4">
-                <img className="w-10 h-10 rounded-full neo-border object-cover" src="https://images.unsplash.com/photo-1531123897727-8f129e1ebfa8?q=80&w=100&auto=format&fit=crop" alt="avatar" />
-                <img className="w-10 h-10 rounded-full neo-border object-cover" src="https://images.unsplash.com/photo-1506803682981-6e718a9dd3ee?q=80&w=100&auto=format&fit=crop" alt="avatar" />
-                <img className="w-10 h-10 rounded-full neo-border object-cover" src="https://images.unsplash.com/photo-1543269664-7eef42226a21?q=80&w=100&auto=format&fit=crop" alt="avatar" />
+                <img className="w-10 h-10 rounded-full border-2 border-[#1A1A1A] object-cover" src="https://images.unsplash.com/photo-1531123897727-8f129e1ebfa8?q=80&w=100&auto=format&fit=crop" alt="avatar" />
+                <img className="w-10 h-10 rounded-full border-2 border-[#1A1A1A] object-cover" src="https://images.unsplash.com/photo-1506803682981-6e718a9dd3ee?q=80&w=100&auto=format&fit=crop" alt="avatar" />
+                <img className="w-10 h-10 rounded-full border-2 border-[#1A1A1A] object-cover" src="https://images.unsplash.com/photo-1543269664-7eef42226a21?q=80&w=100&auto=format&fit=crop" alt="avatar" />
               </div>
-              <div className="font-display font-bold text-sm">
+              <div className="font-display font-bold text-sm text-white">
                 +10,000 Next-Gen Investors <br/> already joined!
               </div>
             </div>
@@ -267,7 +274,7 @@ const Hero = () => {
             {/* LMS / Module Mockup (Floating behind) */}
             <div className="absolute -bottom-10 -right-4 w-[280px] h-[200px] bg-white rounded-xl neo-border neo-shadow-sm p-4 z-30 transform -rotate-6 hover:rotate-0 transition-transform duration-500">
                <div className="flex gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-lg bg-genz-pink text-white flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-lg bg-genz-pink text-lotus-dark flex items-center justify-center">
                      <BookOpen className="w-6 h-6" />
                   </div>
                   <div>
@@ -300,7 +307,7 @@ import { coursesData } from './data/courses';
 
 const FeatureLearnEarn = () => {
   const [activeLevel, setActiveLevel] = useState<string>('All');
-  const [showCount, setShowCount] = useState<number>(6);
+  const [showCount, setShowCount] = useState<number>(14);
 
   const levels = ['All', 'Beginner', 'Intermediate', 'Advanced'];
   
@@ -425,7 +432,7 @@ const FeatureCommunity = () => {
 
               <div className="flex gap-4 mb-6 flex-row-reverse">
                 <img src="https://images.unsplash.com/photo-1543269664-7eef42226a21?q=80&w=150&auto=format&fit=crop" className="w-12 h-12 rounded-full neo-border object-cover" alt="You" />
-                <div className="bg-genz-blue text-white rounded-2xl rounded-tr-none p-4 neo-border w-fit">
+                <div className="bg-genz-blue text-lotus-dark rounded-2xl rounded-tr-none p-4 neo-border w-fit">
                   <p className="font-bold mb-1 text-sm text-white/90">@You</p>
                   <p className="font-medium text-sm">Omo, that's huge! 🔥 Any tips on staying consistent?</p>
                 </div>
@@ -731,7 +738,7 @@ const QuizPage = () => {
               {resultProfile === 'Risk Taker' && "High risk, high reward. You're ready to dive into growth-focused Shariah-compliant investments."}
             </p>
 
-            <button onClick={handleShare} className="neo-btn bg-genz-blue text-white w-full uppercase text-xl mb-4 flex items-center justify-center gap-2">
+            <button onClick={handleShare} className="neo-btn bg-genz-blue text-lotus-dark w-full uppercase text-xl mb-4 flex items-center justify-center gap-2">
                Share on Socials
             </button>
             <Link to="/">
@@ -749,7 +756,7 @@ const QuizPage = () => {
 
 import { Calculator, InvestFIF, InvestHalal } from './Funds';
 
-const FeatureProducts = () => {
+export const FeatureProducts = () => {
   return (
     <section id="funds" className="py-32 bg-[#fafafa] relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -848,6 +855,72 @@ const FeatureBenefits = () => {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+};
+
+const FeatureMoreThanAnApp = () => {
+  return (
+    <section className="py-24 bg-white relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div className="mb-12 text-center md:text-left">
+          <p className="text-[#C10202] font-bold text-sm tracking-[0.2em] uppercase mb-4">More than an app</p>
+          <h2 className="text-5xl md:text-7xl font-display font-extrabold uppercase leading-none text-black">
+            Learn. Invest. Belong.
+          </h2>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 mb-24">
+          
+          <div className="bg-genz-lime rounded-3xl p-8 neo-border neo-shadow-sm flex flex-col items-start hover:-translate-y-1 transition-transform border-[3px] border-black h-full">
+            <div className="flex justify-between items-start w-full mb-8">
+              <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div className="bg-white text-black font-bold text-[10px] sm:text-xs uppercase px-3 py-1.5 rounded-full mt-1">
+                VIBE CHECK
+              </div>
+            </div>
+            <h3 className="font-display font-bold text-2xl mb-4 leading-tight">Find your investor archetype</h3>
+            <p className="text-black/80 font-medium text-sm leading-relaxed mt-auto">
+              A 60-second quiz that maps your goals, risk appetite, and values to a personalised fund mix.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-3xl p-8 neo-border neo-shadow-sm flex flex-col items-start hover:-translate-y-1 transition-transform border-[3px] border-black h-full">
+            <div className="flex justify-between items-start w-full mb-8">
+              <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center">
+                <BookOpen className="w-6 h-6" />
+              </div>
+              <div className="bg-white text-gray-800 font-bold text-[10px] sm:text-xs uppercase px-3 py-1.5 rounded-full mt-1 border border-gray-200 shadow-sm">
+                LEARNING HUB
+              </div>
+            </div>
+            <h3 className="font-display font-bold text-2xl mb-4 leading-tight">Bite-sized money modules</h3>
+            <p className="text-gray-600 font-medium text-sm leading-relaxed mt-auto">
+              Earn badges as you master halal investing principles, market basics, and wealth strategy.
+            </p>
+          </div>
+
+          <div className="bg-genz-pink rounded-3xl p-8 neo-border neo-shadow-sm flex flex-col items-start hover:-translate-y-1 transition-transform border-[3px] border-black h-full">
+            <div className="flex justify-between items-start w-full mb-8">
+              <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center">
+                <Users className="w-6 h-6" />
+              </div>
+              <div className="bg-white text-black font-bold text-[10px] sm:text-xs uppercase px-3 py-1.5 rounded-full mt-1">
+                COMMUNITY
+              </div>
+            </div>
+            <h3 className="font-display font-bold text-2xl mb-4 leading-tight">Built with the tribe</h3>
+            <p className="text-black/80 font-medium text-sm leading-relaxed mt-auto">
+              Join live AMAs with Shariah advisors, swap strategies, and grow with thousands of peers.
+            </p>
+          </div>
+
+        </div>
+
       </div>
     </section>
   );
@@ -958,6 +1031,7 @@ const HomePage = () => {
             <Calculator />
           </div>
         </div>
+        <FeatureMoreThanAnApp />
         <FeatureLearnEarn />
         <FeatureCommunity />
         <FAQSection />
@@ -977,13 +1051,15 @@ import { InvestDashboard } from './Dashboard';
 export default function App() {
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-white font-sans text-lotus-dark selection:bg-genz-pink selection:text-white">
+      <ScrollToTop />
+      <div className="min-h-screen bg-white font-sans text-lotus-dark selection:bg-genz-pink selection:text-lotus-dark">
         <Navbar />
         <main>
           <Routes>
              <Route path="/" element={<HomePage />} />
              <Route path="/quiz" element={<QuizPage />} />
              <Route path="/invest" element={<InvestLanding />} />
+             <Route path="/community" element={<Community />} />
              <Route path="/invest/onboarding" element={<InvestOnboarding />} />
              <Route path="/dashboard" element={<InvestDashboard />} />
              <Route path="/invest/fif" element={<InvestFIF />} />
@@ -993,9 +1069,10 @@ export default function App() {
              <Route path="/learn" element={<LMSWrapper />}>
                 <Route index element={<LMSDashboard />} />
                 <Route path="courses" element={<LMSCourses />} />
+                <Route path="lessons" element={<LMSCoursePlayer />} />
                 <Route path="courses/:courseId" element={<LMSCoursePlayer />} />
-                <Route path="community" element={<LMSCommunity />} />
                 <Route path="achievements" element={<LMSAchievements />} />
+                <Route path="admin" element={<AdminDashboard />} />
              </Route>
           </Routes>
         </main>
