@@ -14,7 +14,8 @@ import {
   Video,
   Image as ImageIcon,
   CheckCircle,
-  HelpCircle
+  HelpCircle,
+  Calendar
 } from 'lucide-react';
 import { 
   db, 
@@ -116,7 +117,6 @@ export const AdminDashboard = () => {
   };
 
   const handleBootstrap = async () => {
-    if (!window.confirm("Restore Original Tribe Data? This sets up Modules 0-4 and all original courses.")) return;
     setLoading(true);
     try {
       // 1. Clean existing modules/courses to prevent duplicates if user wants a fresh start
@@ -172,7 +172,6 @@ export const AdminDashboard = () => {
   };
 
   const handleDelete = async (col: string, id: string) => {
-    if (!window.confirm(`Delete this ${col.slice(0, -1)}?`)) return;
     try {
       await deleteDoc(doc(db, col, id));
       notify("Deleted successfully", "success");

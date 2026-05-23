@@ -17,11 +17,13 @@ import {
   ChevronLeft,
   ChevronRight,
   BookOpen,
-  Sparkles
+  Sparkles,
+  Share2
 } from 'lucide-react';
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { auth, loginWithGoogle, logout, db, handleFirestoreError, OperationType } from './lib/firebase';
 import { syncUserProfile, UserProfile } from './lib/userService';
+import html2canvas from 'html2canvas';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { LMSLayout, LMSDashboard, LMSCourses, LMSCoursePlayer, LMSAchievements } from './LMS';
@@ -105,14 +107,16 @@ const Navbar = () => {
           
           {user ? (
             <div className="flex items-center gap-4">
-              <div className="flex flex-col text-right leading-tight">
-                <span className="text-sm font-bold">{user.displayName}</span>
-                {userProfile?.riskProfile && (
-                  <span className="text-xs text-genz-purple uppercase tracking-wider">{userProfile.riskProfile}</span>
-                )}
-              </div>
-              <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`} className="w-10 h-10 rounded-full neo-border" alt="Avatar"/>
-              <button onClick={logout} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <Link to="/dashboard" className="flex items-center gap-4 group cursor-pointer hover:opacity-80 transition-opacity">
+                <div className="flex flex-col text-right leading-tight transform group-hover:-translate-x-1 transition-transform">
+                  <span className="text-sm font-bold">{user.displayName}</span>
+                  {userProfile?.riskProfile && (
+                    <span className="text-[10px] font-bold text-white bg-[#8213F4] px-2 rounded uppercase tracking-wider">{userProfile.riskProfile}</span>
+                  )}
+                </div>
+                <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`} className="w-10 h-10 rounded-full neo-border transform group-hover:scale-105 transition-transform" alt="Avatar"/>
+              </Link>
+              <button onClick={logout} className="p-2 hover:bg-gray-100 rounded-lg transition-colors ml-2" title="Log Out">
                 <LogOut className="w-5 h-5" />
               </button>
             </div>
@@ -151,13 +155,13 @@ const Navbar = () => {
           <Link to="/community" className="font-display font-bold text-xl uppercase py-2 border-b-2 border-black" onClick={() => setIsOpen(false)}>Community</Link>
           {user ? (
              <div className="flex items-center justify-between pt-4">
-               <div className="flex items-center gap-3">
+               <Link to="/dashboard" onClick={() => setIsOpen(false)} className="flex items-center gap-3">
                  <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`} className="w-12 h-12 rounded-full neo-border" alt="Avatar"/>
                  <div>
                    <div className="font-bold">{user.displayName}</div>
-                   {userProfile?.riskProfile && <div className="text-xs font-bold text-genz-purple">{userProfile.riskProfile}</div>}
+                   {userProfile?.riskProfile && <div className="text-[10px] font-bold text-white bg-[#8213F4] px-2 rounded uppercase tracking-wider inline-block mt-1">{userProfile.riskProfile}</div>}
                  </div>
-               </div>
+               </Link>
                <button onClick={() => { logout(); setIsOpen(false); }} className="p-2 bg-red-100 text-red-600 rounded-lg neo-border shadow-sm">
                  <LogOut className="w-5 h-5" />
                </button>
@@ -218,9 +222,9 @@ const Hero = () => {
             
             <div className="mt-10 flex items-center gap-4 bg-white/5 backdrop-blur-sm p-3 rounded-xl border border-white/10 inline-flex shadow-xl">
               <div className="flex -space-x-4">
-                <img className="w-10 h-10 rounded-full border-2 border-[#1A1A1A] object-cover" src="https://images.unsplash.com/photo-1531123897727-8f129e1ebfa8?q=80&w=100&auto=format&fit=crop" alt="avatar" />
-                <img className="w-10 h-10 rounded-full border-2 border-[#1A1A1A] object-cover" src="https://images.unsplash.com/photo-1506803682981-6e718a9dd3ee?q=80&w=100&auto=format&fit=crop" alt="avatar" />
-                <img className="w-10 h-10 rounded-full border-2 border-[#1A1A1A] object-cover" src="https://images.unsplash.com/photo-1543269664-7eef42226a21?q=80&w=100&auto=format&fit=crop" alt="avatar" />
+                <img className="w-10 h-10 rounded-full border-2 border-[#1A1A1A] object-cover" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="avatar" />
+                <img className="w-10 h-10 rounded-full border-2 border-[#1A1A1A] object-cover" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka" alt="avatar" />
+                <img className="w-10 h-10 rounded-full border-2 border-[#1A1A1A] object-cover" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Buster" alt="avatar" />
               </div>
               <div className="font-display font-bold text-sm text-white">
                 +10,000 Next-Gen Investors <br/> already joined!
@@ -343,7 +347,7 @@ const FeatureLearnEarn = () => {
            ))}
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-10">
           <AnimatePresence>
           {filteredCourses.slice(0, showCount).map((course, idx) => (
              <motion.div 
@@ -353,26 +357,26 @@ const FeatureLearnEarn = () => {
                exit={{ opacity: 0, scale: 0.9 }}
                transition={{ delay: idx * 0.1 }}
              >
-               <Link to={`/learn/courses/${course.id}`} className={`bg-[#222] p-8 md:p-10 rounded-[2.5rem] neo-border hover:-translate-y-3 transition-transform relative group block h-full flex flex-col ${idx % 3 === 2 ? 'border-pink-400' : ''}`}>
-                 <div className="absolute top-6 right-6 bg-white text-black font-bold px-4 py-1.5 rounded-full text-xs uppercase neo-border border-2 shadow-sm">
+               <Link to={`/learn/courses/${course.id}`} className={`bg-[#222] p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] neo-border hover:-translate-y-3 transition-transform relative group block h-full flex flex-col ${idx % 3 === 2 ? 'border-pink-400' : ''}`}>
+                 <div className="absolute top-4 right-4 md:top-6 md:right-6 bg-white text-black font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs uppercase neo-border border-2 shadow-sm">
                    {course.level}
                  </div>
-                 <div className={`w-20 h-20 rounded-3xl ${course.color} ${course.accent.replace('bg-', 'text-')} neo-border flex items-center justify-center mb-8 transform group-hover:rotate-12 transition-transform shadow-inner`}>
-                   <span className="text-4xl">{course.badgeIcon}</span>
+                 <div className={`w-14 h-14 md:w-20 md:h-20 rounded-2xl md:rounded-3xl ${course.color} ${course.accent.replace('bg-', 'text-')} neo-border flex items-center justify-center mb-6 md:mb-8 transform group-hover:rotate-12 transition-transform shadow-inner`}>
+                   <span className="text-3xl md:text-4xl">{course.badgeIcon}</span>
                  </div>
-                 <h3 className="font-display font-bold text-2xl md:text-3xl mb-4 text-white leading-tight">{course.title}</h3>
+                 <h3 className="font-display font-bold text-xl md:text-3xl mb-3 md:mb-4 text-white leading-tight">{course.title}</h3>
                  
                  {/* Preview Snippet */}
-                 <p className="text-gray-400 font-medium mb-8 text-base md:text-lg flex-1">
-                   {course.lessons[0]?.content.replace(/<[^>]*>?/gm, '').substring(0, 100)}...
+                 <p className="text-gray-400 font-medium mb-6 md:mb-8 text-xs md:text-lg flex-1 line-clamp-3">
+                   {course.lessons[0]?.content.replace(/<[^>]*>?/gm, '').substring(0, 80)}...
                  </p>
                  
                  <div className="mt-auto">
-                   <div className="flex justify-between items-center mb-2">
-                     <span className="text-sm font-bold text-gray-500">{course.lessons.length} Lessons</span>
-                     <span className={`text-sm font-bold ${course.accent.replace('bg-', 'text-')}`}>+ {course.xp} XP</span>
+                   <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1 md:gap-0 mb-2">
+                     <span className="text-[11px] md:text-sm font-bold text-gray-500">{course.lessons.length} Lessons</span>
+                     <span className={`text-[11px] md:text-sm font-bold ${course.accent.replace('bg-', 'text-')}`}>+ {course.xp} XP</span>
                    </div>
-                   <div className="w-full bg-black h-3 rounded-full overflow-hidden neo-border border-white/20">
+                   <div className="w-full bg-black h-2 md:h-3 rounded-full overflow-hidden neo-border border-white/20">
                       <div className={`${course.accent} h-full w-0 group-hover:w-1/3 transition-all duration-700`}></div>
                    </div>
                  </div>
@@ -423,7 +427,7 @@ const FeatureCommunity = () => {
             <div className="bg-white rounded-3xl neo-border neo-shadow p-6 pointer-events-none">
               
               <div className="flex gap-4 mb-6">
-                <img src="https://images.unsplash.com/photo-1531123897727-8f129e1ebfa8?q=80&w=150&auto=format&fit=crop" className="w-12 h-12 rounded-full neo-border object-cover" alt="Aisha" />
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aisha" className="w-12 h-12 rounded-full neo-border object-cover bg-gray-100" alt="Aisha" />
                 <div className="bg-gray-100 rounded-2xl rounded-tl-none p-4 neo-border w-fit relative">
                   <p className="font-bold mb-1 text-sm">@Aisha_Invests <span className="text-xs bg-yellow-300 px-1 rounded neo-border ml-2">LVL 4</span></p>
                   <p className="font-medium text-sm">Just hit my first ₦100k in the Halal Fixed Income Fund! 🎉</p>
@@ -431,7 +435,7 @@ const FeatureCommunity = () => {
               </div>
 
               <div className="flex gap-4 mb-6 flex-row-reverse">
-                <img src="https://images.unsplash.com/photo-1543269664-7eef42226a21?q=80&w=150&auto=format&fit=crop" className="w-12 h-12 rounded-full neo-border object-cover" alt="You" />
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=You" className="w-12 h-12 rounded-full neo-border object-cover bg-gray-100" alt="You" />
                 <div className="bg-genz-blue text-lotus-dark rounded-2xl rounded-tr-none p-4 neo-border w-fit">
                   <p className="font-bold mb-1 text-sm text-white/90">@You</p>
                   <p className="font-medium text-sm">Omo, that's huge! 🔥 Any tips on staying consistent?</p>
@@ -439,7 +443,7 @@ const FeatureCommunity = () => {
               </div>
 
               <div className="flex gap-4">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/ce/Transparent.gif" className="w-12 h-12 rounded-full neo-border bg-[#C10202] flex items-center justify-center relative after:content-['LT'] after:absolute after:font-display after:font-bold after:text-white" alt="Lotus Tribe Admin" />
+                <div className="w-12 h-12 rounded-full neo-border bg-[#C10202] text-white flex items-center justify-center font-display font-bold text-lg shrink-0">LT</div>
                 <div className="bg-red-50 rounded-2xl rounded-tl-none p-4 neo-border border-[#C10202] w-fit">
                   <p className="font-bold mb-1 text-sm text-[#C10202]">@LotusTribe <span className="text-xs bg-black text-white px-1 rounded neo-border ml-2">MOD</span></p>
                   <p className="font-medium text-sm">Pro tip: Set up automated deductions on payday! 💸🚀</p>
@@ -537,7 +541,7 @@ const Footer = () => {
 const QuizPage = () => {
   const { user, loading, refreshProfile } = useContext(AuthContext);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [score, setScore] = useState(0);
+  const [answers, setAnswers] = useState<number[]>([]);
   const [isFinished, setIsFinished] = useState(false);
   const [saving, setSaving] = useState(false);
   const [resultProfile, setResultProfile] = useState<string | null>(null);
@@ -596,17 +600,19 @@ const QuizPage = () => {
   ];
 
   const handleAnswer = (points: number) => {
-    const newScore = score + points;
+    const newAnswers = [...answers];
+    newAnswers[currentQuestion] = points;
+    setAnswers(newAnswers);
+
     if (currentQuestion < questions.length - 1) {
-      setScore(newScore);
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      finishQuiz(newScore);
+      finishQuiz(newAnswers);
     }
   };
 
-  const finishQuiz = async (finalScore: number) => {
-    setScore(finalScore);
+  const finishQuiz = async (finalAnswers: number[]) => {
+    const finalScore = finalAnswers.reduce((a, b) => a + b, 0);
     let profile = "";
     if (finalScore <= 9) profile = "Steady Saver";
     else if (finalScore <= 14) profile = "Calculated Thinker";
@@ -634,19 +640,19 @@ const QuizPage = () => {
   };
 
   const handleShare = async () => {
-    const text = `I just took the LotusTribe Vibe Check and I got "${resultProfile}"! Find out your investor personality too. 💸🚀`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'LotusTribe Vibe Check',
-          text: text,
-          url: window.location.origin
-        });
-      } catch (err) {
-        console.log("Error sharing:", err);
-      }
-    } else {
-      alert("Sharing not supported on this browser!");
+    const certificateElement = document.getElementById('vibe-certificate');
+    if (!certificateElement) return;
+
+    try {
+      const canvas = await html2canvas(certificateElement, { scale: 2, useCORS: true });
+      const image = canvas.toDataURL("image/png");
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = `LotusTribe_VibeCheck_${user?.displayName || 'Member'}.png`;
+      link.click();
+    } catch (err) {
+      console.log("Error generating certificate image:", err);
+      alert("Could not generate image. Please try again.");
     }
   };
 
@@ -675,7 +681,10 @@ const QuizPage = () => {
       {!isFinished ? (
         <div className="w-full max-w-2xl">
           <div className="mb-8 flex items-center justify-between">
-            <button onClick={() => navigate(-1)} className="flex items-center gap-2 font-display font-bold uppercase hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors">
+            <button 
+               onClick={() => currentQuestion > 0 ? setCurrentQuestion(currentQuestion - 1) : navigate(-1)} 
+               className="flex items-center gap-2 font-display font-bold uppercase hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors"
+            >
               <ChevronLeft className="w-5 h-5"/> Back
             </button>
             <div className="font-display font-bold bg-white px-4 py-1.5 rounded-full neo-border shadow-sm">
@@ -719,35 +728,103 @@ const QuizPage = () => {
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-xl text-center"
+          className="w-full max-w-3xl text-center"
         >
-          <div className="bg-white p-10 rounded-3xl neo-border neo-shadow mb-8 relative overflow-hidden">
-            {/* Confetti-like bg */}
-            <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#121212 2px, transparent 2px)', backgroundSize: '20px 20px' }}></div>
-            
-            <h2 className="font-display font-bold text-2xl uppercase mb-2 text-gray-500">Your Vibe Check Result:</h2>
-            <div className="text-7xl mb-6 mt-4">
-              {resultProfile === 'Steady Saver' ? '🐢' : resultProfile === 'Calculated Thinker' ? '🧠' : '🚀'}
+          <div id="vibe-certificate" className="bg-white p-2 rounded-3xl neo-shadow mb-8 border-4 border-black inline-block w-full">
+            <div className="bg-[#fffdf9] p-8 md:p-12 rounded-2xl border-2 border-dashed border-gray-400 relative overflow-hidden">
+               {/* Ornate corners */}
+               <div className="absolute top-2 left-2 w-8 h-8 border-t-4 border-l-4 border-lotus-dark"></div>
+               <div className="absolute top-2 right-2 w-8 h-8 border-t-4 border-r-4 border-lotus-dark"></div>
+               <div className="absolute bottom-2 left-2 w-8 h-8 border-b-4 border-l-4 border-lotus-dark"></div>
+               <div className="absolute bottom-2 right-2 w-8 h-8 border-b-4 border-r-4 border-lotus-dark"></div>
+               
+               {/* Watermark bg */}
+               <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+                  <div className="text-[200px] font-display font-black transform -rotate-12">LOTUS</div>
+               </div>
+               
+               <div className="relative z-10">
+                 <h2 className="font-display font-black text-3xl md:text-5xl uppercase text-lotus-dark mb-2 tracking-widest">
+                   Certificate of Vibe
+                 </h2>
+                 <p className="text-gray-500 font-bold uppercase tracking-widest text-xs mb-8">Official Lotus Tribe Assessment</p>
+                 
+                 <div className="text-7xl mb-6">
+                   {resultProfile === 'Steady Saver' ? '🐢' : resultProfile === 'Calculated Thinker' ? '🧠' : '🚀'}
+                 </div>
+                 
+                 <div className="bg-gray-100 p-6 rounded-2xl mb-8 border border-gray-200">
+                    <p className="font-display font-bold text-xl md:text-2xl text-lotus-dark leading-relaxed">
+                       Dear <span className="text-lotus-red border-b-2 border-lotus-red px-2">{user?.displayName || 'Tribe Member'}</span>, <br/><br/>
+                       This is to certify that you have successfully completed your Lotus Tribe Investment Vibe Check. Your investment personality is formally recognized as:
+                    </p>
+                    <h1 className="font-display font-black text-4xl md:text-5xl uppercase mt-6 mb-4 text-lotus-dark bg-genz-lime inline-block px-4 py-2 transform -rotate-1 shadow-md border-2 border-black">
+                      {resultProfile}
+                    </h1>
+                    <p className="text-lg md:text-xl font-bold text-gray-700 mt-2">
+                       You are on course to be a {resultProfile === 'Steady Saver' ? 'low-risk' : resultProfile === 'Calculated Thinker' ? 'calculated' : 'high-risk'} Billionaire investor. 🥂
+                    </p>
+                 </div>
+                 
+                 <div className="flex justify-between items-end border-t-2 border-gray-200 pt-6 mt-10">
+                    <div className="text-left">
+                       <div className="font-[signature] font-bold text-3xl text-lotus-dark mb-1 opacity-70">Lotus Tribe</div>
+                       <div className="w-32 h-px bg-black mb-1"></div>
+                       <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Authorized Signature</p>
+                    </div>
+                    <div className="text-right">
+                       <div className="font-mono font-bold text-sm text-lotus-dark mb-1">{new Date().toLocaleDateString()}</div>
+                       <div className="w-24 h-px bg-black mb-1 ml-auto"></div>
+                       <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Date of Issue</p>
+                    </div>
+                 </div>
+                 
+                 <p className="text-[10px] text-gray-400 mt-8 text-left font-sans font-medium italic">
+                   * Disclaimer: This assessment is designed as an educational tool to help you understand your general investor profile. It does not constitute formal financial advice. All investments carry risks, and you should perform independent research before making any financial decisions.
+                 </p>
+               </div>
             </div>
-            <h1 className="font-display font-extrabold text-5xl uppercase mb-6 text-genz-purple">
-              {resultProfile}
-            </h1>
-            <p className="text-xl font-medium text-gray-700 mb-8 max-w-md mx-auto">
-              {resultProfile === 'Steady Saver' && "You like to play it safe and steady. We've got low-risk Halal funds perfect for you."}
-              {resultProfile === 'Calculated Thinker' && "You take risks but only when the math makes sense. Balanced Halal funds are your best bet."}
-              {resultProfile === 'Risk Taker' && "High risk, high reward. You're ready to dive into growth-focused Shariah-compliant investments."}
-            </p>
-
-            <button onClick={handleShare} className="neo-btn bg-genz-blue text-lotus-dark w-full uppercase text-xl mb-4 flex items-center justify-center gap-2">
-               Share on Socials
-            </button>
-            <Link to="/">
-               <button className="neo-btn bg-white text-lotus-dark w-full uppercase text-lg">
-                 Back to Home
-               </button>
-            </Link>
           </div>
-          {saving && <p className="font-bold text-gray-500 animate-pulse">Saving profile...</p>}
+          
+          <div className="max-w-xl mx-auto space-y-6 mt-10">
+             <div className="bg-white p-6 rounded-2xl border-2 border-black neo-shadow text-left">
+                <h3 className="font-display font-bold text-xl uppercase mb-2">Our Recommendation</h3>
+                <p className="text-gray-600 font-medium mb-4">
+                  Based on your vibe check, we recommend you start building your wealth with the 
+                  <span className="font-bold text-lotus-dark"> {resultProfile === 'Risk Taker' || resultProfile === 'Calculated Thinker' ? 'Lotus Halal Investment Fund' : 'Lotus Fixed Income Fund'}</span>.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                  <Link to={'/invest/onboarding'} state={{ fund: resultProfile === 'Risk Taker' || resultProfile === 'Calculated Thinker' ? 'halal' : 'fif' }} className="flex-1">
+                    <button className="neo-btn bg-genz-lime text-lotus-dark w-full uppercase text-sm py-4 shadow-md hover:-translate-y-1 transition-transform">
+                      Accept & Continue to KYC
+                    </button>
+                  </Link>
+                  <Link to={'/invest/onboarding'} state={{ fund: resultProfile === 'Risk Taker' || resultProfile === 'Calculated Thinker' ? 'fif' : 'halal' }} className="flex-1">
+                    <button className="neo-btn bg-gray-50 text-gray-700 w-full uppercase text-xs py-4 border-2 border-gray-300 hover:border-black hover:text-black hover:-translate-y-1 transition-all">
+                      Choose {resultProfile === 'Risk Taker' || resultProfile === 'Calculated Thinker' ? 'FIF (Low Risk)' : 'Halal (Moderate Risk)'} Instead
+                    </button>
+                  </Link>
+                </div>
+             </div>
+
+             <div className="grid grid-cols-2 gap-4">
+               <button onClick={handleShare} className="neo-btn bg-lotus-dark text-white w-full uppercase text-xs py-4 flex items-center justify-center gap-2 shadow-xl hover:-translate-y-1 transition-transform">
+                  Download Certificate <Share2 className="w-4 h-4"/>
+               </button>
+               <button onClick={() => { setIsFinished(false); setCurrentQuestion(0); setAnswers([]); }} className="neo-btn bg-white text-lotus-dark w-full uppercase text-xs py-4 border-2 border-black hover:-translate-y-1 transition-transform">
+                 Retake Vibe Check
+               </button>
+             </div>
+             
+             <div className="pt-4">
+               <Link to="/">
+                  <button className="text-gray-500 font-bold uppercase text-xs hover:text-black hover:underline underline-offset-4 transition-all">
+                    Skip to Homepage
+                  </button>
+               </Link>
+             </div>
+          </div>
+          {saving && <p className="font-bold text-gray-500 animate-pulse mt-4">Saving profile...</p>}
         </motion.div>
       )}
     </div>
@@ -846,12 +923,12 @@ const FeatureBenefits = () => {
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">Everything you need to build enduring wealth, aligned with your values.</p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {benefits.map((benefit, idx) => (
-            <div key={idx} className="bg-white/5 neo-border border-white/10 p-6 rounded-2xl hover:bg-white/10 transition-colors">
-              <div className="text-4xl mb-4">{benefit.icon}</div>
-              <h3 className="font-display font-bold text-xl uppercase mb-2">{benefit.title}</h3>
-              <p className="text-gray-400 leading-relaxed text-sm">{benefit.desc}</p>
+            <div key={idx} className="bg-white/5 neo-border border-white/10 p-4 md:p-6 rounded-2xl hover:bg-white/10 transition-colors">
+              <div className="text-3xl md:text-4xl mb-3 md:mb-4">{benefit.icon}</div>
+              <h3 className="font-display font-bold text-sm md:text-xl uppercase mb-2 leading-tight">{benefit.title}</h3>
+              <p className="text-gray-400 leading-relaxed text-[11px] md:text-sm">{benefit.desc}</p>
             </div>
           ))}
         </div>

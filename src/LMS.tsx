@@ -27,9 +27,17 @@ import {
 import { auth, loginWithGoogle, db, collection, query, getDocs, orderBy } from './lib/firebase';
 import { coursesData } from './data/courses';
 
+const defaultModules = [
+  { id: 'MODULE 0', title: 'THE WAKE UP', order: 0 },
+  { id: 'MODULE 1', title: 'THE ARSENAL', order: 1 },
+  { id: 'MODULE 2', title: 'THE STRATEGY', order: 2 },
+  { id: 'MODULE 3', title: 'ADVANCED MOVES', order: 3 },
+  { id: 'MODULE 4', title: 'THE LOTUS TRIBE SPECIAL', order: 4 }
+];
+
 const useLMSData = () => {
   const [courses, setCourses] = useState<any[]>(coursesData);
-  const [modules, setModules] = useState<any[]>([]);
+  const [modules, setModules] = useState<any[]>(defaultModules);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -328,7 +336,7 @@ export const LMSCourses = () => {
                const summary = moduleSummaries[mod.id] || "";
 
                return (
-                 <div key={mod.firestoreId}>
+                 <div key={mod.firestoreId || mod.id}>
                     <div className="mb-12">
                        <div className="flex items-center gap-6 mb-4">
                           <h2 className="font-display font-extrabold text-3xl md:text-5xl uppercase text-lotus-dark tracking-tighter shrink-0">{moduleName}</h2>

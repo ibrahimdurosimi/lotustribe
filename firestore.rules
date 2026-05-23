@@ -25,23 +25,37 @@ service cloud.firestore {
         && incoming().email == existing().email;
     }
 
-    match /users/{userId} {
-      allow read: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
-      
-      allow create: if isSignedIn() 
-        && isValidId(userId) 
-        && request.auth.uid == userId 
-        && isValidUser(incoming());
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'ibrahimdurosimi@gmail.com';
+    }
 
-      allow update: if isSignedIn() 
-        && isValidId(userId) 
-        && request.auth.uid == userId 
-        && isUpdateValidUser()
-        && incoming().diff(existing()).affectedKeys().hasOnly([
-          'riskProfile', 'quizCompleted', 'updatedAt', 'displayName', 
-          'xp', 'level', 'completedLessons', 'completedCourses', 'badges',
-          'fifBalance', 'halalBalance', 'totalInvested', 'uid'
-        ]);
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /courses/{courseId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /modules/{moduleId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /community_questions/{questionId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isAdmin() || (isSignedIn() && existing().userId == request.auth.uid);
     }
   }
 }

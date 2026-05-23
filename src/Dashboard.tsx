@@ -1,31 +1,43 @@
-import React, { useState, useContext } from 'react';
-import { motion } from 'motion/react';
+import React, { useState, useContext, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Wallet, TrendingUp, History, Download, ArrowUpRight, ArrowDownRight, Settings, Target } from 'lucide-react';
+import { LayoutDashboard, Wallet, TrendingUp, History, Download, ArrowUpRight, ArrowDownRight, Settings, Target, Plus, User, FileText, Bell, Lock, CheckCircle, Share2, Info } from 'lucide-react';
 import { AuthContext } from './App';
+import { doc, updateDoc, collection, addDoc, query, getDocs, orderBy, serverTimestamp, where, arrayUnion } from 'firebase/firestore';
+import { db } from './lib/firebase';
+import html2canvas from 'html2canvas';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+const DashboardLayout = ({ children, activeTab, setActiveTab }: { children: React.ReactNode, activeTab: string, setActiveTab: (t: string) => void }) => {
+    const navItems = [
+        { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
+        { id: 'funding', icon: Wallet, label: 'Funding' },
+        { id: 'transactions', icon: History, label: 'Transactions' },
+        { id: 'certificate', icon: Download, label: 'Certificate' },
+        { id: 'settings', icon: Settings, label: 'Settings' }
+    ];
+
     return (
         <div className="min-h-screen bg-[#fafafa] pt-24 pb-20 md:pb-0 font-sans text-lotus-dark flex justify-center">
             <div className="flex flex-col md:flex-row w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 gap-8 mt-8">
-                <aside className="hidden md:flex flex-col w-64 shrink-0 h-[calc(100vh-140px)] sticky top-32">
-                    <div className="bg-white rounded-3xl neo-border neo-shadow p-6 flex-1 flex flex-col gap-2">
-                        <h2 className="font-display font-bold text-xl uppercase mb-6 text-gray-500">My Wealth</h2>
+                <aside className="md:flex flex-col w-full md:w-64 shrink-0 md:h-[calc(100vh-140px)] md:sticky top-32">
+                    <div className="bg-white rounded-3xl neo-border neo-shadow p-6 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible flex-1">
+                        <h2 className="hidden md:block font-display font-bold text-xl uppercase mb-6 text-gray-500">My Wealth</h2>
                         
-                        <Link to="/dashboard" className="flex items-center gap-4 px-4 py-3 rounded-2xl font-bold transition-all bg-genz-lime neo-border shadow-[2px_2px_0_0_#121212] translate-y-[-2px]">
-                            <LayoutDashboard className="w-6 h-6" /> Overview
-                        </Link>
-                        <Link to="/dashboard" className="flex items-center gap-4 px-4 py-3 rounded-2xl font-bold transition-all hover:bg-gray-100 text-gray-600 hover:text-black">
-                            <Wallet className="w-6 h-6" /> Funding
-                        </Link>
-                        <Link to="/dashboard" className="flex items-center gap-4 px-4 py-3 rounded-2xl font-bold transition-all hover:bg-gray-100 text-gray-600 hover:text-black">
-                            <History className="w-6 h-6" /> Transactions
-                        </Link>
-                        <Link to="/dashboard" className="flex items-center gap-4 px-4 py-3 rounded-2xl font-bold transition-all hover:bg-gray-100 text-gray-600 hover:text-black">
-                            <Settings className="w-6 h-6" /> Settings
-                        </Link>
+                        {navItems.map(item => (
+                            <button 
+                                key={item.id}
+                                onClick={() => setActiveTab(item.id)}
+                                className={`flex items-center gap-4 px-4 py-3 rounded-2xl font-bold transition-all whitespace-nowrap 
+                                    ${activeTab === item.id 
+                                        ? 'bg-genz-lime neo-border shadow-[2px_2px_0_0_#121212] translate-y-[-2px]' 
+                                        : 'hover:bg-gray-100 text-gray-600 hover:text-black'}`}
+                            >
+                                <item.icon className="w-6 h-6" /> <span className="hidden md:inline">{item.label}</span>
+                            </button>
+                        ))}
 
-                        <div className="mt-auto bg-gray-50 rounded-2xl p-4 border-2 border-gray-100">
+                        <div className="hidden md:block mt-auto bg-gray-50 rounded-2xl p-4 border-2 border-gray-100">
                             <p className="text-sm font-medium text-gray-500 mb-2">Need help with your portfolio?</p>
                             <button className="text-sm font-bold text-lotus-red hover:underline decoration-2 underline-offset-4">Talk to an Advisor</button>
                         </div>
@@ -42,180 +54,838 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
 
 export const InvestDashboard = () => {
     const { user, userProfile } = useContext(AuthContext);
+    const [activeTab, setActiveTab] = useState('overview');
 
     const fifBalance = userProfile?.fifBalance || 0;
     const halalBalance = userProfile?.halalBalance || 0;
     const totalBalance = fifBalance + halalBalance;
     const totalEarnings = 0; // Stub for actual earnings
     
+    // Default allocations if 0 to show visual
     const halalPercent = totalBalance > 0 ? Math.round((halalBalance / totalBalance) * 100) : 50;
     const fifPercent = totalBalance > 0 ? Math.round((fifBalance / totalBalance) * 100) : 50;
 
     return (
-        <DashboardLayout>
-            <div className="space-y-8">
-                {/* Header Welcome */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b-2 border-gray-100 pb-6">
-                    <div>
-                        <h1 className="text-4xl font-display font-extrabold uppercase">
-                            Welcome back, <span className="text-[#C10202]">{user?.displayName?.split(' ')[0] || 'Investor'}</span>!
-                        </h1>
-                        <p className="text-gray-500 font-medium mt-1">Here's how your Halal portfolio is performing today.</p>
-                    </div>
-                    <div className="flex gap-3">
-                        <button className="neo-btn bg-white text-black px-6 py-3 text-sm hidden sm:flex items-center gap-2">
-                            <Download size={16}/> Statement
-                        </button>
-                        <button className="neo-btn bg-black text-white px-8 py-3 text-sm">
-                            + Invest Now
-                        </button>
-                    </div>
-                </div>
-
-                {/* Portfolio Value Summary */}
-                <div className="grid md:grid-cols-3 gap-6">
-                    <div className="md:col-span-2 bg-lotus-dark text-white rounded-[2rem] p-8 neo-border neo-shadow border-2 border-black relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
-                        <p className="text-gray-400 font-medium mb-2 uppercase tracking-wider text-sm flex items-center justify-between relative z-10">
-                            Total Balance
-                            <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-lg text-xs font-bold">+ 0.0% All Time</span>
-                        </p>
-                        <h2 className="text-5xl md:text-6xl font-display font-extrabold text-white mb-2 relative z-10">₦{totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
-                        <div className="flex items-center gap-2 mt-8 relative z-10">
-                           <div className="bg-white/10 px-4 py-2 rounded-xl text-sm font-medium border border-white/20">
-                             <span className="text-gray-400 block text-xs">Total Earnings</span>
-                             <span className="text-green-400 font-bold">+ ₦{totalEarnings}</span>
-                           </div>
-                           <div className="bg-white/10 px-4 py-2 rounded-xl text-sm font-medium border border-white/20">
-                             <span className="text-gray-400 block text-xs">Pending Deposits</span>
-                             <span className="text-white font-bold">₦0.00</span>
-                           </div>
-                        </div>
-                    </div>
-                    
-                    <div className="bg-white rounded-[2rem] p-6 neo-border neo-shadow-sm flex flex-col justify-between">
-                        <h3 className="font-display font-bold text-gray-500 uppercase text-sm mb-4">Asset Allocation</h3>
-                        <div className="flex-1 flex flex-col justify-center">
-                            {/* Simple simulated chart layout */}
-                            <div className="flex items-end h-24 gap-2 mb-4">
-                                <div className="w-1/2 bg-genz-pink rounded-t-xl transition-all" style={{ height: `${halalPercent}%` }}></div>
-                                <div className="w-1/2 bg-genz-lime rounded-t-xl border border-black/10 transition-all" style={{ height: `${fifPercent}%` }}></div>
-                            </div>
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center text-sm">
-                                    <div className="flex items-center gap-2 font-bold"><div className="w-3 h-3 rounded-full bg-genz-pink"></div> Halal Equity</div>
-                                    <span>{halalPercent}%</span>
-                                </div>
-                                <div className="flex justify-between items-center text-sm">
-                                    <div className="flex items-center gap-2 font-bold"><div className="w-3 h-3 rounded-full bg-genz-lime border border-black/10"></div> FIF (Fixed Income)</div>
-                                    <span>{fifPercent}%</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* My Funds */}
-                <h3 className="font-display font-bold text-2xl uppercase mt-8 mb-4 border-b-2 border-gray-100 pb-2">My Funds</h3>
-                <div className="grid md:grid-cols-2 gap-6">
-                    {/* Halal Fund Card */}
-                    <div className="bg-white p-6 rounded-[2rem] neo-border neo-shadow-sm flex flex-col group cursor-pointer hover:border-black transition-all">
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <div className="inline-block px-3 py-1 bg-genz-pink text-black font-bold text-xs uppercase rounded-lg mb-2 neo-border">Moderate Risk</div>
-                                <h4 className="font-display font-bold text-2xl uppercase">Lotus Halal Fund</h4>
-                            </div>
-                            <TrendingUp className="text-green-500 w-6 h-6" />
-                        </div>
-                        <div className="mb-2">
-                            <p className="text-gray-500 text-sm font-medium uppercase mb-1">Current Value</p>
-                            <p className="text-3xl font-display font-bold">₦{halalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-                        </div>
-                        <div className="flex justify-between items-end mt-4 pt-4 border-t-2 border-gray-50">
-                            <div>
-                                <p className="text-xs text-gray-500 font-bold uppercase mb-1">Total Return</p>
-                                <p className="text-sm font-bold text-green-500">+ ₦0 (0.0%)</p>
-                            </div>
-                            <button className="text-sm font-bold bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl transition-colors">Manage</button>
-                        </div>
-                    </div>
-
-                    {/* FIF Fund Card */}
-                    <div className="bg-white p-6 rounded-[2rem] neo-border neo-shadow-sm flex flex-col group cursor-pointer hover:border-black transition-all">
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <div className="inline-block px-3 py-1 bg-genz-lime text-black font-bold text-xs uppercase rounded-lg mb-2 neo-border">Low Risk</div>
-                                <h4 className="font-display font-bold text-2xl uppercase">Lotus FIF Fund</h4>
-                            </div>
-                            <TrendingUp className="text-green-500 w-6 h-6" />
-                        </div>
-                        <div className="mb-2">
-                            <p className="text-gray-500 text-sm font-medium uppercase mb-1">Current Value</p>
-                            <p className="text-3xl font-display font-bold">₦{fifBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-                        </div>
-                        <div className="flex justify-between items-end mt-4 pt-4 border-t-2 border-gray-50">
-                            <div>
-                                <p className="text-xs text-gray-500 font-bold uppercase mb-1">Total Return</p>
-                                <p className="text-sm font-bold text-green-500">+ ₦0 (0.0%)</p>
-                            </div>
-                            <button className="text-sm font-bold bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl transition-colors">Manage</button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Recent Transactions */}
-                <div className="bg-white rounded-3xl p-6 neo-border neo-shadow-sm mt-8">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="font-display font-bold text-xl uppercase">Recent Activity</h3>
-                        <button className="text-sm font-bold text-lotus-red hover:underline">View All</button>
-                    </div>
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center neo-border shadow-sm">
-                                    <ArrowUpRight size={20} />
-                                </div>
+        <DashboardLayout activeTab={activeTab} setActiveTab={setActiveTab}>
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="space-y-8"
+                >
+                    {activeTab === 'overview' && (
+                        <>
+                            {/* Header Welcome */}
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b-2 border-gray-100 pb-6">
                                 <div>
-                                    <p className="font-bold">Auto-Invest: Halal Fund</p>
-                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">12 May 2026 • SUCCESS</p>
+                                    <h1 className="text-4xl font-display font-extrabold uppercase">
+                                        Welcome back, <span className="text-[#C10202]">{user?.displayName?.split(' ')[0] || 'Investor'}</span>!
+                                    </h1>
+                                    <p className="text-gray-500 font-medium mt-1">Here's how your Halal portfolio is performing today.</p>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button className="neo-btn bg-white text-black px-6 py-3 text-sm hidden sm:flex items-center gap-2">
+                                        <Download size={16}/> Statement
+                                    </button>
+                                    <button onClick={() => setActiveTab('funding')} className="neo-btn bg-black text-white px-8 py-3 text-sm">
+                                        + Invest Now
+                                    </button>
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <p className="font-bold text-lg text-green-600">+ ₦50,000</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center neo-border shadow-sm">
-                                    <ArrowUpRight size={20} />
-                                </div>
-                                <div>
-                                    <p className="font-bold">Auto-Invest: FIF Fund</p>
-                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">12 May 2026 • SUCCESS</p>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <p className="font-bold text-lg text-green-600">+ ₦20,000</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center neo-border shadow-sm">
-                                    <Target size={20} />
-                                </div>
-                                <div>
-                                    <p className="font-bold">Dividend Earned</p>
-                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">01 May 2026 • SUCCESS</p>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <p className="font-bold text-lg text-green-600">+ ₦12,450</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-            </div>
+                            {/* Portfolio Value Summary */}
+                            <div className="grid md:grid-cols-3 gap-6">
+                                <div className="md:col-span-2 bg-lotus-dark text-white rounded-[2rem] p-8 neo-border neo-shadow border-2 border-black relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+                                    <p className="text-gray-400 font-medium mb-2 uppercase tracking-wider text-sm flex items-center justify-between relative z-10">
+                                        Total Balance
+                                        <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-lg text-xs font-bold">+ 0.0% All Time</span>
+                                    </p>
+                                    <h2 className="text-5xl md:text-6xl font-display font-extrabold text-white mb-2 relative z-10">₦{totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
+                                    <div className="flex items-center gap-2 mt-8 relative z-10">
+                                    <div className="bg-white/10 px-4 py-2 rounded-xl text-sm font-medium border border-white/20">
+                                        <span className="text-gray-400 block text-xs">Total Earnings</span>
+                                        <span className="text-green-400 font-bold">+ ₦{totalEarnings}</span>
+                                    </div>
+                                    <div className="bg-white/10 px-4 py-2 rounded-xl text-sm font-medium border border-white/20">
+                                        <span className="text-gray-400 block text-xs">Pending Deposits</span>
+                                        <span className="text-white font-bold">₦0.00</span>
+                                    </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="bg-white rounded-[2rem] p-6 neo-border neo-shadow-sm flex flex-col justify-between">
+                                    <h3 className="font-display font-bold text-gray-500 uppercase text-sm mb-4">Asset Allocation</h3>
+                                    <div className="flex-1 flex flex-col justify-center">
+                                        {/* Simple simulated chart layout */}
+                                        <div className="flex items-end h-24 gap-2 mb-4">
+                                            <div className="w-1/2 bg-genz-pink rounded-t-xl transition-all" style={{ height: `${halalPercent}%` }}></div>
+                                            <div className="w-1/2 bg-genz-lime rounded-t-xl border border-black/10 transition-all" style={{ height: `${fifPercent}%` }}></div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center text-sm">
+                                                <div className="flex items-center gap-2 font-bold"><div className="w-3 h-3 rounded-full bg-genz-pink"></div> Halal Equity</div>
+                                                <span>{halalPercent}%</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm">
+                                                <div className="flex items-center gap-2 font-bold"><div className="w-3 h-3 rounded-full bg-genz-lime border border-black/10"></div> FIF (Fixed Income)</div>
+                                                <span>{fifPercent}%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* My Funds */}
+                            <h3 className="font-display font-bold text-2xl uppercase mt-8 mb-4 border-b-2 border-gray-100 pb-2">My Funds</h3>
+                            
+                            {totalBalance === 0 ? (
+                                <div className="bg-white p-8 rounded-[2rem] neo-border neo-shadow-sm text-center">
+                                    <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 neo-border">
+                                        <Wallet className="w-8 h-8"/>
+                                    </div>
+                                    <h4 className="font-display font-bold text-xl uppercase mb-2">No Active Funds</h4>
+                                    <p className="text-gray-500 mb-6 font-medium">You don't have any active investments yet. Add funds to start growing your wealth.</p>
+                                    <button onClick={() => setActiveTab('funding')} className="neo-btn bg-black text-white px-8 py-3 text-sm">
+                                        + Add Funds
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        {/* Halal Fund Card */}
+                                        {halalBalance > 0 && (
+                                            <div className="bg-white p-6 rounded-[2rem] neo-border neo-shadow-sm flex flex-col group cursor-pointer hover:border-black transition-all">
+                                                <div className="flex justify-between items-start mb-6">
+                                                    <div>
+                                                        <div className="inline-block px-3 py-1 bg-genz-pink text-black font-bold text-xs uppercase rounded-lg mb-2 neo-border">Moderate Risk</div>
+                                                        <h4 className="font-display font-bold text-2xl uppercase">Lotus Halal Fund</h4>
+                                                    </div>
+                                                    <TrendingUp className="text-green-500 w-6 h-6" />
+                                                </div>
+                                                <div className="mb-2">
+                                                    <p className="text-gray-500 text-sm font-medium uppercase mb-1">Current Value</p>
+                                                    <p className="text-3xl font-display font-bold">₦{halalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                                                </div>
+                                                <div className="flex justify-between items-end mt-4 pt-4 border-t-2 border-gray-50">
+                                                    <div>
+                                                        <p className="text-xs text-gray-500 font-bold uppercase mb-1">Total Return</p>
+                                                        <p className="text-sm font-bold text-green-500">+ ₦0 (0.0%)</p>
+                                                    </div>
+                                                    <button onClick={() => setActiveTab('funding')} className="text-sm font-bold bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl transition-colors">Manage</button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* FIF Fund Card */}
+                                        {fifBalance > 0 && (
+                                            <div className="bg-white p-6 rounded-[2rem] neo-border neo-shadow-sm flex flex-col group cursor-pointer hover:border-black transition-all">
+                                                <div className="flex justify-between items-start mb-6">
+                                                    <div>
+                                                        <div className="inline-block px-3 py-1 bg-genz-lime text-black font-bold text-xs uppercase rounded-lg mb-2 neo-border">Low Risk</div>
+                                                        <h4 className="font-display font-bold text-2xl uppercase">Lotus FIF Fund</h4>
+                                                    </div>
+                                                    <TrendingUp className="text-green-500 w-6 h-6" />
+                                                </div>
+                                                <div className="mb-2">
+                                                    <p className="text-gray-500 text-sm font-medium uppercase mb-1">Current Value</p>
+                                                    <p className="text-3xl font-display font-bold">₦{fifBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                                                </div>
+                                                <div className="flex justify-between items-end mt-4 pt-4 border-t-2 border-gray-50">
+                                                    <div>
+                                                        <p className="text-xs text-gray-500 font-bold uppercase mb-1">Total Return</p>
+                                                        <p className="text-sm font-bold text-green-500">+ ₦0 (0.0%)</p>
+                                                    </div>
+                                                    <button onClick={() => setActiveTab('funding')} className="text-sm font-bold bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl transition-colors">Manage</button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <FundPerformanceChart />
+                                </>
+                            )}
+                        </>
+                    )}
+
+                    {activeTab === 'funding' && <FundingTab user={user} userProfile={userProfile} />}
+                    {activeTab === 'transactions' && <TransactionsTab user={user} />}
+                    {activeTab === 'certificate' && <CertificateTab user={user} userProfile={userProfile} />}
+                    {activeTab === 'settings' && <SettingsTab user={user} userProfile={userProfile} />}
+
+                </motion.div>
+            </AnimatePresence>
         </DashboardLayout>
+    );
+};
+
+const FundingTab = ({ user, userProfile }: any) => {
+    const { refreshProfile } = useContext(AuthContext);
+    const [actionType, setActionType] = useState<'deposit' | 'withdraw'>('deposit');
+    const [amount, setAmount] = useState('');
+    const [fund, setFund] = useState<'halal' | 'fif'>('halal');
+    const [status, setStatus] = useState<'idle' | 'paystack' | 'success' | 'withdraw_success'>('idle');
+    const [isLoading, setIsLoading] = useState(false);
+    const [frequency, setFrequency] = useState('one-time');
+
+    if (user && !userProfile?.kycCompleted) {
+        return (
+            <div className="bg-white rounded-3xl p-10 neo-border neo-shadow-sm max-w-2xl mx-auto text-center mt-10">
+                <div className="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 neo-border border-red-500">
+                    <CheckCircle className="w-10 h-10" />
+                </div>
+                <h3 className="font-display font-extrabold text-3xl uppercase mb-4">Complete Your KYC</h3>
+                <p className="text-gray-500 font-medium mb-8">You need to verify your identity before you can add funds to your investment portfolios.</p>
+                <Link to="/invest/onboarding">
+                    <button className="neo-btn bg-lotus-dark text-white px-8 py-3 uppercase hover:-translate-y-1 transition-transform inline-block">
+                        Proceed to Verification
+                    </button>
+                </Link>
+            </div>
+        );
+    }
+
+    const currentBalance = (fund === 'halal' ? userProfile?.halalBalance : userProfile?.fifBalance) || 0;
+
+    const handleProceed = () => {
+        if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+            alert('Please enter a valid amount');
+            return;
+        }
+        
+        if (actionType === 'withdraw' && Number(amount) > currentBalance) {
+            alert('Insufficient funds for this withdrawal.');
+            return;
+        }
+
+        if (actionType === 'deposit') {
+            setStatus('paystack');
+        } else {
+            handleWithdrawal();
+        }
+    };
+
+    const handleWithdrawal = async () => {
+        setIsLoading(true);
+        if (user) {
+            try {
+                const dbField = fund === 'halal' ? 'halalBalance' : 'fifBalance';
+                
+                const updates: any = {
+                    [dbField]: currentBalance - Number(amount),
+                };
+
+                const updatePromise = updateDoc(doc(db, 'users', user.uid), updates);
+                
+                const txPromise = addDoc(collection(db, 'users', user.uid, 'transactions'), {
+                    type: 'Withdrawal',
+                    fund: fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund',
+                    amount: -Number(amount),
+                    status: 'SUCCESS',
+                    createdAt: serverTimestamp()
+                });
+
+                await Promise.race([
+                    Promise.all([updatePromise, txPromise]),
+                    new Promise(resolve => setTimeout(resolve, 3000))
+                ]).catch(e => console.warn('Offline update warning:', e));
+
+                setTimeout(() => {
+                    setIsLoading(false);
+                    setStatus('withdraw_success');
+                    refreshProfile();
+                }, 1000);
+            } catch (e) {
+                console.error('Error updating balance', e);
+                setIsLoading(false);
+            }
+        }
+    };
+
+    const handlePaystackMock = async (success: boolean) => {
+        setIsLoading(true);
+        if (success) {
+            if (user) {
+                // Mock balance update
+                try {
+                    const dbField = fund === 'halal' ? 'halalBalance' : 'fifBalance';
+                    const currentBalance = (fund === 'halal' ? userProfile?.halalBalance : userProfile?.fifBalance) || 0;
+                    
+                    const updates: any = {
+                        [dbField]: currentBalance + Number(amount),
+                    };
+
+                    if (frequency !== 'one-time') {
+                        updates.autoInvest = arrayUnion({
+                            fund,
+                            amount: Number(amount),
+                            frequency,
+                            createdAt: new Date().toISOString()
+                        });
+                    }
+
+                    const updatePromise = updateDoc(doc(db, 'users', user.uid), updates);
+                    
+                    const txPromise = addDoc(collection(db, 'users', user.uid, 'transactions'), {
+                        type: frequency !== 'one-time' ? 'Auto-Invest Initial' : 'Deposit',
+                        fund: fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund',
+                        amount: Number(amount),
+                        status: 'SUCCESS',
+                        createdAt: serverTimestamp()
+                    });
+
+                    await Promise.race([
+                        Promise.all([updatePromise, txPromise]),
+                        new Promise(resolve => setTimeout(resolve, 3000))
+                    ]).catch(e => console.warn('Offline update warning:', e));
+
+                    setTimeout(() => {
+                        setIsLoading(false);
+                        setStatus('success');
+                        refreshProfile(); // Get fresh auth context data quickly for this demo
+                    }, 500);
+                } catch (e) {
+                    console.error('Error updating balance', e);
+                    setIsLoading(false);
+                    setStatus('idle');
+                }
+            } else {
+                setTimeout(() => {
+                    setIsLoading(false);
+                    setStatus('success');
+                }, 500);
+            }
+        } else {
+            setIsLoading(false);
+            setStatus('idle');
+        }
+    };
+
+    if (status === 'paystack') {
+        return (
+            <div className="bg-white rounded-3xl p-8 neo-border neo-shadow-sm max-w-md mx-auto text-center mt-10">
+                <div className="bg-blue-500 text-white w-full py-4 rounded-xl font-bold uppercase mb-8">
+                    Mock Paystack Terminal
+                </div>
+                <h3 className="font-display font-bold text-2xl uppercase mb-2">Fund your account</h3>
+                <p className="text-gray-500 mb-2 font-medium">You are about to pay <span className="font-bold text-black border-b-2 border-black">₦{Number(amount).toLocaleString()}</span> into {fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund'}</p>
+                {frequency !== 'one-time' && (
+                    <p className="text-sm font-bold text-blue-600 mb-6 bg-blue-50 py-2 rounded-lg border border-blue-200 uppercase">
+                        {frequency} Auto-Invest Activated
+                    </p>
+                )}
+                
+                <div className="space-y-4">
+                    <button 
+                        onClick={() => handlePaystackMock(true)} 
+                        disabled={isLoading}
+                        className="neo-btn bg-green-400 text-black w-full uppercase py-3 shadow-md border-2 border-black disabled:opacity-50"
+                    >
+                        {isLoading ? 'Processing...' : 'Simulate Success'}
+                    </button>
+                    <button 
+                        onClick={() => handlePaystackMock(false)} 
+                        disabled={isLoading}
+                        className="neo-btn bg-red-100 text-red-600 w-full uppercase py-3 border-2 border-transparent hover:border-red-600 disabled:opacity-50"
+                    >
+                        Simulate Failure / Cancel
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (status === 'success') {
+        return (
+            <div className="bg-white rounded-3xl p-10 neo-border neo-shadow-sm max-w-md mx-auto text-center mt-10">
+                <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 neo-border border-green-500">
+                    <CheckCircle className="w-10 h-10" />
+                </div>
+                <h3 className="font-display font-extrabold text-3xl uppercase mb-4">Payment Successful!</h3>
+                <p className="text-gray-500 font-medium mb-8">Your ₦{Number(amount).toLocaleString()} deposit to the {fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund'} has been received.</p>
+                {frequency !== 'one-time' && (
+                    <p className="text-sm font-bold text-blue-600 mb-6 uppercase border-b-2 border-dashed border-blue-200 pb-2 inline-block">
+                        {frequency} Auto-Invest Subscribed Successfully
+                    </p>
+                )}
+                <button onClick={() => setStatus('idle')} className="neo-btn bg-black text-white w-full py-3 uppercase">
+                    Make another deposit
+                </button>
+            </div>
+        );
+    }
+
+    if (status === 'withdraw_success') {
+        return (
+            <div className="bg-white rounded-3xl p-10 neo-border neo-shadow-sm max-w-md mx-auto text-center mt-10">
+                <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 neo-border border-green-500">
+                    <CheckCircle className="w-10 h-10" />
+                </div>
+                <h3 className="font-display font-extrabold text-3xl uppercase mb-4">Withdrawal Processed!</h3>
+                <p className="text-gray-500 font-medium mb-8">Your withdrawal of ₦{Number(amount).toLocaleString()} from the {fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund'} has been processed and sent to your bank account.</p>
+                <button onClick={() => {
+                    setStatus('idle');
+                    setAmount('');
+                }} className="neo-btn bg-black text-white w-full py-3 uppercase">
+                    Done
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-white rounded-3xl p-8 neo-border neo-shadow-sm max-w-2xl mx-auto">
+            <div className="flex bg-gray-100 rounded-xl p-1 mb-8">
+                <button 
+                    onClick={() => setActionType('deposit')}
+                    className={`flex-1 py-3 px-4 rounded-lg font-bold uppercase text-sm transition-all ${actionType === 'deposit' ? 'bg-white shadow-sm text-black border-2 border-black' : 'text-gray-500 border-2 border-transparent'}`}
+                >
+                    Deposit Funds
+                </button>
+                <button 
+                    onClick={() => setActionType('withdraw')}
+                    className={`flex-1 py-3 px-4 rounded-lg font-bold uppercase text-sm transition-all ${actionType === 'withdraw' ? 'bg-white shadow-sm text-black border-2 border-black' : 'text-gray-500 border-2 border-transparent'}`}
+                >
+                    Withdraw Funds
+                </button>
+            </div>
+
+            <h2 className="font-display font-extrabold text-3xl uppercase mb-2">
+                {actionType === 'deposit' ? 'Add Funds' : 'Withdraw Funds'}
+            </h2>
+            <p className="text-gray-500 font-medium mb-8">
+                {actionType === 'deposit' ? 'Invest into your preferred Lotus Tribe portfolios safely.' : 'Withdraw from your active portfolios directly to your bank account.'}
+            </p>
+            
+            <div className="space-y-6">
+                <div>
+                    <div className="flex justify-between items-end mb-2">
+                        <label className="block text-sm font-bold uppercase tracking-wider text-gray-600">Select Fund</label>
+                        {actionType === 'withdraw' && (
+                            <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">
+                                Available: ₦{currentBalance.toLocaleString()}
+                            </span>
+                        )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <button 
+                            onClick={() => setFund('halal')} 
+                            className={`p-4 rounded-xl border-2 transition-all text-center ${fund === 'halal' ? 'border-genz-pink bg-pink-50' : 'border-gray-200'}`}
+                        >
+                            <div className="font-display font-bold uppercase">Halal Fund</div>
+                            <div className="text-xs text-gray-500">(Moderate Risk)</div>
+                        </button>
+                        <button 
+                            onClick={() => setFund('fif')} 
+                            className={`p-4 rounded-xl border-2 transition-all text-center ${fund === 'fif' ? 'border-genz-lime bg-[#F4FFDC]' : 'border-gray-200'}`}
+                        >
+                            <div className="font-display font-bold uppercase">FIF Fund</div>
+                            <div className="text-xs text-gray-500">(Low Risk)</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-bold uppercase tracking-wider text-gray-600 mb-2">
+                        Amount to {actionType === 'deposit' ? 'Invest' : 'Withdraw'} (₦)
+                    </label>
+                    <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-display font-bold text-2xl text-gray-400">₦</span>
+                        <input 
+                            type="number" 
+                            min="1000"
+                            max={actionType === 'withdraw' ? currentBalance : undefined}
+                            value={amount}
+                            onChange={e => setAmount(e.target.value)}
+                            placeholder="0.00" 
+                            className="w-full bg-gray-50 border-2 border-gray-200 rounded-xl p-4 pl-12 font-display font-bold text-2xl focus:border-black outline-none transition-colors"
+                        />
+                    </div>
+                </div>
+
+                {actionType === 'deposit' && (
+                    <div>
+                        <label className="block text-sm font-bold uppercase tracking-wider text-gray-600 mb-2">Auto-Invest Frequency</label>
+                        <div className="grid grid-cols-4 gap-2">
+                            {['one-time', 'daily', 'weekly', 'monthly'].map((freq) => (
+                                <button 
+                                    key={freq}
+                                    onClick={() => setFrequency(freq)} 
+                                    className={`p-2 rounded-lg text-xs font-bold uppercase tracking-wider border-2 transition-all text-center ${frequency === freq ? 'border-lotus-dark bg-lotus-dark text-white' : 'border-gray-200 text-gray-500 hover:border-gray-400'}`}
+                                >
+                                    {freq.replace('-', ' ')}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <div className="pt-4">
+                    <button 
+                        onClick={handleProceed}
+                        disabled={isLoading}
+                        className="neo-btn bg-genz-blue text-lotus-dark w-full py-4 text-lg uppercase flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                        {isLoading ? 'Processing...' : (actionType === 'deposit' ? 'Proceed to Payment' : 'Withdraw to Bank Account')}
+                        {!isLoading && actionType === 'deposit' && <ArrowUpRight className="w-5 h-5"/>}
+                    </button>
+                </div>
+            </div>
+
+            {userProfile?.autoInvest && userProfile.autoInvest.length > 0 && (
+                <div className="mt-12 pt-8 border-t-2 border-gray-100">
+                    <h3 className="font-display font-bold text-xl uppercase mb-4">Active Auto-Investments</h3>
+                    <div className="space-y-3">
+                        {userProfile.autoInvest.map((ai: any, i: number) => (
+                            <div key={i} className="flex justify-between items-center p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                                        <TrendingUp size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-black">{ai.fund === 'halal' ? 'Halal Fund' : 'FIF Fund'}</p>
+                                        <p className="text-xs text-blue-600 font-bold uppercase tracking-widest">{ai.frequency}</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="font-bold text-lg">₦{ai.amount.toLocaleString()}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const TransactionsTab = ({ user }: { user: any }) => {
+    const [transactions, setTransactions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    React.useEffect(() => {
+        if (!user) return;
+        const fetchTxs = async () => {
+            try {
+                const q = query(collection(db, 'users', user.uid, 'transactions'), orderBy('createdAt', 'desc'));
+                const querySnapshot = await getDocs(q);
+                const txs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setTransactions(txs);
+            } catch (e) {
+                console.error("Error fetching transactions", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTxs();
+    }, [user]);
+
+    return (
+        <div className="bg-white rounded-3xl p-6 md:p-8 neo-border neo-shadow-sm min-h-[60vh]">
+            <h2 className="font-display font-extrabold text-3xl uppercase mb-8">Transaction History</h2>
+            
+            {loading ? (
+                <div className="text-center text-gray-500 py-10 font-bold uppercase tracking-widest">Loading...</div>
+            ) : transactions.length === 0 ? (
+                <div className="text-center text-gray-500 py-10 font-bold uppercase tracking-widest">No transactions yet</div>
+            ) : (
+                <div className="space-y-4">
+                    {transactions.map((tc) => (
+                        <div key={tc.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100 gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center neo-border shadow-sm shrink-0 ${tc.type === 'Auto-Invest' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
+                                    {tc.type === 'Auto-Invest' ? <Target size={24} /> : <ArrowDownRight size={24} />}
+                                </div>
+                                <div>
+                                    <p className="font-bold text-lg">{tc.type}: {tc.fund}</p>
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                        {tc.createdAt?.toDate ? tc.createdAt.toDate().toLocaleDateString() : 'Just now'} • SUCCESS
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="text-right sm:w-auto w-full sm:text-right text-left pl-16 sm:pl-0">
+                                <p className="font-bold text-xl text-green-600">+ ₦{Number(tc.amount).toLocaleString()}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const SettingsTab = ({ user, userProfile }: any) => {
+    return (
+        <div className="bg-white rounded-3xl p-6 md:p-8 neo-border neo-shadow-sm max-w-3xl mx-auto">
+            <h2 className="font-display font-extrabold text-3xl uppercase mb-8 border-b-2 border-gray-100 pb-4">Account Settings</h2>
+            
+            <div className="space-y-8">
+                {/* Profile Settings */}
+                <section>
+                    <h3 className="flex items-center gap-2 font-display font-bold text-xl uppercase mb-4 text-gray-500"><User className="w-5 h-5"/> Profile Information</h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold uppercase text-gray-400 mb-1">Full Name</label>
+                            <input type="text" readOnly value={user?.displayName || ''} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 font-medium outline-none text-gray-600 cursor-not-allowed" />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold uppercase text-gray-400 mb-1">Email Address</label>
+                            <input type="email" readOnly value={user?.email || ''} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 font-medium outline-none text-gray-600 cursor-not-allowed" />
+                        </div>
+                    </div>
+                </section>
+
+                {/* KYC Status */}
+                <section>
+                    <h3 className="flex items-center gap-2 font-display font-bold text-xl uppercase mb-4 text-gray-500"><FileText className="w-5 h-5"/> KYC & Verification</h3>
+                    {userProfile?.kycCompleted ? (
+                        <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <CheckCircle className="w-6 h-6 text-green-600" />
+                                <div>
+                                    <p className="font-bold text-green-900">Tier 2 Verified</p>
+                                    <p className="text-sm font-medium text-green-700">Account verified</p>
+                                </div>
+                            </div>
+                            <button className="text-sm font-bold bg-white text-green-700 px-4 py-2 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">Upgrade to Tier 3</button>
+                        </div>
+                    ) : (
+                        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="hidden sm:block">
+                                   <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500 font-bold border border-red-300">!</div>
+                                </div>
+                                <div>
+                                    <p className="font-bold text-red-900">Unverified Account</p>
+                                    <p className="text-sm font-medium text-red-700">Complete KYC to start investing.</p>
+                                </div>
+                            </div>
+                            <Link to="/invest/onboarding" className="text-sm font-bold bg-red-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-red-700 transition-colors uppercase">Verify Now</Link>
+                        </div>
+                    )}
+                </section>
+
+                <hr className="border-gray-100" />
+
+                {/* Security */}
+                <section>
+                    <h3 className="flex items-center gap-2 font-display font-bold text-xl uppercase mb-4 text-gray-500"><Lock className="w-5 h-5"/> Security</h3>
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between py-3">
+                            <div>
+                                <p className="font-bold">Two-Factor Authentication</p>
+                                <p className="text-sm text-gray-500">Add an extra layer of security to your account.</p>
+                            </div>
+                            <button className="px-4 py-2 bg-black text-white text-sm font-bold rounded-lg uppercase">Enable 2FA</button>
+                        </div>
+                        <div className="flex items-center justify-between py-3 border-t border-gray-50">
+                            <div>
+                                <p className="font-bold">Change Password</p>
+                                <p className="text-sm text-gray-500">Update your account password</p>
+                            </div>
+                            <button className="px-4 py-2 border-2 border-gray-200 text-black text-sm font-bold rounded-lg uppercase hover:border-black transition-colors">Update</button>
+                        </div>
+                    </div>
+                </section>
+                
+                <hr className="border-gray-100" />
+                
+                <div className="flex justify-between items-center bg-red-50 p-4 rounded-xl border border-red-100">
+                    <div>
+                        <p className="font-bold text-red-600">Danger Zone</p>
+                        <p className="text-xs text-red-500">Permanently delete your account and data.</p>
+                    </div>
+                    <button className="px-4 py-2 bg-white text-red-600 border border-red-200 text-sm font-bold rounded-lg hover:bg-red-100 transition-colors">Delete Account</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const CertificateTab = ({ user, userProfile }: any) => {
+    const handleShare = async () => {
+        const certificateElement = document.getElementById('dashboard-vibe-certificate');
+        if (!certificateElement) return;
+
+        try {
+            const canvas = await html2canvas(certificateElement, { scale: 2, useCORS: true });
+            const image = canvas.toDataURL("image/png");
+            const link = document.createElement('a');
+            link.href = image;
+            link.download = `LotusTribe_VibeCheck_${user?.displayName || 'Member'}.png`;
+            link.click();
+        } catch (err) {
+            console.log("Error generating certificate image:", err);
+            alert("Could not generate image. Please try again.");
+        }
+    };
+
+    if (!userProfile?.riskProfile) {
+        return (
+            <div className="bg-white p-8 rounded-3xl neo-border neo-shadow-sm text-center min-h-[60vh] flex flex-col items-center justify-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                    <Info className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="font-display font-bold text-2xl uppercase mb-2">No Certificate Yet!</h3>
+                <p className="text-gray-500 font-medium mb-6">You need to complete the Vibe Check assessment to generate your investor certificate.</p>
+                <Link to="/quiz">
+                    <button className="neo-btn bg-black text-white px-8 py-3 text-sm">
+                        Take Vibe Check
+                    </button>
+                </Link>
+            </div>
+        );
+    }
+
+    return (
+        <div className="max-w-3xl mx-auto">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="font-display font-extrabold text-3xl uppercase">Your Certificate</h2>
+                <button onClick={handleShare} className="neo-btn bg-lotus-dark text-white px-6 py-2 uppercase text-sm flex items-center gap-2">
+                    <Download className="w-4 h-4"/> Download
+                </button>
+            </div>
+            
+            <div id="dashboard-vibe-certificate" className="bg-white p-2 rounded-3xl neo-shadow mb-8 border-4 border-black inline-block w-full">
+                <div className="bg-[#fffdf9] p-8 md:p-12 rounded-2xl border-2 border-dashed border-gray-400 relative overflow-hidden">
+                   {/* Ornate corners */}
+                   <div className="absolute top-2 left-2 w-8 h-8 border-t-4 border-l-4 border-lotus-dark"></div>
+                   <div className="absolute top-2 right-2 w-8 h-8 border-t-4 border-r-4 border-lotus-dark"></div>
+                   <div className="absolute bottom-2 left-2 w-8 h-8 border-b-4 border-l-4 border-lotus-dark"></div>
+                   <div className="absolute bottom-2 right-2 w-8 h-8 border-b-4 border-r-4 border-lotus-dark"></div>
+                   
+                   {/* Watermark bg */}
+                   <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+                      <div className="text-[200px] font-display font-black transform -rotate-12">LOTUS</div>
+                   </div>
+                   
+                   <div className="relative z-10 text-center">
+                     <h2 className="font-display font-black text-3xl md:text-5xl uppercase text-lotus-dark mb-2 tracking-widest">
+                       Certificate of Vibe
+                     </h2>
+                     <p className="text-gray-500 font-bold uppercase tracking-widest text-xs mb-8">Official Lotus Tribe Assessment</p>
+                     
+                     <div className="text-7xl mb-6">
+                       {userProfile.riskProfile === 'Steady Saver' ? '🐢' : userProfile.riskProfile === 'Calculated Thinker' ? '🧠' : '🚀'}
+                     </div>
+                     
+                     <div className="bg-gray-100 p-6 rounded-2xl mb-8 border border-gray-200">
+                        <p className="font-display font-bold text-xl md:text-2xl text-lotus-dark leading-relaxed">
+                           Dear <span className="text-lotus-red border-b-2 border-lotus-red px-2">{user?.displayName || 'Tribe Member'}</span>, <br/><br/>
+                           This is to certify that you have successfully completed your Lotus Tribe Investment Vibe Check. Your investment personality is formally recognized as:
+                        </p>
+                        <h1 className="font-display font-black text-4xl md:text-5xl uppercase mt-6 mb-4 text-lotus-dark bg-genz-lime inline-block px-4 py-2 transform -rotate-1 shadow-md border-2 border-black">
+                          {userProfile.riskProfile}
+                        </h1>
+                        <p className="text-lg md:text-xl font-bold text-gray-700 mt-2">
+                           You are on course to be a {userProfile.riskProfile === 'Steady Saver' ? 'low-risk' : userProfile.riskProfile === 'Calculated Thinker' ? 'calculated' : 'high-risk'} Billionaire investor. 🥂
+                        </p>
+                     </div>
+                     
+                     <div className="flex justify-between items-end border-t-2 border-gray-200 pt-6 mt-10">
+                        <div className="text-left">
+                           <div className="font-[signature] font-bold text-3xl text-lotus-dark mb-1 opacity-70">Lotus Tribe</div>
+                           <div className="w-32 h-px bg-black mb-1"></div>
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Authorized Signature</p>
+                        </div>
+                        <div className="text-right">
+                           <div className="font-mono font-bold text-sm text-lotus-dark mb-1">{new Date().toLocaleDateString()}</div>
+                           <div className="w-24 h-px bg-black mb-1 ml-auto"></div>
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Date of Issue</p>
+                        </div>
+                     </div>
+                     
+                     <p className="text-[10px] text-gray-400 mt-8 text-left font-sans font-medium italic">
+                       * Disclaimer: This assessment is designed as an educational tool to help you understand your general investor profile. It does not constitute formal financial advice. All investments carry risks, and you should perform independent research before making any financial decisions.
+                     </p>
+                   </div>
+                </div>
+            </div>
+            <div className="text-center mt-6">
+                 <Link to="/quiz">
+                    <button className="text-gray-500 font-bold uppercase text-xs hover:text-black hover:underline underline-offset-4 transition-all">
+                        Retake Vibe Check
+                    </button>
+                 </Link>
+            </div>
+        </div>
+    );
+};
+
+const FundPerformanceChart = () => {
+    const [period, setPeriod] = useState('1M');
+    const periods = ['1D', '1W', '1M', '3M', '6M', '1Y', '3Y', '5Y'];
+    
+    // Generate mock data based on period
+    const data = useMemo(() => {
+        let points = 30; // default for 1M
+        let volatility = 5;
+        let baseline = 10000;
+        
+        if (period === '1D') { points = 24; volatility = 2; }
+        else if (period === '1W') { points = 7; volatility = 3; }
+        else if (period === '1M') { points = 30; volatility = 5; }
+        else if (period === '3M') { points = 12; volatility = 8; }
+        else if (period === '6M') { points = 24; volatility = 10; }
+        else if (period === '1Y') { points = 12; volatility = 15; }
+        else if (period === '3Y') { points = 36; volatility = 25; }
+        else if (period === '5Y') { points = 60; volatility = 40; }
+
+        const mockData = [];
+        let currentVal = baseline;
+        for (let i = 0; i < points; i++) {
+            currentVal += (Math.random() - 0.45) * volatility * 100; // Slight upward trend
+            const displayLabel = period === '1D' ? `${i}:00` : `T-${points - i}`;
+            mockData.push({
+                name: displayLabel,
+                value: Math.round(currentVal)
+            });
+        }
+        return mockData;
+    }, [period]);
+
+    return (
+        <div className="bg-white rounded-3xl p-6 mt-8 neo-border neo-shadow-sm min-h-[400px]">
+             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                 <div>
+                    <h3 className="font-display font-bold text-xl uppercase mb-1">Portfolio Performance</h3>
+                    <p className="text-gray-500 font-medium text-sm">Track your investment growth over time.</p>
+                 </div>
+                 <div className="flex bg-gray-100 rounded-lg p-1 overflow-x-auto w-full sm:w-auto">
+                    {periods.map(p => (
+                        <button 
+                            key={p} 
+                            onClick={() => setPeriod(p)}
+                            className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase transition-colors shrink-0 ${period === p ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                        >
+                            {p}
+                        </button>
+                    ))}
+                 </div>
+             </div>
+             
+             <div className="h-[300px] w-full mt-4">
+                 <ResponsiveContainer width="100%" height="100%">
+                     <AreaChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                         <defs>
+                            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.3}/>
+                                <stop offset="95%" stopColor="#82ca9d" stopOpacity={0}/>
+                            </linearGradient>
+                         </defs>
+                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                         <XAxis axisLine={false} tickLine={false} dataKey="name" tick={{fill: '#9ca3af', fontSize: 12}} dy={10} minTickGap={20} />
+                         <YAxis axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} tickFormatter={(val) => `₦${(val/1000).toFixed(0)}k`} />
+                         <Tooltip 
+                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
+                            formatter={(value: number) => [`₦${value.toLocaleString()}`, 'Value']}
+                            labelStyle={{ color: '#6b7280', fontWeight: 'bold', marginBottom: '4px' }}
+                         />
+                         <Area type="monotone" dataKey="value" stroke="#82ca9d" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
+                     </AreaChart>
+                 </ResponsiveContainer>
+             </div>
+        </div>
     );
 };
