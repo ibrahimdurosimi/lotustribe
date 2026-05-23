@@ -79,7 +79,7 @@ export const coursesData: Course[] = [
           <p>When you hear “rich,” what comes to mind? A dude in a rented Lamborghini, a massive mortgage he can’t really afford, designer clothes bought on credit, and $47 in his checking account. That’s rich. It looks cool on Instagram for 15 seconds. Then the repo man shows up.</p>
           <h3 class="font-display font-bold text-xl mt-6 mb-2">Wealthy is different.</h3>
           <p>Wealthy means you wake up on a Tuesday at 10 AM because you choose to – not because your boss will fire you if you’re late. Wealthy means your car is reliable (not flashy), your rent is covered for 6 months even if you quit your job, and you can help a friend in need without checking your balance first.</p>
-          <div class="bg-gray-100 p-4 rounded-xl mt-6 neo-border border-gray-300">
+          <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl mt-6 neo-border border-gray-300">
             <p class="font-bold">For Gen Z: Wealthy = the ability to say “no.”</p>
             <ul class="list-disc pl-5 mt-2 space-y-1">
               <li>No to a job you hate.</li>
@@ -149,7 +149,7 @@ export const coursesData: Course[] = [
           <h3 class="font-display font-bold text-xl mt-6 mb-2">Real example:</h3>
           <p>$1,000 invested in the S&P 500 in 2014 became roughly $3,000 by 2024. Inflation ate about $300 of that, but you still came out $1,700 ahead. The person who left cash under their mattress? They lost $340 in buying power.</p>
 
-          <div class="bg-gray-100 p-4 rounded-xl mt-6 neo-border border-gray-300">
+          <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl mt-6 neo-border border-gray-300">
             <p class="font-bold">Meme summary (for your internal team):</p>
             <p>Cash under mattress = slow death by inflation.<br/>
             Investing = anti-inflation shield.</p>
@@ -250,13 +250,13 @@ export const coursesData: Course[] = [
         content: `
           <p>This is the single most misunderstood idea in investing. Master it, and you’re ahead of 90% of beginners.</p>
           
-          <div class="bg-gray-100 p-6 rounded-xl mt-4 mb-6">
+          <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-xl mt-4 mb-6">
             <h4 class="font-bold text-lg mb-2 text-lotus-red">Risk = permanent loss of money.</h4>
             <p>Example: You buy a meme coin called “MoonDog.” The founders disappear with all the money. Your investment is gone forever. That’s risk.</p>
           </div>
 
-          <div class="bg-gray-100 p-6 rounded-xl mb-6">
-            <h4 class="font-bold text-lg mb-2 text-lotus-dark">Volatility = temporary ups and downs.</h4>
+          <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-xl mb-6">
+            <h4 class="font-bold text-lg mb-2 text-lotus-dark dark:text-white">Volatility = temporary ups and downs.</h4>
             <p>Example: You buy Apple stock at $180. Next month it drops to $150 because the whole market is down. Six months later it goes to $200. You didn’t lose anything if you didn’t sell. You actually gained $20 per share.</p>
           </div>
 
@@ -352,7 +352,7 @@ export const coursesData: Course[] = [
             <h3 class="font-display font-bold text-xl mt-6 mb-2">Why do stock prices move?</h3>
             <p>Supply and demand. More people want to buy than sell → price goes up. More people want to sell than buy → price goes down.</p>
             
-            <div class="bg-gray-100 p-6 rounded-xl mt-4 border border-gray-200">
+            <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-xl mt-4 border border-gray-200 dark:border-gray-700">
                <p class="font-bold uppercase tracking-widest text-xs text-lotus-red mb-2">The Golden Rule:</p>
                <p>Only buy an individual stock if you would be happy owning it for 5 years without checking the price every day. If you can’t handle that, stick to index funds.</p>
             </div>
@@ -367,7 +367,7 @@ export const coursesData: Course[] = [
              <h3 class="font-display font-bold text-xl mt-6 mb-2">Example:</h3>
              <p>You own $10,000 worth of Coca-Cola stock. Coca-Cola pays a 3% annual dividend. Every year, you receive $300 in cash deposited into your account – whether the stock price goes up or down. You can spend that cash or reinvest it to buy more shares.</p>
              
-             <div class="bg-white p-4 neo-border rounded-xl mt-4 shadow-sm">
+             <div class="bg-white dark:bg-gray-900 p-4 neo-border rounded-xl mt-4 shadow-sm">
                 <p><strong>Dividend yield</strong> = annual dividend divided by stock price.</p>
                 <p>A stock at $100 paying $3 per share per year has a 3% yield.</p>
              </div>
@@ -405,7 +405,7 @@ export const coursesData: Course[] = [
              <h3 class="font-display font-bold text-xl mt-6 mb-2">How it works:</h3>
              <p>If Amazon is $100 per share and you invest $5, you own 5% of one share. When Amazon goes to $110, your $5 becomes $5.50. Same percentage gain as someone who bought a whole share.</p>
              
-             <div class="bg-gray-100 p-4 rounded-xl mt-6">
+             <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl mt-6">
                <p class="font-bold">Gen Z superpower:</p>
                <p>Fractional shares mean you can build a diversified portfolio with very little money. You can own 20 different companies for $100 total.</p>
              </div>
@@ -547,7 +547,7 @@ export const coursesData: Course[] = [
                <li>Think of Ethereum as an app store without a central company.</li>
              </ul>
              
-             <div class="bg-gray-100 p-4 rounded-xl mt-6">
+             <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl mt-6">
                <p><strong>Gen Z analogy:</strong> Bitcoin is like a savings account that no government can touch. Ethereum is like a smartphone – the value is in the apps you can build on it.</p>
              </div>
           `
@@ -597,7 +597,7 @@ export const coursesData: Course[] = [
           readTime: "1.5 minutes",
           content: `
              <p>Want to know how many years it takes to double your money? Use the Rule of 72.</p>
-             <div class="bg-gray-100 p-6 rounded-xl text-center my-6 text-2xl font-black font-display text-lotus-dark">
+             <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-xl text-center my-6 text-2xl font-black font-display text-lotus-dark dark:text-white">
                 72 ÷ Annual Return = Years to double
              </div>
              
@@ -808,7 +808,7 @@ export const coursesData: Course[] = [
              <p>Bear markets are the best time to buy – if you have cash and courage.</p>
              <p class="mt-2">Everything is on sale. That $100 stock you wanted is now $70. The company didn’t change. The market got scared.</p>
              
-             <div class="bg-gray-100 p-6 rounded-xl mt-6">
+             <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-xl mt-6">
                 <p class="font-bold underline mb-2">Historical fact:</p>
                 <p>Since 1926, the S&P 500 has had 26 bear markets. After every single one, it eventually reached new highs. Average recovery time: about 2 years.</p>
              </div>
@@ -854,7 +854,7 @@ export const coursesData: Course[] = [
     xp: 500,
     level: "Advanced",
     color: "bg-lotus-dark",
-    accent: "bg-white text-lotus-dark",
+    accent: "bg-white dark:bg-gray-900 text-lotus-dark dark:text-white",
     quiz: [],
     lessons: [
        {
@@ -864,9 +864,9 @@ export const coursesData: Course[] = [
           content: `
              <p>There are no stupid questions in Lotus Tribe. But there are better ways to ask.</p>
              
-             <div class="bg-gray-100 p-6 rounded-xl mt-6">
+             <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-xl mt-6">
                 <p class="font-bold mb-2">Template for asking anything:</p>
-                <p class="italic text-gray-600">“I’m a [Investor Animal]. My goal is [amount] by [year]. Here’s what I don’t understand: [specific question]. I’ve tried [what you already did]. Can anyone explain like I’m 5?”</p>
+                <p class="italic text-gray-600 dark:text-gray-300">“I’m a [Investor Animal]. My goal is [amount] by [year]. Here’s what I don’t understand: [specific question]. I’ve tried [what you already did]. Can anyone explain like I’m 5?”</p>
              </div>
              
              <h3 class="font-display font-bold text-xl mt-6 mb-2">Community rules:</h3>

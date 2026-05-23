@@ -36,29 +36,29 @@ export const Community = () => {
   }, []);
 
   return (
-    <div className="min-h-screen pt-32 pb-24 bg-[#FCFCFC] font-sans text-lotus-dark">
+    <div className="min-h-screen pt-32 pb-24 bg-[#FCFCFC] font-sans text-lotus-dark dark:text-white">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         <header className="mb-16 text-center md:text-left">
-           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="inline-block px-4 py-1.5 rounded-full bg-genz-lime text-lotus-dark font-display font-bold text-xs tracking-wider uppercase mb-6 shadow-sm ring-1 ring-lotus-dark/5">
+           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="inline-block px-4 py-1.5 rounded-full bg-genz-lime text-lotus-dark dark:text-white font-display font-bold text-xs tracking-wider uppercase mb-6 shadow-sm ring-1 ring-lotus-dark/5">
              The Tribe Square
            </motion.div>
            <div className="flex flex-col md:flex-row justify-between items-end gap-8">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                <h1 className="font-display font-black text-6xl md:text-8xl text-lotus-dark leading-[0.85] uppercase tracking-tighter">
+                <h1 className="font-display font-black text-6xl md:text-8xl text-lotus-dark dark:text-white leading-[0.85] uppercase tracking-tighter">
                   Knowledge <br/><span className="text-lotus-red italic">is power.</span>
                 </h1>
-                <p className="text-gray-500 font-medium text-xl max-w-2xl mt-8">
+                <p className="text-gray-500 dark:text-gray-400 font-medium text-xl max-w-2xl mt-8">
                   Connect with fellow investors, ask the elders, and level up together. No gatekeeping, just pure growth.
                 </p>
               </motion.div>
               
-              <div className="flex bg-white neo-border p-2 rounded-2xl shadow-sm border border-gray-100 mb-2 overflow-x-auto max-w-full">
+              <div className="flex bg-white dark:bg-gray-900 neo-border p-2 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 mb-2 overflow-x-auto max-w-full">
                  {['qna', 'leaderboard', 'events'].map((tab) => (
                     <button
                        key={tab}
                        onClick={() => setActiveTab(tab as any)}
                        className={`px-6 py-3 rounded-xl font-display font-bold uppercase text-xs transition-all whitespace-nowrap ${
-                         activeTab === tab ? 'bg-lotus-dark text-white shadow-md' : 'text-gray-400 hover:text-lotus-dark hover:bg-gray-50'
+                         activeTab === tab ? 'bg-lotus-dark text-white shadow-md' : 'text-gray-400 hover:text-lotus-dark dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800'
                        }`}
                     >
                        {tab === 'qna' ? '💬 Q&A' : tab === 'leaderboard' ? '🏆 Leaders' : '📅 Events'}
@@ -178,7 +178,7 @@ const QNAPortal = ({ questions, setQuestions }: { questions: any[], setQuestions
   return (
     <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="grid lg:grid-cols-[1fr_350px] gap-12">
        <div className="space-y-8">
-          <form onSubmit={handleSubmit} className="bg-white neo-border p-8 rounded-[2.5rem] shadow-sm border border-gray-100 relative">
+          <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 neo-border p-8 rounded-[2.5rem] shadow-sm border border-gray-100 dark:border-gray-800 relative">
              <h3 className="font-display font-bold text-xl uppercase mb-6 flex items-center gap-3">
                 <HelpCircle className="text-lotus-red" /> Ask the Tribe (+20 XP)
              </h3>
@@ -188,10 +188,10 @@ const QNAPortal = ({ questions, setQuestions }: { questions: any[], setQuestions
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Headline: What's your question?"
-                  className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-lotus-red transition-all font-bold text-lg text-lotus-dark placeholder:text-gray-300"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl px-6 py-4 focus:outline-none focus:border-lotus-red transition-all font-bold text-lg text-lotus-dark dark:text-white placeholder:text-gray-300"
                 />
                 <div className="flex gap-4">
-                   <select value={category} onChange={e => setCategory(e.target.value)} className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl px-6 py-4 focus:outline-none focus:border-lotus-red transition-all font-bold text-sm text-lotus-dark uppercase">
+                   <select value={category} onChange={e => setCategory(e.target.value)} className="bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl px-6 py-4 focus:outline-none focus:border-lotus-red transition-all font-bold text-sm text-lotus-dark dark:text-white uppercase">
                      {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                    </select>
                 </div>
@@ -200,10 +200,10 @@ const QNAPortal = ({ questions, setQuestions }: { questions: any[], setQuestions
                      value={description}
                      onChange={(e) => setDescription(e.target.value)}
                      placeholder="Add details, context, or what you've already tried..."
-                     className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl p-6 min-h-[120px] focus:outline-none focus:border-lotus-red transition-all font-medium text-lg text-lotus-dark placeholder:text-gray-300"
+                     className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-3xl p-6 min-h-[120px] focus:outline-none focus:border-lotus-red transition-all font-medium text-lg text-lotus-dark dark:text-white placeholder:text-gray-300"
                    />
                    <div className="absolute bottom-4 left-4" ref={emojiRef}>
-                      <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="text-gray-400 hover:text-lotus-red transition-colors p-2 bg-white rounded-full shadow-sm neo-border border-gray-200">
+                      <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="text-gray-400 hover:text-lotus-red transition-colors p-2 bg-white dark:bg-gray-900 rounded-full shadow-sm neo-border border-gray-200 dark:border-gray-700">
                          <Smile size={20} />
                       </button>
                       {showEmojiPicker && (
@@ -223,15 +223,15 @@ const QNAPortal = ({ questions, setQuestions }: { questions: any[], setQuestions
              </div>
           </form>
 
-          <div className="bg-white neo-border p-4 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4">
+          <div className="bg-white dark:bg-gray-900 neo-border p-4 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col md:flex-row gap-4">
              <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input 
                   type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search questions..." className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl pl-12 pr-4 py-3 focus:outline-none focus:border-lotus-dark font-bold text-sm"
+                  placeholder="Search questions..." className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl pl-12 pr-4 py-3 focus:outline-none focus:border-lotus-dark font-bold text-sm"
                 />
              </div>
-             <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className="bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-3 focus:outline-none focus:border-lotus-dark font-bold text-sm uppercase appearance-none min-w-[150px]">
+             <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className="bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-3 focus:outline-none focus:border-lotus-dark font-bold text-sm uppercase appearance-none min-w-[150px]">
                 <option value="All">All Categories</option>
                 {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
              </select>
@@ -239,25 +239,25 @@ const QNAPortal = ({ questions, setQuestions }: { questions: any[], setQuestions
 
           <div className="space-y-6">
              {filteredQuestions.length === 0 ? (
-               <div className="p-20 text-center bg-white neo-border rounded-[2.5rem] border-dashed text-gray-300 font-display font-bold uppercase">No questions found.</div>
+               <div className="p-20 text-center bg-white dark:bg-gray-900 neo-border rounded-[2.5rem] border-dashed text-gray-300 font-display font-bold uppercase">No questions found.</div>
              ) : (
                filteredQuestions.map((q) => (
-                 <motion.div layout key={q.id} onClick={() => setSelectedQuestion(q)} className="bg-white p-8 border-[3px] border-black rounded-[2.5rem] neo-shadow-sm flex gap-6 hover:-translate-y-1 transition-transform cursor-pointer">
+                 <motion.div layout key={q.id} onClick={() => setSelectedQuestion(q)} className="bg-white dark:bg-gray-900 p-8 border-[3px] border-black rounded-[2.5rem] neo-shadow-sm flex gap-6 hover:-translate-y-1 transition-transform cursor-pointer">
                     <div className="flex flex-col items-center gap-2">
-                       <button onClick={(e) => { e.stopPropagation(); handleUpvote(q.id); }} className="bg-gray-100 border-2 border-black rounded-xl p-2 flex flex-col items-center hover:bg-genz-lime transition-colors group">
-                          <ArrowUp className="w-5 h-5 text-black font-bold group-hover:-translate-y-1 transition-transform" />
-                          <span className="font-display font-bold text-black">{q.upvotes || 0}</span>
+                       <button onClick={(e) => { e.stopPropagation(); handleUpvote(q.id); }} className="bg-gray-100 dark:bg-gray-800 border-2 border-black rounded-xl p-2 flex flex-col items-center hover:bg-genz-lime transition-colors group">
+                          <ArrowUp className="w-5 h-5 text-black dark:text-white font-bold group-hover:-translate-y-1 transition-transform" />
+                          <span className="font-display font-bold text-black dark:text-white">{q.upvotes || 0}</span>
                        </button>
                     </div>
                     <div className="flex-1 w-full overflow-hidden">
                        <div className="flex items-center gap-3 mb-4 flex-wrap">
-                          <span className="bg-gray-100 px-3 py-1 rounded-full text-[10px] font-bold uppercase text-gray-500 border border-gray-200">{q.category || 'General'}</span>
-                          <span className="font-display font-bold text-sm uppercase truncate text-gray-500">By {q.userName || 'Tribe Member'}</span>
+                          <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">{q.category || 'General'}</span>
+                          <span className="font-display font-bold text-sm uppercase truncate text-gray-500 dark:text-gray-400">By {q.userName || 'Tribe Member'}</span>
                        </div>
-                       <h3 className="font-display font-extrabold text-2xl text-black mb-3 uppercase leading-tight line-clamp-2">{q.title || q.text}</h3>
-                       {q.title && <p className="text-gray-500 font-medium mb-4 line-clamp-2 text-sm">{q.text}</p>}
+                       <h3 className="font-display font-extrabold text-2xl text-black dark:text-white mb-3 uppercase leading-tight line-clamp-2">{q.title || q.text}</h3>
+                       {q.title && <p className="text-gray-500 dark:text-gray-400 font-medium mb-4 line-clamp-2 text-sm">{q.text}</p>}
                        <div className="flex items-center gap-6 mt-4">
-                          <div className="flex items-center gap-2 font-bold text-[10px] text-gray-400 uppercase tracking-widest hover:text-lotus-dark">
+                          <div className="flex items-center gap-2 font-bold text-[10px] text-gray-400 uppercase tracking-widest hover:text-lotus-dark dark:text-white">
                              <MessageCircle size={16} className="text-lotus-red/40" /> {q.replies || 0} Answers
                           </div>
                        </div>
@@ -269,12 +269,12 @@ const QNAPortal = ({ questions, setQuestions }: { questions: any[], setQuestions
        </div>
 
        <div className="space-y-8 hidden lg:block">
-          <div className="bg-white neo-border p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
-             <h4 className="font-display font-extrabold uppercase text-lg mb-6 border-b border-gray-100 pb-4">Hot Topics</h4>
+          <div className="bg-white dark:bg-gray-900 neo-border p-8 rounded-[2.5rem] shadow-sm border border-gray-100 dark:border-gray-800">
+             <h4 className="font-display font-extrabold uppercase text-lg mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">Hot Topics</h4>
              <div className="space-y-4">
                 {['#HalalInvesting', '#CryptoEthics', '#StudentWealth', '#LotusTribe', '#ZakatStrategy'].map(tag => (
                    <div key={tag} className="flex items-center justify-between group cursor-pointer">
-                      <span className="font-bold text-gray-500 hover:text-lotus-red transition-colors">{tag}</span>
+                      <span className="font-bold text-gray-500 dark:text-gray-400 hover:text-lotus-red transition-colors">{tag}</span>
                       <TrendingUp size={14} className="text-gray-200 group-hover:text-lotus-red" />
                    </div>
                 ))}
@@ -296,22 +296,22 @@ const QNAPortal = ({ questions, setQuestions }: { questions: any[], setQuestions
        <AnimatePresence>
          {selectedQuestion && (
            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-lotus-dark/60 backdrop-blur-sm overflow-y-auto">
-             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white w-full max-w-3xl rounded-[3rem] neo-border shadow-2xl my-auto relative flex flex-col max-h-[90vh]">
-                <button onClick={() => setSelectedQuestion(null)} className="absolute top-6 right-6 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10"><X size={24} /></button>
+             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white dark:bg-gray-900 w-full max-w-3xl rounded-[3rem] neo-border shadow-2xl my-auto relative flex flex-col max-h-[90vh]">
+                <button onClick={() => setSelectedQuestion(null)} className="absolute top-6 right-6 p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 rounded-full transition-colors z-10"><X size={24} /></button>
                 
                 <div className="p-8 md:p-12 overflow-y-auto w-full">
-                  <div className="flex gap-4 border-b border-gray-100 pb-8 mb-8">
-                     <button onClick={() => handleUpvote(selectedQuestion.id, true)} className="mt-2 shrink-0 bg-gray-50 border-2 border-gray-200 rounded-2xl w-14 h-14 flex flex-col items-center justify-center hover:border-black hover:bg-genz-lime transition-all">
+                  <div className="flex gap-4 border-b border-gray-100 dark:border-gray-800 pb-8 mb-8">
+                     <button onClick={() => handleUpvote(selectedQuestion.id, true)} className="mt-2 shrink-0 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl w-14 h-14 flex flex-col items-center justify-center hover:border-black hover:bg-genz-lime transition-all">
                         <ArrowUp size={20} className="font-bold mb-1" />
                         <span className="font-display font-bold">{selectedQuestion.upvotes || 0}</span>
                      </button>
                      <div>
                         <div className="flex items-center gap-3 mb-4">
-                           <span className="bg-gray-100 px-3 py-1 rounded-full text-[10px] font-bold uppercase text-gray-500">{selectedQuestion.category || 'General'}</span>
+                           <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400">{selectedQuestion.category || 'General'}</span>
                            <span className="font-display font-bold text-sm uppercase text-gray-400">By {selectedQuestion.userName}</span>
                         </div>
-                        <h2 className="font-display font-black text-3xl md:text-4xl text-lotus-dark uppercase leading-tight mb-6">{selectedQuestion.title || selectedQuestion.text}</h2>
-                        {selectedQuestion.title && <div className="text-gray-600 font-medium text-lg whitespace-pre-wrap">{selectedQuestion.text}</div>}
+                        <h2 className="font-display font-black text-3xl md:text-4xl text-lotus-dark dark:text-white uppercase leading-tight mb-6">{selectedQuestion.title || selectedQuestion.text}</h2>
+                        {selectedQuestion.title && <div className="text-gray-600 dark:text-gray-300 font-medium text-lg whitespace-pre-wrap">{selectedQuestion.text}</div>}
                      </div>
                   </div>
 
@@ -319,24 +319,24 @@ const QNAPortal = ({ questions, setQuestions }: { questions: any[], setQuestions
                      <h4 className="font-display font-bold text-xl uppercase mb-6">{selectedQuestion.replies || 0} Answers</h4>
                      <div className="space-y-6">
                         {(selectedQuestion.answers || []).map((ans: any) => (
-                           <div key={ans.id} className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                           <div key={ans.id} className="bg-gray-50 dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-800">
                               <div className="flex items-center gap-3 mb-4">
                                  <img src={ans.userPhoto || `https://ui-avatars.com/api/?name=${ans.userName}&background=random`} className="w-8 h-8 rounded-full border border-gray-300" alt="Avatar" />
-                                 <span className="font-display font-bold text-sm uppercase text-lotus-dark">{ans.userName}</span>
+                                 <span className="font-display font-bold text-sm uppercase text-lotus-dark dark:text-white">{ans.userName}</span>
                               </div>
-                              <p className="text-gray-600 font-medium whitespace-pre-wrap">{ans.text}</p>
+                              <p className="text-gray-600 dark:text-gray-300 font-medium whitespace-pre-wrap">{ans.text}</p>
                            </div>
                         ))}
                      </div>
                   </div>
 
-                  <div className="bg-gray-50 p-6 rounded-[2rem] border-2 border-dashed border-gray-200">
-                     <h4 className="font-display font-bold text-lg uppercase mb-4 text-lotus-dark">Your Answer (+20 XP)</h4>
+                  <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-[2rem] border-2 border-dashed border-gray-200 dark:border-gray-700">
+                     <h4 className="font-display font-bold text-lg uppercase mb-4 text-lotus-dark dark:text-white">Your Answer (+20 XP)</h4>
                      <textarea 
                         value={answerText}
                         onChange={e => setAnswerText(e.target.value)}
                         placeholder="Share your wisdom..."
-                        className="w-full bg-white border-2 border-gray-100 rounded-2xl p-4 min-h-[100px] mb-4 focus:outline-none focus:border-lotus-red font-medium"
+                        className="w-full bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-2xl p-4 min-h-[100px] mb-4 focus:outline-none focus:border-lotus-red font-medium"
                      />
                      <button onClick={handleAnswerSubmit} disabled={!answerText.trim()} className="neo-btn bg-lotus-dark text-white px-8 py-3 uppercase text-xs disabled:opacity-50">Post Answer</button>
                   </div>
@@ -352,25 +352,25 @@ const QNAPortal = ({ questions, setQuestions }: { questions: any[], setQuestions
 const Leaderboard = ({ users }: { users: any[] }) => {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-4xl mx-auto">
-       <div className="bg-white neo-border p-10 md:p-16 rounded-[4rem] shadow-xl relative overflow-hidden border border-gray-100">
+       <div className="bg-white dark:bg-gray-900 neo-border p-10 md:p-16 rounded-[4rem] shadow-xl relative overflow-hidden border border-gray-100 dark:border-gray-800">
           <div className="absolute top-0 right-0 p-10 opacity-10"><Trophy size={120} /></div>
           
           <div className="relative z-10 text-center mb-16">
-             <h2 className="font-display font-black text-5xl md:text-7xl uppercase text-lotus-dark tracking-tighter mb-4">The Top <span className="text-lotus-red italic">Slayers.</span></h2>
-             <p className="text-gray-500 font-medium text-lg uppercase tracking-widest">Elite investors of the Lotus Tribe</p>
+             <h2 className="font-display font-black text-5xl md:text-7xl uppercase text-lotus-dark dark:text-white tracking-tighter mb-4">The Top <span className="text-lotus-red italic">Slayers.</span></h2>
+             <p className="text-gray-500 dark:text-gray-400 font-medium text-lg uppercase tracking-widest">Elite investors of the Lotus Tribe</p>
           </div>
 
           <div className="space-y-4">
              {users.map((u, idx) => (
-                <div key={u.id} className={`flex items-center gap-6 p-6 rounded-3xl transition-all duration-300 ${idx === 0 ? 'bg-genz-lime border-2 border-lotus-dark/10 scale-105 shadow-xl' : idx === 1 ? 'bg-genz-purple/20 border border-lotus-dark/5' : idx === 2 ? 'bg-genz-pink/20 border border-lotus-dark/5' : 'bg-gray-50'}`}>
+                <div key={u.id} className={`flex items-center gap-6 p-6 rounded-3xl transition-all duration-300 ${idx === 0 ? 'bg-genz-lime border-2 border-lotus-dark/10 scale-105 shadow-xl' : idx === 1 ? 'bg-genz-purple/20 border border-lotus-dark/5' : idx === 2 ? 'bg-genz-pink/20 border border-lotus-dark/5' : 'bg-gray-50 dark:bg-gray-800'}`}>
                    <div className="w-12 font-display font-black text-3xl text-lotus-dark/20">{idx + 1}</div>
                    <img src={u.photoURL || `https://ui-avatars.com/api/?name=${u.displayName || u.email}&background=random`} className="w-14 h-14 rounded-full border-2 border-white shadow-md" alt="Avatar" />
                    <div className="flex-1">
-                      <h4 className="font-display font-bold text-xl uppercase text-lotus-dark">{u.displayName || 'Tribe Member'}</h4>
+                      <h4 className="font-display font-bold text-xl uppercase text-lotus-dark dark:text-white">{u.displayName || 'Tribe Member'}</h4>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{idx === 0 ? '🏆 Master Elder' : idx === 1 ? '🥇 Elite Elder' : idx === 2 ? '🥈 Elder' : 'Investment Pro'}</p>
                    </div>
                    <div className="text-right">
-                      <div className="font-display font-black text-2xl text-lotus-dark">{u.xp || 0}</div>
+                      <div className="font-display font-black text-2xl text-lotus-dark dark:text-white">{u.xp || 0}</div>
                       <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Total XP</div>
                    </div>
                 </div>
@@ -425,14 +425,14 @@ const EventsList = ({ events, setEvents }: { events: any[], setEvents: any }) =>
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.05 }} className="w-full">
        <div className="flex justify-between items-center mb-8">
           <h2 className="font-display font-extrabold text-2xl uppercase">Upcoming Sessions</h2>
-          <button onClick={() => setIsCreating(true)} className="neo-btn bg-genz-lime text-lotus-dark px-6 py-3 uppercase font-bold text-xs flex items-center gap-2 border-2 border-black">
+          <button onClick={() => setIsCreating(true)} className="neo-btn bg-genz-lime text-lotus-dark dark:text-white px-6 py-3 uppercase font-bold text-xs flex items-center gap-2 border-2 border-black">
              <Plus size={16} /> Host Event
           </button>
        </div>
 
        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {events.length === 0 ? (
-            <div className="col-span-full py-32 text-center bg-white neo-border rounded-[4rem] text-gray-300 font-display font-bold text-2xl uppercase tracking-widest">
+            <div className="col-span-full py-32 text-center bg-white dark:bg-gray-900 neo-border rounded-[4rem] text-gray-300 font-display font-bold text-2xl uppercase tracking-widest">
                No upcoming events yet.
             </div>
           ) : (
@@ -444,10 +444,10 @@ const EventsList = ({ events, setEvents }: { events: any[], setEvents: any }) =>
                else evDate = new Date();
 
                return (
-                  <div key={event.id} className="bg-white rounded-[3rem] neo-border neo-shadow-sm flex flex-col group overflow-hidden hover:-translate-y-2 transition-all duration-500 cursor-pointer border border-gray-100 relative">
+                  <div key={event.id} className="bg-white dark:bg-gray-900 rounded-[3rem] neo-border neo-shadow-sm flex flex-col group overflow-hidden hover:-translate-y-2 transition-all duration-500 cursor-pointer border border-gray-100 dark:border-gray-800 relative">
                      <div className="h-48 bg-lotus-dark relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                        <div className="absolute top-6 right-6 bg-white rounded-2xl p-3 shadow-xl text-center min-w-[60px] z-10">
+                        <div className="absolute top-6 right-6 bg-white dark:bg-gray-900 rounded-2xl p-3 shadow-xl text-center min-w-[60px] z-10">
                            <div className="text-lotus-red font-display font-black text-2xl leading-none">{evDate.getDate()}</div>
                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{evDate.toLocaleString('default', { month: 'short' })}</div>
                         </div>
@@ -456,21 +456,21 @@ const EventsList = ({ events, setEvents }: { events: any[], setEvents: any }) =>
                            <h3 className="font-display font-extrabold text-2xl uppercase leading-tight group-hover:text-genz-lime transition-colors">{event.title}</h3>
                         </div>
                      </div>
-                     <div className="p-8 flex flex-col flex-1 bg-white">
-                        <p className="text-gray-500 font-medium mb-6 line-clamp-2 text-sm">{event.description}</p>
+                     <div className="p-8 flex flex-col flex-1 bg-white dark:bg-gray-900">
+                        <p className="text-gray-500 dark:text-gray-400 font-medium mb-6 line-clamp-2 text-sm">{event.description}</p>
                         <div className="space-y-4 mt-auto mb-8">
-                           <div className="flex items-center gap-3 text-sm font-bold text-gray-600 uppercase tracking-widest">
+                           <div className="flex items-center gap-3 text-sm font-bold text-gray-600 dark:text-gray-300 uppercase tracking-widest">
                               <MapPin size={16} className="text-lotus-red/60" /> {event.location || 'Zoom'}
                            </div>
-                           <div className="flex items-center gap-3 text-sm font-bold text-gray-600 uppercase tracking-widest">
+                           <div className="flex items-center gap-3 text-sm font-bold text-gray-600 dark:text-gray-300 uppercase tracking-widest">
                               <Clock size={16} className="text-lotus-red/60" /> {event.time || 'TBD'}
                            </div>
-                           <div className="flex items-center gap-3 text-sm font-bold text-gray-600 uppercase tracking-widest">
+                           <div className="flex items-center gap-3 text-sm font-bold text-gray-600 dark:text-gray-300 uppercase tracking-widest">
                               <Users size={16} className="text-lotus-red/60" /> {(event.attendees || []).length} Attending
                            </div>
                         </div>
                         {isAttending ? (
-                           <button disabled className="w-full py-4 rounded-2xl bg-gray-100 text-gray-400 font-bold uppercase text-xs flex items-center justify-center gap-2">
+                           <button disabled className="w-full py-4 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-400 font-bold uppercase text-xs flex items-center justify-center gap-2">
                               <CheckCircle2 size={16} /> Spot Secured
                            </button>
                         ) : (
@@ -488,33 +488,33 @@ const EventsList = ({ events, setEvents }: { events: any[], setEvents: any }) =>
        <AnimatePresence>
           {isCreating && (
              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-lotus-dark/80 backdrop-blur-sm">
-                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white w-full max-w-2xl rounded-[3rem] p-10 neo-border shadow-2xl relative max-h-[90vh] overflow-y-auto">
-                   <button onClick={() => setIsCreating(false)} className="absolute top-6 right-6 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"><X size={24} /></button>
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[3rem] p-10 neo-border shadow-2xl relative max-h-[90vh] overflow-y-auto">
+                   <button onClick={() => setIsCreating(false)} className="absolute top-6 right-6 p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 rounded-full transition-colors"><X size={24} /></button>
                    <h2 className="font-display font-black text-3xl uppercase mb-8">Host a Tribe Event</h2>
                    
                    <div className="space-y-6">
                       <div>
-                         <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Event Title</label>
-                         <input value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 font-bold focus:border-lotus-dark focus:outline-none" placeholder="E.g., Crypto AMA" />
+                         <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Event Title</label>
+                         <input value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-bold focus:border-lotus-dark focus:outline-none" placeholder="E.g., Crypto AMA" />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                          <div>
-                            <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Date</label>
-                            <input type="date" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-4 font-bold text-sm focus:border-lotus-dark focus:outline-none" />
+                            <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Date</label>
+                            <input type="date" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-4 py-4 font-bold text-sm focus:border-lotus-dark focus:outline-none" />
                          </div>
                          <div>
-                            <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Time</label>
-                            <input type="time" value={newEvent.time} onChange={e => setNewEvent({...newEvent, time: e.target.value})} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-4 font-bold text-sm focus:border-lotus-dark focus:outline-none" />
+                            <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Time</label>
+                            <input type="time" value={newEvent.time} onChange={e => setNewEvent({...newEvent, time: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-4 py-4 font-bold text-sm focus:border-lotus-dark focus:outline-none" />
                          </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                          <div>
-                            <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Location/URL</label>
-                            <input value={newEvent.location} onChange={e => setNewEvent({...newEvent, location: e.target.value})} placeholder="Zoom link or city" className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 font-bold focus:border-lotus-dark focus:outline-none" />
+                            <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Location/URL</label>
+                            <input value={newEvent.location} onChange={e => setNewEvent({...newEvent, location: e.target.value})} placeholder="Zoom link or city" className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-bold focus:border-lotus-dark focus:outline-none" />
                          </div>
                          <div>
-                            <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Category</label>
-                            <select value={newEvent.category} onChange={e => setNewEvent({...newEvent, category: e.target.value})} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 font-bold focus:border-lotus-dark focus:outline-none">
+                            <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Category</label>
+                            <select value={newEvent.category} onChange={e => setNewEvent({...newEvent, category: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-bold focus:border-lotus-dark focus:outline-none">
                                <option>Live Webinar</option>
                                <option>Physical Meetup</option>
                                <option>Workshop</option>
@@ -523,10 +523,10 @@ const EventsList = ({ events, setEvents }: { events: any[], setEvents: any }) =>
                          </div>
                       </div>
                       <div>
-                         <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Description</label>
-                         <textarea value={newEvent.description} onChange={e => setNewEvent({...newEvent, description: e.target.value})} placeholder="What's this event about?" className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-6 min-h-[100px] font-medium focus:border-lotus-dark focus:outline-none" />
+                         <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Description</label>
+                         <textarea value={newEvent.description} onChange={e => setNewEvent({...newEvent, description: e.target.value})} placeholder="What's this event about?" className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl p-6 min-h-[100px] font-medium focus:border-lotus-dark focus:outline-none" />
                       </div>
-                      <button onClick={handleCreateEvent} disabled={!newEvent.title || !newEvent.date} className="w-full neo-btn bg-genz-lime text-lotus-dark py-5 rounded-2xl font-black uppercase text-sm border-2 border-black mt-4 disabled:opacity-50">Create Event (+50 XP)</button>
+                      <button onClick={handleCreateEvent} disabled={!newEvent.title || !newEvent.date} className="w-full neo-btn bg-genz-lime text-lotus-dark dark:text-white py-5 rounded-2xl font-black uppercase text-sm border-2 border-black mt-4 disabled:opacity-50">Create Event (+50 XP)</button>
                    </div>
                 </motion.div>
              </div>

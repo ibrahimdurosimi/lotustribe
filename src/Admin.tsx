@@ -45,7 +45,7 @@ const Notification = ({ message, type, onClose }: { message: string, type: 'succ
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 50 }}
       className={`fixed bottom-10 right-10 z-[200] px-6 py-4 rounded-2xl shadow-xl border-2 flex items-center gap-3 font-bold uppercase text-sm ${
-        type === 'success' ? 'bg-genz-lime border-black text-lotus-dark' : 'bg-red-500 border-white text-white'
+        type === 'success' ? 'bg-genz-lime border-black text-lotus-dark dark:text-white' : 'bg-red-500 border-white text-white'
       }`}
     >
       {type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
@@ -196,8 +196,8 @@ export const AdminDashboard = () => {
         xp: 100,
         badgeName: '',
         badgeIcon: '📂',
-        color: 'bg-gray-100',
-        accent: 'bg-gray-500',
+        color: 'bg-gray-100 dark:bg-gray-800',
+        accent: 'bg-gray-50 dark:bg-gray-8000',
         lessons: [{ id: 'lesson-1', title: 'New Lesson', readTime: '5 minutes', content: '<p>Content here...</p>', videoUrl: '', imageUrl: '' }],
         quiz: [{ question: 'Sample Question?', options: ['Option 1', 'Option 2', 'Option 3'], correctAnswer: 0 }]
     });
@@ -288,10 +288,10 @@ export const AdminDashboard = () => {
 
   if (!user || !isAdmin) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 bg-white rounded-3xl neo-border neo-shadow max-w-md mx-auto mt-24">
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 bg-white dark:bg-gray-900 rounded-3xl neo-border neo-shadow max-w-md mx-auto mt-24">
         <div className="text-6xl mb-6">🚫</div>
-        <h2 className="text-3xl font-display font-black uppercase text-lotus-dark mb-4">Access Denied</h2>
-        <p className="text-center text-gray-500 font-medium mb-8">This portal is for Lotus Tribe elders only. Please return to the training grounds.</p>
+        <h2 className="text-3xl font-display font-black uppercase text-lotus-dark dark:text-white mb-4">Access Denied</h2>
+        <p className="text-center text-gray-500 dark:text-gray-400 font-medium mb-8">This portal is for Lotus Tribe elders only. Please return to the training grounds.</p>
         <button onClick={() => window.location.href = '/learn'} className="neo-btn bg-lotus-dark text-white px-8 py-3 uppercase">Back to Hub</button>
       </div>
     );
@@ -308,15 +308,15 @@ export const AdminDashboard = () => {
           <div className="inline-block px-4 py-1.5 rounded-full bg-genz-purple text-white font-display font-bold text-xs tracking-wider uppercase mb-6 shadow-sm">
              Architect Mode
           </div>
-          <h1 className="font-display font-black text-5xl md:text-7xl text-lotus-dark leading-none uppercase tracking-tighter">
+          <h1 className="font-display font-black text-5xl md:text-7xl text-lotus-dark dark:text-white leading-none uppercase tracking-tighter">
             Curate <span className="text-lotus-red">Knowledge.</span>
           </h1>
         </div>
         <div className="flex gap-4">
-          <div className="bg-gray-100 p-1 rounded-2xl flex gap-1">
-             <button onClick={() => setActiveTab('courses')} className={`px-6 py-3 rounded-xl font-bold uppercase text-xs transition-all ${activeTab === 'courses' ? 'bg-white shadow-sm text-lotus-dark' : 'text-gray-400 hover:text-gray-600'}`}>Courses</button>
-             <button onClick={() => setActiveTab('modules')} className={`px-6 py-3 rounded-xl font-bold uppercase text-xs transition-all ${activeTab === 'modules' ? 'bg-white shadow-sm text-lotus-dark' : 'text-gray-400 hover:text-gray-600'}`}>Modules</button>
-             <button onClick={() => setActiveTab('events')} className={`px-6 py-3 rounded-xl font-bold uppercase text-xs transition-all ${activeTab === 'events' ? 'bg-white shadow-sm text-lotus-dark' : 'text-gray-400 hover:text-gray-600'}`}>Events</button>
+          <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl flex gap-1">
+             <button onClick={() => setActiveTab('courses')} className={`px-6 py-3 rounded-xl font-bold uppercase text-xs transition-all ${activeTab === 'courses' ? 'bg-white dark:bg-gray-900 shadow-sm text-lotus-dark dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:text-gray-300'}`}>Courses</button>
+             <button onClick={() => setActiveTab('modules')} className={`px-6 py-3 rounded-xl font-bold uppercase text-xs transition-all ${activeTab === 'modules' ? 'bg-white dark:bg-gray-900 shadow-sm text-lotus-dark dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:text-gray-300'}`}>Modules</button>
+             <button onClick={() => setActiveTab('events')} className={`px-6 py-3 rounded-xl font-bold uppercase text-xs transition-all ${activeTab === 'events' ? 'bg-white dark:bg-gray-900 shadow-sm text-lotus-dark dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:text-gray-300'}`}>Events</button>
           </div>
           {activeTab === 'courses' ? (
             <button onClick={startNew} className="neo-btn bg-lotus-dark text-white px-8 py-4 uppercase flex items-center gap-3 font-bold shadow-xl">
@@ -340,22 +340,22 @@ export const AdminDashboard = () => {
             <div className="p-20 text-center font-display font-bold text-2xl animate-pulse text-gray-300 uppercase">Indexing Courses...</div>
           ) : courses.length > 0 ? (
             courses.map(course => (
-              <div key={course.firestoreId} className="bg-white rounded-[2.5rem] neo-border neo-shadow-sm p-8 flex flex-col md:flex-row items-center justify-between gap-8 hover:-translate-y-1 transition-transform border border-gray-100">
+              <div key={course.firestoreId} className="bg-white dark:bg-gray-900 rounded-[2.5rem] neo-border neo-shadow-sm p-8 flex flex-col md:flex-row items-center justify-between gap-8 hover:-translate-y-1 transition-transform border border-gray-100 dark:border-gray-800">
                 <div className="flex items-center gap-8 w-full md:w-auto">
                   <div className={`w-20 h-20 rounded-3xl ${course.color} flex items-center justify-center text-5xl shadow-inner shrink-0`}>
                       {course.badgeIcon}
                   </div>
                   <div>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{course.module}</p>
-                      <h3 className="font-display font-bold text-2xl text-lotus-dark uppercase leading-tight">{course.title}</h3>
+                      <h3 className="font-display font-bold text-2xl text-lotus-dark dark:text-white uppercase leading-tight">{course.title}</h3>
                       <div className="flex gap-4 mt-2">
-                        <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded font-bold uppercase">{course.level}</span>
+                        <span className="text-[10px] bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded font-bold uppercase">{course.level}</span>
                         <span className="text-[10px] text-lotus-red font-bold uppercase">{course.lessons?.length || 0} Lessons • {course.quiz?.length || 0} Quiz Qs</span>
                       </div>
                   </div>
                 </div>
                 <div className="flex gap-3 w-full md:w-auto">
-                    <button onClick={() => startEdit(course)} className="flex-1 md:flex-none py-3 px-6 bg-white border-2 border-lotus-dark rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-2 hover:bg-gray-50">
+                    <button onClick={() => startEdit(course)} className="flex-1 md:flex-none py-3 px-6 bg-white dark:bg-gray-900 border-2 border-lotus-dark rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800">
                       <Edit2 size={16} /> Edit
                     </button>
                     <button onClick={() => handleDelete('courses', course.firestoreId)} className="flex-1 md:flex-none py-3 px-6 bg-red-50 text-red-600 border-2 border-red-100 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-2 hover:bg-red-100">
@@ -365,11 +365,11 @@ export const AdminDashboard = () => {
               </div>
             ))
           ) : (
-            <div className="p-24 text-center bg-white neo-border rounded-[4rem] border-dashed border-4 border-gray-100">
+            <div className="p-24 text-center bg-white dark:bg-gray-900 neo-border rounded-[4rem] border-dashed border-4 border-gray-100 dark:border-gray-800">
                <div className="text-6xl mb-8">📭</div>
-               <h3 className="font-display font-black text-3xl uppercase text-lotus-dark mb-4">No Knowledge Found</h3>
+               <h3 className="font-display font-black text-3xl uppercase text-lotus-dark dark:text-white mb-4">No Knowledge Found</h3>
                <p className="text-gray-400 font-bold uppercase text-xs mb-10">You have no courses in the database. Restore original data to begin.</p>
-               <button onClick={handleBootstrap} className="neo-btn bg-genz-lime text-lotus-dark px-10 py-4 uppercase font-bold text-sm shadow-xl border-2 border-black">
+               <button onClick={handleBootstrap} className="neo-btn bg-genz-lime text-lotus-dark dark:text-white px-10 py-4 uppercase font-bold text-sm shadow-xl border-2 border-black">
                   Restore Tribe Data
                </button>
             </div>
@@ -378,9 +378,9 @@ export const AdminDashboard = () => {
       ) : activeTab === 'modules' ? (
         <div className="grid gap-6">
           {modules.map(mod => (
-            <div key={mod.firestoreId} className="bg-white rounded-[2rem] neo-border neo-shadow-sm p-6 flex items-center justify-between gap-6 border border-gray-100">
+            <div key={mod.firestoreId} className="bg-white dark:bg-gray-900 rounded-[2rem] neo-border neo-shadow-sm p-6 flex items-center justify-between gap-6 border border-gray-100 dark:border-gray-800">
                <div className="flex items-center gap-6">
-                  <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center font-black text-xl text-gray-400">
+                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center font-black text-xl text-gray-400">
                     {mod.order}
                   </div>
                   <div>
@@ -389,19 +389,19 @@ export const AdminDashboard = () => {
                   </div>
                </div>
                <div className="flex gap-2">
-                  <button onClick={() => { setCurrentModule(mod); setIsEditingModule(true); }} className="p-3 bg-white border-2 border-gray-100 rounded-xl hover:bg-gray-50"><Edit2 size={16}/></button>
+                  <button onClick={() => { setCurrentModule(mod); setIsEditingModule(true); }} className="p-3 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800"><Edit2 size={16}/></button>
                   <button onClick={() => handleDelete('modules', mod.firestoreId)} className="p-3 bg-red-50 text-red-600 border-2 border-red-100 rounded-xl hover:bg-red-100"><Trash2 size={16}/></button>
                </div>
             </div>
           ))}
-          <button onClick={startNewModule} className="p-8 border-2 border-dashed border-gray-200 rounded-[2rem] text-gray-400 font-bold uppercase hover:bg-gray-50 flex items-center justify-center gap-3">
+          <button onClick={startNewModule} className="p-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-[2rem] text-gray-400 font-bold uppercase hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-center gap-3">
              <Plus size={20} /> Add New Module
           </button>
         </div>
       ) : (
         <div className="grid gap-6">
            {events.map(event => (
-              <div key={event.firestoreId} className="bg-white rounded-[2rem] neo-border neo-shadow-sm p-6 flex items-center justify-between gap-6 border border-gray-100">
+              <div key={event.firestoreId} className="bg-white dark:bg-gray-900 rounded-[2rem] neo-border neo-shadow-sm p-6 flex items-center justify-between gap-6 border border-gray-100 dark:border-gray-800">
                  <div className="flex items-center gap-6">
                     <div className="w-16 h-16 bg-lotus-red/10 rounded-2xl flex items-center justify-center text-lotus-red">
                        <Calendar size={28} />
@@ -413,12 +413,12 @@ export const AdminDashboard = () => {
                     </div>
                  </div>
                  <div className="flex gap-2">
-                    <button onClick={() => { setCurrentEvent(event); setIsEditingEvent(true); }} className="p-3 bg-white border-2 border-gray-100 rounded-xl hover:bg-gray-50"><Edit2 size={16}/></button>
+                    <button onClick={() => { setCurrentEvent(event); setIsEditingEvent(true); }} className="p-3 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800"><Edit2 size={16}/></button>
                     <button onClick={() => handleDelete('events', event.firestoreId)} className="p-3 bg-red-50 text-red-600 border-2 border-red-100 rounded-xl hover:bg-red-100"><Trash2 size={16}/></button>
                  </div>
               </div>
            ))}
-           <button onClick={() => { setCurrentEvent({ title: '', date: '', time: '6:00 PM', location: 'Zoom', category: 'Live Webinar' }); setIsEditingEvent(true); }} className="p-8 border-2 border-dashed border-gray-200 rounded-[2rem] text-gray-400 font-bold uppercase hover:bg-gray-50 flex items-center justify-center gap-3">
+           <button onClick={() => { setCurrentEvent({ title: '', date: '', time: '6:00 PM', location: 'Zoom', category: 'Live Webinar' }); setIsEditingEvent(true); }} className="p-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-[2rem] text-gray-400 font-bold uppercase hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-center gap-3">
               <Plus size={20} /> Create New Event
            </button>
         </div>
@@ -428,25 +428,25 @@ export const AdminDashboard = () => {
       <AnimatePresence>
         {isEditingModule && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-lotus-dark/40 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-white w-full max-w-md rounded-[3rem] p-8 neo-border neo-shadow">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-white dark:bg-gray-900 w-full max-w-md rounded-[3rem] p-8 neo-border neo-shadow">
                <h2 className="font-display font-black text-3xl uppercase mb-8">Manage Module</h2>
                <div className="space-y-6 mb-10">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Module ID (e.g. MODULE 0)</label>
-                    <input value={currentModule.id} onChange={e => setCurrentModule({...currentModule, id: e.target.value.toUpperCase()})} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 font-bold" />
+                    <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Module ID (e.g. MODULE 0)</label>
+                    <input value={currentModule.id} onChange={e => setCurrentModule({...currentModule, id: e.target.value.toUpperCase()})} className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-bold" />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Title</label>
-                    <input value={currentModule.title} onChange={e => setCurrentModule({...currentModule, title: e.target.value.toUpperCase()})} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 font-bold" />
+                    <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Title</label>
+                    <input value={currentModule.title} onChange={e => setCurrentModule({...currentModule, title: e.target.value.toUpperCase()})} className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-bold" />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Order (Sorting)</label>
-                    <input type="number" value={currentModule.order} onChange={e => setCurrentModule({...currentModule, order: parseInt(e.target.value)})} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 font-bold" />
+                    <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Order (Sorting)</label>
+                    <input type="number" value={currentModule.order} onChange={e => setCurrentModule({...currentModule, order: parseInt(e.target.value)})} className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-bold" />
                   </div>
                </div>
                <div className="flex gap-3">
                   <button onClick={saveModule} className="flex-1 py-4 bg-genz-lime rounded-2xl font-black uppercase text-sm border-2 border-black">Save Module</button>
-                  <button onClick={() => setIsEditingModule(false)} className="px-6 py-4 bg-gray-100 rounded-2xl font-bold uppercase text-xs">Cancel</button>
+                  <button onClick={() => setIsEditingModule(false)} className="px-6 py-4 bg-gray-100 dark:bg-gray-800 rounded-2xl font-bold uppercase text-xs">Cancel</button>
                </div>
             </motion.div>
           </div>
@@ -457,30 +457,30 @@ export const AdminDashboard = () => {
       <AnimatePresence>
         {isEditingEvent && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-lotus-dark/40 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-white w-full max-w-md rounded-[3rem] p-8 neo-border neo-shadow">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-white dark:bg-gray-900 w-full max-w-md rounded-[3rem] p-8 neo-border neo-shadow">
                <h2 className="font-display font-black text-3xl uppercase mb-8">Manage Event</h2>
                <div className="space-y-4 mb-10">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Event Title</label>
-                    <input value={currentEvent.title} onChange={e => setCurrentEvent({...currentEvent, title: e.target.value})} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 font-bold" />
+                    <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Event Title</label>
+                    <input value={currentEvent.title} onChange={e => setCurrentEvent({...currentEvent, title: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-bold" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Date</label>
-                      <input type="date" value={currentEvent.date instanceof Timestamp ? currentEvent.date.toDate().toISOString().split('T')[0] : currentEvent.date} onChange={e => setCurrentEvent({...currentEvent, date: e.target.value})} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-4 font-bold text-sm" />
+                      <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Date</label>
+                      <input type="date" value={currentEvent.date instanceof Timestamp ? currentEvent.date.toDate().toISOString().split('T')[0] : currentEvent.date} onChange={e => setCurrentEvent({...currentEvent, date: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-4 py-4 font-bold text-sm" />
                     </div>
                     <div>
-                      <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Time</label>
-                      <input value={currentEvent.time} onChange={e => setCurrentEvent({...currentEvent, time: e.target.value})} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-4 font-bold text-sm" />
+                      <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Time</label>
+                      <input value={currentEvent.time} onChange={e => setCurrentEvent({...currentEvent, time: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-4 py-4 font-bold text-sm" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Location/URL</label>
-                    <input value={currentEvent.location} onChange={e => setCurrentEvent({...currentEvent, location: e.target.value})} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 font-bold" />
+                    <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Location/URL</label>
+                    <input value={currentEvent.location} onChange={e => setCurrentEvent({...currentEvent, location: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-bold" />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Category</label>
-                    <select value={currentEvent.category} onChange={e => setCurrentEvent({...currentEvent, category: e.target.value})} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 font-bold appearance-none cursor-pointer">
+                    <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Category</label>
+                    <select value={currentEvent.category} onChange={e => setCurrentEvent({...currentEvent, category: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-bold appearance-none cursor-pointer">
                        <option>Live Webinar</option>
                        <option>Physical Meetup</option>
                        <option>Workshop</option>
@@ -489,7 +489,7 @@ export const AdminDashboard = () => {
                </div>
                <div className="flex gap-3">
                   <button onClick={saveEvent} className="flex-1 py-4 bg-genz-lime rounded-2xl font-black uppercase text-sm border-2 border-black">Save Event</button>
-                  <button onClick={() => setIsEditingEvent(false)} className="px-6 py-4 bg-gray-100 rounded-2xl font-bold uppercase text-xs">Cancel</button>
+                  <button onClick={() => setIsEditingEvent(false)} className="px-6 py-4 bg-gray-100 dark:bg-gray-800 rounded-2xl font-bold uppercase text-xs">Cancel</button>
                </div>
             </motion.div>
           </div>
@@ -502,33 +502,33 @@ export const AdminDashboard = () => {
                initial={{ opacity: 0, scale: 0.9, y: 20 }}
                animate={{ opacity: 1, scale: 1, y: 0 }}
                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-               className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-[3.5rem] neo-border neo-shadow-sm p-8 md:p-12 relative"
+               className="bg-white dark:bg-gray-900 w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-[3.5rem] neo-border neo-shadow-sm p-8 md:p-12 relative"
             >
-               <button onClick={() => setIsEditing(false)} className="absolute top-8 right-8 p-3 hover:bg-gray-100 rounded-full transition-colors">
+               <button onClick={() => setIsEditing(false)} className="absolute top-8 right-8 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
                   <X size={28} />
                </button>
 
-               <h2 className="font-display font-black text-4xl uppercase mb-10 text-lotus-dark">
+               <h2 className="font-display font-black text-4xl uppercase mb-10 text-lotus-dark dark:text-white">
                   {currentCourse.firestoreId ? 'Edit Course' : 'Create Course'}
                </h2>
 
                <div className="grid md:grid-cols-2 gap-8 mb-10">
                   <div className="space-y-6">
                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2 tracking-widest pl-1">Course Title</label>
+                        <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2 tracking-widest pl-1">Course Title</label>
                         <input 
                            type="text" 
                            value={currentCourse.title}
                            onChange={(e) => setCurrentCourse({...currentCourse, title: e.target.value})}
-                           className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 focus:outline-none focus:border-lotus-dark font-display font-bold text-lg"
+                           className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 focus:outline-none focus:border-lotus-dark font-display font-bold text-lg"
                         />
                      </div>
                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2 tracking-widest pl-1">Module</label>
+                        <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2 tracking-widest pl-1">Module</label>
                         <select 
                            value={currentCourse.module}
                            onChange={(e) => setCurrentCourse({...currentCourse, module: e.target.value})}
-                           className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 focus:outline-none focus:border-lotus-dark font-bold appearance-none cursor-pointer"
+                           className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 focus:outline-none focus:border-lotus-dark font-bold appearance-none cursor-pointer"
                         >
                            {modules.length > 0 ? (
                              modules.map(mod => <option key={mod.id} value={`${mod.id}: ${mod.title}`}>{mod.id}: {mod.title}</option>)
@@ -541,11 +541,11 @@ export const AdminDashboard = () => {
                         </select>
                      </div>
                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2 tracking-widest pl-1">Level</label>
+                        <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2 tracking-widest pl-1">Level</label>
                         <select 
                            value={currentCourse.level}
                            onChange={(e) => setCurrentCourse({...currentCourse, level: e.target.value})}
-                           className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 focus:outline-none focus:border-lotus-dark font-bold appearance-none"
+                           className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 focus:outline-none focus:border-lotus-dark font-bold appearance-none"
                         >
                            <option>Beginner</option>
                            <option>Intermediate</option>
@@ -557,32 +557,32 @@ export const AdminDashboard = () => {
                   <div className="space-y-6">
                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                           <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2 tracking-widest pl-1">Badge Name</label>
+                           <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2 tracking-widest pl-1">Badge Name</label>
                            <input 
                               type="text" 
                               value={currentCourse.badgeName}
                               onChange={(e) => setCurrentCourse({...currentCourse, badgeName: e.target.value})}
-                              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 font-bold"
+                              className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-bold"
                            />
                         </div>
                         <div>
-                           <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2 tracking-widest pl-1">Icon (Emoji)</label>
+                           <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2 tracking-widest pl-1">Icon (Emoji)</label>
                            <input 
                               type="text" 
                               value={currentCourse.badgeIcon}
                               onChange={(e) => setCurrentCourse({...currentCourse, badgeIcon: e.target.value})}
-                              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 text-center text-2xl"
+                              className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 text-center text-2xl"
                            />
                         </div>
                      </div>
                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                           <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2 tracking-widest pl-1">XP</label>
-                           <input type="number" value={currentCourse.xp} onChange={e => setCurrentCourse({...currentCourse, xp: parseInt(e.target.value)})} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 font-bold" />
+                           <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2 tracking-widest pl-1">XP</label>
+                           <input type="number" value={currentCourse.xp} onChange={e => setCurrentCourse({...currentCourse, xp: parseInt(e.target.value)})} className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-bold" />
                         </div>
                         <div>
-                           <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2 tracking-widest pl-1">ID Slug</label>
-                           <input value={currentCourse.id} onChange={e => setCurrentCourse({...currentCourse, id: e.target.value.toLowerCase().replace(/ /g, '-')})} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 font-mono text-sm" />
+                           <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2 tracking-widest pl-1">ID Slug</label>
+                           <input value={currentCourse.id} onChange={e => setCurrentCourse({...currentCourse, id: e.target.value.toLowerCase().replace(/ /g, '-')})} className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-mono text-sm" />
                         </div>
                      </div>
                   </div>
@@ -606,9 +606,9 @@ export const AdminDashboard = () => {
                   
                   <div className="space-y-6">
                      {currentCourse.lessons?.map((lesson: any, idx: number) => (
-                        <div key={idx} className="bg-gray-50 border-2 border-gray-100 rounded-[2.5rem] p-8">
+                        <div key={idx} className="bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-[2.5rem] p-8">
                            <div className="flex justify-between items-start mb-6">
-                              <span className="bg-white border-2 border-black w-10 h-10 rounded-full flex items-center justify-center font-black text-sm">{idx + 1}</span>
+                              <span className="bg-white dark:bg-gray-900 border-2 border-black w-10 h-10 rounded-full flex items-center justify-center font-black text-sm">{idx + 1}</span>
                               <button onClick={() => {
                                  const lessons = currentCourse.lessons.filter((_: any, i: number) => i !== idx);
                                  setCurrentCourse({...currentCourse, lessons});
@@ -618,10 +618,10 @@ export const AdminDashboard = () => {
                            <div className="grid md:grid-cols-2 gap-4 mb-6">
                               <input placeholder="Title" value={lesson.title} onChange={e => {
                                  const lessons = [...currentCourse.lessons]; lessons[idx].title = e.target.value; setCurrentCourse({...currentCourse, lessons});
-                              }} className="w-full bg-white border-2 border-gray-100 rounded-2xl px-6 py-3 font-bold" />
+                              }} className="w-full bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-3 font-bold" />
                               <input placeholder="Read Time (e.g. 5m)" value={lesson.readTime} onChange={e => {
                                  const lessons = [...currentCourse.lessons]; lessons[idx].readTime = e.target.value; setCurrentCourse({...currentCourse, lessons});
-                              }} className="w-full bg-white border-2 border-gray-100 rounded-2xl px-6 py-3" />
+                              }} className="w-full bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-3" />
                            </div>
 
                            <div className="grid md:grid-cols-2 gap-4 mb-6">
@@ -629,26 +629,26 @@ export const AdminDashboard = () => {
                                  <Video className="absolute left-4 top-4 text-gray-300" size={18} />
                                  <input placeholder="Video URL (Youtube/Vimeo)" value={lesson.videoUrl} onChange={e => {
                                     const lessons = [...currentCourse.lessons]; lessons[idx].videoUrl = e.target.value; setCurrentCourse({...currentCourse, lessons});
-                                 }} className="w-full bg-white border-2 border-gray-100 rounded-2xl pl-12 pr-6 py-3 text-sm" />
+                                 }} className="w-full bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-2xl pl-12 pr-6 py-3 text-sm" />
                               </div>
                               <div className="relative">
                                  <ImageIcon className="absolute left-4 top-4 text-gray-300" size={18} />
                                  <input placeholder="Image URL" value={lesson.imageUrl} onChange={e => {
                                     const lessons = [...currentCourse.lessons]; lessons[idx].imageUrl = e.target.value; setCurrentCourse({...currentCourse, lessons});
-                                 }} className="w-full bg-white border-2 border-gray-100 rounded-2xl pl-12 pr-6 py-3 text-sm" />
+                                 }} className="w-full bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-2xl pl-12 pr-6 py-3 text-sm" />
                               </div>
                            </div>
 
                            <textarea placeholder="Lesson Content (HTML allowed)" value={lesson.content} onChange={e => {
                               const lessons = [...currentCourse.lessons]; lessons[idx].content = e.target.value; setCurrentCourse({...currentCourse, lessons});
-                           }} className="w-full bg-white border-2 border-gray-100 rounded-2xl px-6 py-4 font-mono text-xs h-40" />
+                           }} className="w-full bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-mono text-xs h-40" />
                         </div>
                      ))}
                   </div>
                </div>
 
                {/* Quiz Editor */}
-               <div className="mb-12 border-t pt-12 border-gray-100">
+               <div className="mb-12 border-t pt-12 border-gray-100 dark:border-gray-800">
                   <div className="flex justify-between items-center mb-6">
                      <h3 className="font-display font-bold text-xl uppercase text-gray-400 flex items-center gap-2"><HelpCircle /> Final Quiz</h3>
                      <button 
@@ -665,7 +665,7 @@ export const AdminDashboard = () => {
                   
                   <div className="space-y-6">
                      {currentCourse.quiz?.map((q: any, qIdx: number) => (
-                        <div key={qIdx} className="bg-gray-50 border-2 border-gray-100 rounded-[2.5rem] p-8">
+                        <div key={qIdx} className="bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-[2.5rem] p-8">
                            <div className="flex justify-between items-center mb-6">
                               <span className="font-black text-xs uppercase tracking-widest text-gray-400">Question {qIdx + 1}</span>
                               <button onClick={() => {
@@ -675,7 +675,7 @@ export const AdminDashboard = () => {
                            </div>
                            <input value={q.question} onChange={e => {
                               const quiz = [...currentCourse.quiz]; quiz[qIdx].question = e.target.value; setCurrentCourse({...currentCourse, quiz});
-                           }} className="w-full bg-white border-2 border-gray-100 rounded-2xl px-6 py-4 font-bold mb-4" />
+                           }} className="w-full bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-bold mb-4" />
                            
                            <div className="space-y-3">
                               {q.options.map((opt: string, oIdx: number) => (
@@ -685,7 +685,7 @@ export const AdminDashboard = () => {
                                     }} />
                                     <input value={opt} onChange={e => {
                                        const quiz = [...currentCourse.quiz]; quiz[qIdx].options[oIdx] = e.target.value; setCurrentCourse({...currentCourse, quiz});
-                                    }} className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm" placeholder={`Option ${oIdx + 1}`} />
+                                    }} className="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm" placeholder={`Option ${oIdx + 1}`} />
                                  </div>
                               ))}
                            </div>
@@ -695,10 +695,10 @@ export const AdminDashboard = () => {
                </div>
 
                <div className="flex gap-4">
-                  <button onClick={saveCourse} disabled={loading} className="flex-1 neo-btn bg-genz-lime text-lotus-dark py-5 uppercase font-black text-xl flex items-center justify-center gap-3">
+                  <button onClick={saveCourse} disabled={loading} className="flex-1 neo-btn bg-genz-lime text-lotus-dark dark:text-white py-5 uppercase font-black text-xl flex items-center justify-center gap-3">
                      {loading ? 'Processing...' : <><Save size={24} /> Publish Everything</>}
                   </button>
-                  <button onClick={() => setIsEditing(false)} className="px-10 py-5 bg-gray-100 rounded-3xl font-bold uppercase text-gray-500 hover:bg-gray-200">Cancel</button>
+                  <button onClick={() => setIsEditing(false)} className="px-10 py-5 bg-gray-100 dark:bg-gray-800 rounded-3xl font-bold uppercase text-gray-500 dark:text-gray-400 hover:bg-gray-200">Cancel</button>
                </div>
             </motion.div>
           </div>

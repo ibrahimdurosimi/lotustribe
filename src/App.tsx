@@ -18,7 +18,9 @@ import {
   ChevronRight,
   BookOpen,
   Sparkles,
-  Share2
+  Share2,
+  Sun,
+  Moon
 } from 'lucide-react';
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { auth, loginWithGoogle, logout, db, handleFirestoreError, OperationType } from './lib/firebase';
@@ -79,6 +81,28 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, userProfile } = useContext(AuthContext);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // Check initial theme from localStorage or system preference
+    const storedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
+      setIsDark(true);
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDark(!isDark);
+    if (!isDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
 
   const location = useLocation();
   const isLearnRoute = location.pathname.startsWith('/learn');
@@ -87,23 +111,32 @@ const Navbar = () => {
 
   return (
     <nav className="fixed w-full z-50 p-4 pointer-events-none">
-      <div className="max-w-6xl mx-auto bg-white neo-border neo-shadow rounded-2xl pointer-events-auto flex justify-between items-center px-6 py-4">
+      <div className="max-w-6xl mx-auto bg-white dark:bg-gray-900 neo-border neo-shadow rounded-2xl pointer-events-auto flex justify-between items-center px-6 py-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 cursor-pointer group">
           <img src="/lotus-logo.png" alt="Lotus Tribe Logo" className="h-8 md:h-10 transform group-hover:-rotate-2 group-hover:scale-105 transition-all" />
         </Link>
+        
+        {/* Theme Toggle Mobile */}
+        <button onClick={toggleTheme} className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors ml-auto mr-2" aria-label="Toggle theme">
+          {isDark ? <Sun className="w-5 h-5 text-gray-600 dark:text-gray-300" /> : <Moon className="w-5 h-5 text-gray-600 dark:text-gray-300" />}
+        </button>
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8 font-display font-semibold">
           <div className="relative group perspective-1000">
             <Link to="/invest" className="hover:text-genz-pink transition-colors cursor-pointer inline-block">Invest <ChevronRight className="inline w-4 h-4 transform group-hover:rotate-90 transition-transform" /></Link>
-            <div className="absolute top-full left-0 mt-2 w-48 bg-white neo-border neo-shadow-sm rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left -rotate-x-12 group-hover:rotate-x-0">
+            <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-900 neo-border neo-shadow-sm rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left -rotate-x-12 group-hover:rotate-x-0">
               <Link to="/invest/fif" className="block px-4 py-3 hover:bg-genz-lime hover:font-bold border-b-2 border-black/5 last:border-b-0 transition-colors">Low Risk (FIF)</Link>
               <Link to="/invest/halal" className="block px-4 py-3 hover:bg-genz-pink hover:font-bold transition-colors">Moderate Risk (Halal)</Link>
             </div>
           </div>
           <Link to="/learn" className="hover:text-genz-purple transition-colors hover:-translate-y-0.5 inline-block transform duration-150">Learn</Link>
           <Link to="/community" className="hover:text-genz-pink transition-colors hover:-translate-y-0.5 inline-block transform duration-150">Community</Link>
+          
+          <button onClick={toggleTheme} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors" aria-label="Toggle theme">
+            {isDark ? <Sun className="w-5 h-5 text-gray-600 dark:text-gray-300" /> : <Moon className="w-5 h-5 text-gray-600 dark:text-gray-300" />}
+          </button>
           
           {user ? (
             <div className="flex items-center gap-4">
@@ -116,7 +149,7 @@ const Navbar = () => {
                 </div>
                 <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`} className="w-10 h-10 rounded-full neo-border transform group-hover:scale-105 transition-transform" alt="Avatar"/>
               </Link>
-              <button onClick={logout} className="p-2 hover:bg-gray-100 rounded-lg transition-colors ml-2" title="Log Out">
+              <button onClick={logout} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors ml-2" title="Log Out">
                 <LogOut className="w-5 h-5" />
               </button>
             </div>
@@ -132,7 +165,7 @@ const Navbar = () => {
 
         {/* Mobile Menu Toggle */}
         <button 
-          className="md:hidden p-2 neo-border rounded-lg bg-gray-100 hover:bg-genz-lime transition-colors"
+          className="md:hidden p-2 neo-border rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-genz-lime transition-colors"
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -144,7 +177,7 @@ const Navbar = () => {
         <motion.div 
           initial={{ opacity: 0, y: -20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          className="md:hidden absolute top-24 left-4 right-4 bg-white neo-border neo-shadow rounded-2xl p-6 flex flex-col gap-4 pointer-events-auto"
+          className="md:hidden absolute top-24 left-4 right-4 bg-white dark:bg-gray-900 neo-border neo-shadow rounded-2xl p-6 flex flex-col gap-4 pointer-events-auto"
         >
           <div className="flex flex-col gap-2">
             <span className="font-display font-bold text-xl uppercase py-2 border-b-2 border-black text-[#C10202]">Invest</span>
@@ -167,7 +200,7 @@ const Navbar = () => {
                </button>
              </div>
           ) : (
-            <button onClick={() => { loginWithGoogle(); setIsOpen(false); }} className="neo-btn bg-genz-lime text-lotus-dark w-full mt-4 uppercase text-lg">
+            <button onClick={() => { loginWithGoogle(); setIsOpen(false); }} className="neo-btn bg-genz-lime text-lotus-dark dark:text-white w-full mt-4 uppercase text-lg">
               Join the Tribe
             </button>
           )}
@@ -179,7 +212,7 @@ const Navbar = () => {
 
 const Hero = () => {
   return (
-    <section className="relative pt-48 pb-28 overflow-hidden bg-[#1A1A1A]">
+    <section className="relative pt-48 pb-28 overflow-hidden bg-[#1A1A1A] dark:bg-[#0a0a0a]">
       {/* Financial Pattern Background */}
       <div 
         className="absolute inset-0 z-0 opacity-100 pointer-events-none" 
@@ -214,7 +247,7 @@ const Hero = () => {
                 </button>
               </Link>
               <Link to="/invest">
-                <button className="neo-btn w-full bg-white text-lotus-dark text-lg flex items-center justify-center">
+                <button className="neo-btn w-full bg-white dark:bg-gray-900 text-lotus-dark dark:text-white text-lg flex items-center justify-center">
                   Explore Funds
                 </button>
               </Link>
@@ -239,15 +272,15 @@ const Hero = () => {
             className="relative h-[550px] w-full flex items-center justify-center perspective-1000"
           >
             {/* Dashboard Mockup */}
-            <div className="w-[450px] h-[320px] bg-white rounded-xl neo-border neo-shadow p-0 relative z-20 overflow-hidden transform rotate-2 hover:rotate-0 transition-transform duration-500">
+            <div className="w-[450px] h-[320px] bg-white dark:bg-gray-900 rounded-xl neo-border neo-shadow p-0 relative z-20 overflow-hidden transform rotate-2 hover:rotate-0 transition-transform duration-500">
                {/* header */}
-               <div className="bg-gray-50 border-b border-black/10 py-3 px-4 flex justify-between items-center">
+               <div className="bg-gray-50 dark:bg-gray-800 border-b border-black/10 py-3 px-4 flex justify-between items-center">
                   <div className="flex items-center gap-2">
                      <div className="w-6 h-6 rounded-md bg-[#C10202] text-white flex items-center justify-center font-bold text-[10px]">LT</div>
                      <span className="font-display font-bold text-sm">Portfolio Overview</span>
                   </div>
                   <div className="flex items-center gap-2">
-                     <span className="text-xs font-bold text-gray-500">₦150,450.00</span>
+                     <span className="text-xs font-bold text-gray-500 dark:text-gray-400">₦150,450.00</span>
                      <div className="w-6 h-6 rounded-full bg-genz-lime neo-border text-xs flex items-center justify-center">+</div>
                   </div>
                </div>
@@ -266,7 +299,7 @@ const Hero = () => {
                </div>
                {/* chart area */}
                <div className="px-4">
-                  <div className="w-full h-24 bg-gray-50 rounded-lg border border-gray-100 flex items-end px-2 gap-2 pt-4">
+                  <div className="w-full h-24 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-800 flex items-end px-2 gap-2 pt-4">
                      {/* Fake chart bars */}
                      {[30, 40, 35, 50, 45, 60, 75, 65, 80, 95].map((h, i) => (
                         <div key={i} className="flex-1 bg-[#C10202]/20 rounded-t-sm" style={{ height: `${h}%` }}></div>
@@ -276,17 +309,17 @@ const Hero = () => {
             </div>
 
             {/* LMS / Module Mockup (Floating behind) */}
-            <div className="absolute -bottom-10 -right-4 w-[280px] h-[200px] bg-white rounded-xl neo-border neo-shadow-sm p-4 z-30 transform -rotate-6 hover:rotate-0 transition-transform duration-500">
+            <div className="absolute -bottom-10 -right-4 w-[280px] h-[200px] bg-white dark:bg-gray-900 rounded-xl neo-border neo-shadow-sm p-4 z-30 transform -rotate-6 hover:rotate-0 transition-transform duration-500">
                <div className="flex gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-lg bg-genz-pink text-lotus-dark flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-lg bg-genz-pink text-lotus-dark dark:text-white flex items-center justify-center">
                      <BookOpen className="w-6 h-6" />
                   </div>
                   <div>
                     <h4 className="font-display font-bold text-sm leading-tight">Module 3</h4>
-                    <p className="text-xs font-bold text-gray-500">Ethical Investing</p>
+                    <p className="text-xs font-bold text-gray-500 dark:text-gray-400">Ethical Investing</p>
                   </div>
                </div>
-               <div className="bg-gray-100 w-full h-2 rounded-full mb-2"><div className="bg-[#C10202] h-full w-1/2 rounded-full"></div></div>
+               <div className="bg-gray-100 dark:bg-gray-800 w-full h-2 rounded-full mb-2"><div className="bg-[#C10202] h-full w-1/2 rounded-full"></div></div>
                <p className="text-[10px] uppercase font-bold text-right text-gray-400 mb-4">50% Completed</p>
                <button className="w-full neo-btn py-2 text-xs bg-genz-lime">Continue Lesson</button>
             </div>
@@ -295,7 +328,7 @@ const Hero = () => {
             <motion.div 
               animate={{ y: [0, -10, 0] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className="absolute top-10 -left-6 bg-white neo-border neo-shadow px-4 py-3 rounded-xl z-30 transform -rotate-12 flex items-center gap-2"
+              className="absolute top-10 -left-6 bg-white dark:bg-gray-900 neo-border neo-shadow px-4 py-3 rounded-xl z-30 transform -rotate-12 flex items-center gap-2"
             >
               <Award className="w-5 h-5 text-[#C10202]" />
               <span className="font-display font-bold text-xs uppercase tracking-tight">Level 5 Investor</span>
@@ -320,10 +353,10 @@ const FeatureLearnEarn = () => {
   );
 
   return (
-    <section id="learn" className="py-32 bg-[#111] text-white">
+    <section id="learn" className="py-32 bg-[#111] dark:bg-[#050505] text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-block px-5 py-2 rounded-full bg-genz-pink text-lotus-dark font-display font-bold text-sm tracking-wider uppercase mb-8 neo-shadow -rotate-2">
+          <div className="inline-block px-5 py-2 rounded-full bg-genz-pink text-lotus-dark dark:text-white font-display font-bold text-sm tracking-wider uppercase mb-8 neo-shadow -rotate-2">
             Learning Hub
           </div>
           <h2 className="text-5xl md:text-7xl font-display font-extrabold uppercase leading-none mb-8">
@@ -340,7 +373,7 @@ const FeatureLearnEarn = () => {
               <button
                  key={level}
                  onClick={() => setActiveLevel(level)}
-                 className={`px-6 py-2 rounded-2xl font-bold font-display uppercase tracking-wide transition-all ${activeLevel === level ? 'bg-genz-lime text-black border-2 border-black shadow-[4px_4px_0_0_#000] transform -translate-y-1' : 'bg-[#222] text-gray-400 border-2 border-transparent hover:border-gray-600'}`}
+                 className={`px-6 py-2 rounded-2xl font-bold font-display uppercase tracking-wide transition-all ${activeLevel === level ? 'bg-genz-lime text-black dark:text-white border-2 border-black shadow-[4px_4px_0_0_#000] transform -translate-y-1' : 'bg-[#222] dark:bg-[#1a1a1a] text-gray-400 border-2 border-transparent hover:border-gray-600'}`}
               >
                  {level}
               </button>
@@ -357,8 +390,8 @@ const FeatureLearnEarn = () => {
                exit={{ opacity: 0, scale: 0.9 }}
                transition={{ delay: idx * 0.1 }}
              >
-               <Link to={`/learn/courses/${course.id}`} className={`bg-[#222] p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] neo-border hover:-translate-y-3 transition-transform relative group block h-full flex flex-col ${idx % 3 === 2 ? 'border-pink-400' : ''}`}>
-                 <div className="absolute top-4 right-4 md:top-6 md:right-6 bg-white text-black font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs uppercase neo-border border-2 shadow-sm">
+               <Link to={`/learn/courses/${course.id}`} className={`bg-[#222] dark:bg-[#1a1a1a] p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] neo-border hover:-translate-y-3 transition-transform relative group block h-full flex flex-col ${idx % 3 === 2 ? 'border-pink-400' : ''}`}>
+                 <div className="absolute top-4 right-4 md:top-6 md:right-6 bg-white dark:bg-gray-900 text-black dark:text-white font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs uppercase neo-border border-2 shadow-sm">
                    {course.level}
                  </div>
                  <div className={`w-14 h-14 md:w-20 md:h-20 rounded-2xl md:rounded-3xl ${course.color} ${course.accent.replace('bg-', 'text-')} neo-border flex items-center justify-center mb-6 md:mb-8 transform group-hover:rotate-12 transition-transform shadow-inner`}>
@@ -373,7 +406,7 @@ const FeatureLearnEarn = () => {
                  
                  <div className="mt-auto">
                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1 md:gap-0 mb-2">
-                     <span className="text-[11px] md:text-sm font-bold text-gray-500">{course.lessons.length} Lessons</span>
+                     <span className="text-[11px] md:text-sm font-bold text-gray-500 dark:text-gray-400">{course.lessons.length} Lessons</span>
                      <span className={`text-[11px] md:text-sm font-bold ${course.accent.replace('bg-', 'text-')}`}>+ {course.xp} XP</span>
                    </div>
                    <div className="w-full bg-black h-2 md:h-3 rounded-full overflow-hidden neo-border border-white/20">
@@ -388,7 +421,7 @@ const FeatureLearnEarn = () => {
 
         {filteredCourses.length > showCount && (
            <div className="text-center mt-16">
-              <button onClick={() => setShowCount(prev => prev + 6)} className="neo-btn bg-white text-black text-lg">
+              <button onClick={() => setShowCount(prev => prev + 6)} className="neo-btn bg-white dark:bg-gray-900 text-black dark:text-white text-lg">
                  Load More Courses
               </button>
            </div>
@@ -408,13 +441,13 @@ const FeatureCommunity = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid md:grid-cols-2 gap-16 items-center">
           <div>
-            <div className="inline-block px-5 py-2 rounded-full bg-white text-black font-display font-bold text-sm tracking-wider uppercase mb-8 neo-shadow -rotate-3">
+            <div className="inline-block px-5 py-2 rounded-full bg-white dark:bg-gray-900 text-black dark:text-white font-display font-bold text-sm tracking-wider uppercase mb-8 neo-shadow -rotate-3">
               The Squad
             </div>
-            <h2 className="text-5xl md:text-7xl font-display font-extrabold text-lotus-dark uppercase leading-[0.9] tracking-tighter mb-8">
-              Don't invest <br/> <span className="bg-white px-2 neo-border inline-block mt-2 transform rotate-2">alone.</span>
+            <h2 className="text-5xl md:text-7xl font-display font-extrabold text-lotus-dark dark:text-white uppercase leading-[0.9] tracking-tighter mb-8">
+              Don't invest <br/> <span className="bg-white dark:bg-gray-900 px-2 neo-border inline-block mt-2 transform rotate-2">alone.</span>
             </h2>
-            <p className="text-2xl font-medium text-lotus-dark mb-10 max-w-lg">
+            <p className="text-2xl font-medium text-lotus-dark dark:text-white mb-10 max-w-lg">
               Join the Lotus Tribe community. Ask questions, flex your badges, attend exclusive virtual events, and grow your wealth alongside thousands of others.
             </p>
             <Link to="/learn/community" className="neo-btn bg-black text-white px-10 py-5 flex items-center gap-3 w-fit text-xl">
@@ -424,20 +457,20 @@ const FeatureCommunity = () => {
 
           <div className="relative mt-12 md:mt-0 lg:ml-12">
             {/* Mock Chat UI */}
-            <div className="bg-white rounded-3xl neo-border neo-shadow p-6 pointer-events-none">
+            <div className="bg-white dark:bg-gray-900 rounded-3xl neo-border neo-shadow p-6 pointer-events-none">
               
               <div className="flex gap-4 mb-6">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aisha" className="w-12 h-12 rounded-full neo-border object-cover bg-gray-100" alt="Aisha" />
-                <div className="bg-gray-100 rounded-2xl rounded-tl-none p-4 neo-border w-fit relative">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aisha" className="w-12 h-12 rounded-full neo-border object-cover bg-gray-100 dark:bg-gray-800" alt="Aisha" />
+                <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-tl-none p-4 neo-border w-fit relative">
                   <p className="font-bold mb-1 text-sm">@Aisha_Invests <span className="text-xs bg-yellow-300 px-1 rounded neo-border ml-2">LVL 4</span></p>
                   <p className="font-medium text-sm">Just hit my first ₦100k in the Halal Fixed Income Fund! 🎉</p>
                 </div>
               </div>
 
               <div className="flex gap-4 mb-6 flex-row-reverse">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=You" className="w-12 h-12 rounded-full neo-border object-cover bg-gray-100" alt="You" />
-                <div className="bg-genz-blue text-lotus-dark rounded-2xl rounded-tr-none p-4 neo-border w-fit">
-                  <p className="font-bold mb-1 text-sm text-white/90">@You</p>
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=You" className="w-12 h-12 rounded-full neo-border object-cover bg-gray-100 dark:bg-gray-800" alt="You" />
+                <div className="bg-genz-blue text-lotus-dark dark:text-white rounded-2xl rounded-tr-none p-4 neo-border w-fit">
+                  <p className="font-bold mb-1 text-sm text-white/90 dark:text-gray-200">@You</p>
                   <p className="font-medium text-sm">Omo, that's huge! 🔥 Any tips on staying consistent?</p>
                 </div>
               </div>
@@ -455,10 +488,10 @@ const FeatureCommunity = () => {
             {/* Event callout */}
             <div className="absolute -right-8 -bottom-8 bg-genz-purple neo-border neo-shadow p-4 rounded-2xl transform rotate-6 max-w-xs pointer-events-none hidden md:block">
               <div className="flex items-center gap-2 mb-2">
-                <div className="bg-white text-black font-bold text-xs p-1 rounded">UPCOMING</div>
+                <div className="bg-white dark:bg-gray-900 text-black dark:text-white font-bold text-xs p-1 rounded">UPCOMING</div>
                 <div className="font-bold font-display text-white">Live Webinar</div>
               </div>
-              <p className="font-bold text-sm text-white/90">"Investing in your 20s" — Tomorrow @ 6PM</p>
+              <p className="font-bold text-sm text-white/90 dark:text-gray-200">"Investing in your 20s" — Tomorrow @ 6PM</p>
             </div>
           </div>
         </div>
@@ -469,7 +502,7 @@ const FeatureCommunity = () => {
 
 const Footer = () => {
   return (
-    <footer className="bg-white pt-24 pb-10">
+    <footer className="bg-white dark:bg-gray-900 pt-24 pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="flex flex-col md:flex-row justify-between items-center bg-lotus-dark p-10 md:p-16 rounded-[2.5rem] neo-border neo-shadow text-white mb-20">
@@ -477,7 +510,7 @@ const Footer = () => {
             <h3 className="font-display font-extrabold text-5xl mb-4 uppercase">Ready to join?</h3>
             <p className="font-medium text-gray-400 text-xl">Stop scrolling, start investing.</p>
           </div>
-          <button className="neo-btn bg-genz-pink text-black text-2xl px-12 py-5 hover:bg-white hover:text-black">
+          <button className="neo-btn bg-genz-pink text-black dark:text-white text-2xl px-12 py-5 hover:bg-white dark:bg-gray-900 hover:text-black dark:text-white">
             CREATE FREE ACCOUNT
           </button>
         </div>
@@ -487,41 +520,41 @@ const Footer = () => {
             <div className="flex items-center gap-1 mb-8">
               <img src="/lotus-logo.png" alt="Lotus Tribe Logo" className="h-10" />
             </div>
-            <p className="text-base text-gray-600 leading-relaxed">
+            <p className="text-base text-gray-600 dark:text-gray-300 leading-relaxed">
               A digital investment platform for the next generation, powered by Lotus Capital Limited.
             </p>
           </div>
           
           <div>
             <h4 className="font-display font-bold text-lg mb-4 uppercase">Explore</h4>
-            <ul className="space-y-3 text-gray-600">
-              <li><Link to="/quiz" className="hover:text-black hover:underline underline-offset-4">Vibe Check Quiz</Link></li>
-              <li><a href="#" className="hover:text-black hover:underline underline-offset-4">Mutual Funds</a></li>
-              <li><a href="#" className="hover:text-black hover:underline underline-offset-4">Learning Hub</a></li>
+            <ul className="space-y-3 text-gray-600 dark:text-gray-300">
+              <li><Link to="/quiz" className="hover:text-black dark:text-white hover:underline underline-offset-4">Vibe Check Quiz</Link></li>
+              <li><a href="#" className="hover:text-black dark:text-white hover:underline underline-offset-4">Mutual Funds</a></li>
+              <li><a href="#" className="hover:text-black dark:text-white hover:underline underline-offset-4">Learning Hub</a></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-display font-bold text-lg mb-4 uppercase">Company</h4>
-            <ul className="space-y-3 text-gray-600">
-              <li><a href="#" className="hover:text-black hover:underline underline-offset-4">About Lotus Capital</a></li>
-              <li><a href="#" className="hover:text-black hover:underline underline-offset-4">Contact the Squad</a></li>
-              <li><a href="#" className="hover:text-black hover:underline underline-offset-4">Join our Team</a></li>
+            <ul className="space-y-3 text-gray-600 dark:text-gray-300">
+              <li><a href="#" className="hover:text-black dark:text-white hover:underline underline-offset-4">About Lotus Capital</a></li>
+              <li><a href="#" className="hover:text-black dark:text-white hover:underline underline-offset-4">Contact the Squad</a></li>
+              <li><a href="#" className="hover:text-black dark:text-white hover:underline underline-offset-4">Join our Team</a></li>
             </ul>
           </div>
           
           <div>
             <h4 className="font-display font-bold text-lg mb-4 uppercase">Legal text</h4>
-            <ul className="space-y-3 text-gray-600">
-              <li><a href="#" className="hover:text-black hover:underline underline-offset-4">Terms of Play</a></li>
-              <li><a href="#" className="hover:text-black hover:underline underline-offset-4">Privacy Stuff</a></li>
+            <ul className="space-y-3 text-gray-600 dark:text-gray-300">
+              <li><a href="#" className="hover:text-black dark:text-white hover:underline underline-offset-4">Terms of Play</a></li>
+              <li><a href="#" className="hover:text-black dark:text-white hover:underline underline-offset-4">Privacy Stuff</a></li>
             </ul>
           </div>
         </div>
 
         {/* Disclaimer box */}
-        <div className="bg-gray-100 p-6 rounded-2xl neo-border text-xs text-gray-500 font-medium leading-relaxed mb-8">
-          <p className="font-bold text-gray-700 uppercase mb-2">Legal Disclaimer</p>
+        <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-2xl neo-border text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed mb-8">
+          <p className="font-bold text-gray-700 dark:text-gray-200 uppercase mb-2">Legal Disclaimer</p>
           <p className="mb-2">
             Lotus Tribe is a mobile-first digital investment platform owned and operated by Lotus Capital Limited, a Fund/Portfolio Manager duly licensed and regulated by the Securities and Exchange Commission (SEC), Nigeria. Lotus Tribe is a distribution platform that provides access to Lotus Capital’s mutual funds, including the Lotus Halal Investment Fund and the Lotus Fixed Income Fund (FIF). All funds offered on the platform are Shariah-compliant and regulated by the SEC, Nigeria.
           </p>
@@ -662,12 +695,12 @@ const QuizPage = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen pt-32 pb-20 flex flex-col items-center justify-center bg-gray-50 px-4">
-        <div className="bg-white p-8 rounded-3xl neo-border neo-shadow text-center max-w-md w-full">
+      <div className="min-h-screen pt-32 pb-20 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800 px-4">
+        <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl neo-border neo-shadow text-center max-w-md w-full">
           <div className="text-6xl mb-6">🔒</div>
           <h2 className="font-display font-bold text-3xl uppercase mb-4">Login Required</h2>
-          <p className="font-medium text-gray-600 mb-8">You need to log in to take the Vibe Check and save your investor profile.</p>
-          <button onClick={loginWithGoogle} className="neo-btn bg-genz-lime text-lotus-dark w-full uppercase text-xl">
+          <p className="font-medium text-gray-600 dark:text-gray-300 mb-8">You need to log in to take the Vibe Check and save your investor profile.</p>
+          <button onClick={loginWithGoogle} className="neo-btn bg-genz-lime text-lotus-dark dark:text-white w-full uppercase text-xl">
             Log In with Google
           </button>
         </div>
@@ -676,7 +709,7 @@ const QuizPage = () => {
   }
 
   return (
-    <div className="min-h-screen pt-32 pb-20 px-4 flex flex-col items-center justify-center bg-[#fafafa]">
+    <div className="min-h-screen pt-32 pb-20 px-4 flex flex-col items-center justify-center bg-[#fafafa] dark:bg-[#111]">
       
       {!isFinished ? (
         <div className="w-full max-w-2xl">
@@ -687,7 +720,7 @@ const QuizPage = () => {
             >
               <ChevronLeft className="w-5 h-5"/> Back
             </button>
-            <div className="font-display font-bold bg-white px-4 py-1.5 rounded-full neo-border shadow-sm">
+            <div className="font-display font-bold bg-white dark:bg-gray-900 px-4 py-1.5 rounded-full neo-border shadow-sm">
               Question {currentQuestion + 1} / {questions.length}
             </div>
           </div>
@@ -705,7 +738,7 @@ const QuizPage = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="bg-white p-8 md:p-12 rounded-3xl neo-border neo-shadow"
+            className="bg-white dark:bg-gray-900 p-8 md:p-12 rounded-3xl neo-border neo-shadow"
           >
             <h2 className="font-display font-extrabold text-3xl md:text-4xl uppercase mb-10 leading-tight">
               {questions[currentQuestion].q}
@@ -730,7 +763,7 @@ const QuizPage = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-3xl text-center"
         >
-          <div id="vibe-certificate" className="bg-white p-2 rounded-3xl neo-shadow mb-8 border-4 border-black inline-block w-full">
+          <div id="vibe-certificate" className="bg-white dark:bg-gray-900 p-2 rounded-3xl neo-shadow mb-8 border-4 border-black inline-block w-full">
             <div className="bg-[#fffdf9] p-8 md:p-12 rounded-2xl border-2 border-dashed border-gray-400 relative overflow-hidden">
                {/* Ornate corners */}
                <div className="absolute top-2 left-2 w-8 h-8 border-t-4 border-l-4 border-lotus-dark"></div>
@@ -744,38 +777,38 @@ const QuizPage = () => {
                </div>
                
                <div className="relative z-10">
-                 <h2 className="font-display font-black text-3xl md:text-5xl uppercase text-lotus-dark mb-2 tracking-widest">
+                 <h2 className="font-display font-black text-3xl md:text-5xl uppercase text-lotus-dark dark:text-white mb-2 tracking-widest">
                    Certificate of Vibe
                  </h2>
-                 <p className="text-gray-500 font-bold uppercase tracking-widest text-xs mb-8">Official Lotus Tribe Assessment</p>
+                 <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-xs mb-8">Official Lotus Tribe Assessment</p>
                  
                  <div className="text-7xl mb-6">
                    {resultProfile === 'Steady Saver' ? '🐢' : resultProfile === 'Calculated Thinker' ? '🧠' : '🚀'}
                  </div>
                  
-                 <div className="bg-gray-100 p-6 rounded-2xl mb-8 border border-gray-200">
-                    <p className="font-display font-bold text-xl md:text-2xl text-lotus-dark leading-relaxed">
+                 <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-2xl mb-8 border border-gray-200 dark:border-gray-700">
+                    <p className="font-display font-bold text-xl md:text-2xl text-lotus-dark dark:text-white leading-relaxed">
                        Dear <span className="text-lotus-red border-b-2 border-lotus-red px-2">{user?.displayName || 'Tribe Member'}</span>, <br/><br/>
                        This is to certify that you have successfully completed your Lotus Tribe Investment Vibe Check. Your investment personality is formally recognized as:
                     </p>
-                    <h1 className="font-display font-black text-4xl md:text-5xl uppercase mt-6 mb-4 text-lotus-dark bg-genz-lime inline-block px-4 py-2 transform -rotate-1 shadow-md border-2 border-black">
+                    <h1 className="font-display font-black text-4xl md:text-5xl uppercase mt-6 mb-4 text-lotus-dark dark:text-white bg-genz-lime inline-block px-4 py-2 transform -rotate-1 shadow-md border-2 border-black">
                       {resultProfile}
                     </h1>
-                    <p className="text-lg md:text-xl font-bold text-gray-700 mt-2">
+                    <p className="text-lg md:text-xl font-bold text-gray-700 dark:text-gray-200 mt-2">
                        You are on course to be a {resultProfile === 'Steady Saver' ? 'low-risk' : resultProfile === 'Calculated Thinker' ? 'calculated' : 'high-risk'} Billionaire investor. 🥂
                     </p>
                  </div>
                  
-                 <div className="flex justify-between items-end border-t-2 border-gray-200 pt-6 mt-10">
+                 <div className="flex justify-between items-end border-t-2 border-gray-200 dark:border-gray-700 pt-6 mt-10">
                     <div className="text-left">
-                       <div className="font-[signature] font-bold text-3xl text-lotus-dark mb-1 opacity-70">Lotus Tribe</div>
+                       <div className="font-[signature] font-bold text-3xl text-lotus-dark dark:text-white mb-1 opacity-70">Lotus Tribe</div>
                        <div className="w-32 h-px bg-black mb-1"></div>
-                       <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Authorized Signature</p>
+                       <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Authorized Signature</p>
                     </div>
                     <div className="text-right">
-                       <div className="font-mono font-bold text-sm text-lotus-dark mb-1">{new Date().toLocaleDateString()}</div>
+                       <div className="font-mono font-bold text-sm text-lotus-dark dark:text-white mb-1">{new Date().toLocaleDateString()}</div>
                        <div className="w-24 h-px bg-black mb-1 ml-auto"></div>
-                       <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Date of Issue</p>
+                       <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Date of Issue</p>
                     </div>
                  </div>
                  
@@ -787,20 +820,20 @@ const QuizPage = () => {
           </div>
           
           <div className="max-w-xl mx-auto space-y-6 mt-10">
-             <div className="bg-white p-6 rounded-2xl border-2 border-black neo-shadow text-left">
+             <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border-2 border-black neo-shadow text-left">
                 <h3 className="font-display font-bold text-xl uppercase mb-2">Our Recommendation</h3>
-                <p className="text-gray-600 font-medium mb-4">
+                <p className="text-gray-600 dark:text-gray-300 font-medium mb-4">
                   Based on your vibe check, we recommend you start building your wealth with the 
-                  <span className="font-bold text-lotus-dark"> {resultProfile === 'Risk Taker' || resultProfile === 'Calculated Thinker' ? 'Lotus Halal Investment Fund' : 'Lotus Fixed Income Fund'}</span>.
+                  <span className="font-bold text-lotus-dark dark:text-white"> {resultProfile === 'Risk Taker' || resultProfile === 'Calculated Thinker' ? 'Lotus Halal Investment Fund' : 'Lotus Fixed Income Fund'}</span>.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 mt-6">
                   <Link to={'/invest/onboarding'} state={{ fund: resultProfile === 'Risk Taker' || resultProfile === 'Calculated Thinker' ? 'halal' : 'fif' }} className="flex-1">
-                    <button className="neo-btn bg-genz-lime text-lotus-dark w-full uppercase text-sm py-4 shadow-md hover:-translate-y-1 transition-transform">
+                    <button className="neo-btn bg-genz-lime text-lotus-dark dark:text-white w-full uppercase text-sm py-4 shadow-md hover:-translate-y-1 transition-transform">
                       Accept & Continue to KYC
                     </button>
                   </Link>
                   <Link to={'/invest/onboarding'} state={{ fund: resultProfile === 'Risk Taker' || resultProfile === 'Calculated Thinker' ? 'fif' : 'halal' }} className="flex-1">
-                    <button className="neo-btn bg-gray-50 text-gray-700 w-full uppercase text-xs py-4 border-2 border-gray-300 hover:border-black hover:text-black hover:-translate-y-1 transition-all">
+                    <button className="neo-btn bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 w-full uppercase text-xs py-4 border-2 border-gray-300 hover:border-black hover:text-black dark:text-white hover:-translate-y-1 transition-all">
                       Choose {resultProfile === 'Risk Taker' || resultProfile === 'Calculated Thinker' ? 'FIF (Low Risk)' : 'Halal (Moderate Risk)'} Instead
                     </button>
                   </Link>
@@ -811,20 +844,20 @@ const QuizPage = () => {
                <button onClick={handleShare} className="neo-btn bg-lotus-dark text-white w-full uppercase text-xs py-4 flex items-center justify-center gap-2 shadow-xl hover:-translate-y-1 transition-transform">
                   Download Certificate <Share2 className="w-4 h-4"/>
                </button>
-               <button onClick={() => { setIsFinished(false); setCurrentQuestion(0); setAnswers([]); }} className="neo-btn bg-white text-lotus-dark w-full uppercase text-xs py-4 border-2 border-black hover:-translate-y-1 transition-transform">
+               <button onClick={() => { setIsFinished(false); setCurrentQuestion(0); setAnswers([]); }} className="neo-btn bg-white dark:bg-gray-900 text-lotus-dark dark:text-white w-full uppercase text-xs py-4 border-2 border-black hover:-translate-y-1 transition-transform">
                  Retake Vibe Check
                </button>
              </div>
              
              <div className="pt-4">
                <Link to="/">
-                  <button className="text-gray-500 font-bold uppercase text-xs hover:text-black hover:underline underline-offset-4 transition-all">
+                  <button className="text-gray-500 dark:text-gray-400 font-bold uppercase text-xs hover:text-black dark:text-white hover:underline underline-offset-4 transition-all">
                     Skip to Homepage
                   </button>
                </Link>
              </div>
           </div>
-          {saving && <p className="font-bold text-gray-500 animate-pulse mt-4">Saving profile...</p>}
+          {saving && <p className="font-bold text-gray-500 dark:text-gray-400 animate-pulse mt-4">Saving profile...</p>}
         </motion.div>
       )}
     </div>
@@ -835,16 +868,16 @@ import { Calculator, InvestFIF, InvestHalal } from './Funds';
 
 export const FeatureProducts = () => {
   return (
-    <section id="funds" className="py-32 bg-[#fafafa] relative overflow-hidden">
+    <section id="funds" className="py-32 bg-[#fafafa] dark:bg-[#111] relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-20">
           <div className="inline-block px-5 py-2 rounded-full bg-lotus-dark text-white font-display font-bold text-sm tracking-wider uppercase mb-8 neo-shadow-sm rotate-2">
             The Funds
           </div>
-          <h2 className="text-5xl md:text-7xl font-display font-extrabold uppercase leading-none mb-8 text-black">
+          <h2 className="text-5xl md:text-7xl font-display font-extrabold uppercase leading-none mb-8 text-black dark:text-white">
             Grow your <span className="text-lotus-red border-b-8 border-lotus-red pb-1">wealth.</span>
           </h2>
-          <p className="text-xl font-medium text-gray-700">
+          <p className="text-xl font-medium text-gray-700 dark:text-gray-200">
             Halal investment products structured for your goals. Start with ₦5,000. Regulated, transparent, and built for the next generation.
           </p>
         </div>
@@ -854,17 +887,17 @@ export const FeatureProducts = () => {
           <div className="bg-genz-lime p-10 md:p-12 rounded-[2.5rem] neo-border neo-shadow flex flex-col justify-between group hover:-translate-y-2 transition-transform">
              <div>
                 <div className="flex justify-between items-start mb-8">
-                   <div className="bg-white px-4 py-1.5 rounded-full font-bold text-sm uppercase neo-border border-2">Low Risk</div>
-                   <div className="w-16 h-16 bg-white rounded-2xl neo-border flex items-center justify-center transform group-hover:rotate-12 transition-transform">
-                     <Shield className="w-8 h-8 text-black" />
+                   <div className="bg-white dark:bg-gray-900 px-4 py-1.5 rounded-full font-bold text-sm uppercase neo-border border-2">Low Risk</div>
+                   <div className="w-16 h-16 bg-white dark:bg-gray-900 rounded-2xl neo-border flex items-center justify-center transform group-hover:rotate-12 transition-transform">
+                     <Shield className="w-8 h-8 text-black dark:text-white" />
                    </div>
                 </div>
-                <h3 className="font-display font-bold text-4xl mb-4 text-black uppercase leading-tight">Lotus Non-Interest Fixed Income Fund</h3>
-                <p className="font-medium text-lg text-black/80 mb-8">Short & medium term goals. Quarterly payouts. Protect your capital while beating inflation.</p>
+                <h3 className="font-display font-bold text-4xl mb-4 text-black dark:text-white uppercase leading-tight">Lotus Non-Interest Fixed Income Fund</h3>
+                <p className="font-medium text-lg text-black/80 dark:text-gray-200 mb-8">Short & medium term goals. Quarterly payouts. Protect your capital while beating inflation.</p>
              </div>
              
              <div className="space-y-4">
-                <div className="bg-white/50 p-4 rounded-xl font-medium flex justify-between items-center neo-border border-2 border-black/20">
+                <div className="bg-white/50 dark:bg-black/20 p-4 rounded-xl font-medium flex justify-between items-center neo-border border-2 border-black/20 dark:border-white/20 text-black dark:text-white">
                    <span>FY 2025 Return</span>
                    <span className="font-bold text-xl">15.00%</span>
                 </div>
@@ -878,17 +911,17 @@ export const FeatureProducts = () => {
           <div className="bg-genz-pink p-10 md:p-12 rounded-[2.5rem] neo-border neo-shadow flex flex-col justify-between group hover:-translate-y-2 transition-transform">
              <div>
                 <div className="flex justify-between items-start mb-8">
-                   <div className="bg-white px-4 py-1.5 rounded-full font-bold text-sm uppercase neo-border border-2">Moderate Risk</div>
-                   <div className="w-16 h-16 bg-white rounded-2xl neo-border flex items-center justify-center transform group-hover:-rotate-12 transition-transform">
-                     <TrendingUp className="w-8 h-8 text-black" />
+                   <div className="bg-white dark:bg-gray-900 px-4 py-1.5 rounded-full font-bold text-sm uppercase neo-border border-2">Moderate Risk</div>
+                   <div className="w-16 h-16 bg-white dark:bg-gray-900 rounded-2xl neo-border flex items-center justify-center transform group-hover:-rotate-12 transition-transform">
+                     <TrendingUp className="w-8 h-8 text-black dark:text-white" />
                    </div>
                 </div>
-                <h3 className="font-display font-bold text-4xl mb-4 text-black uppercase leading-tight">Lotus Halal Investment Fund</h3>
-                <p className="font-medium text-lg text-black/80 mb-8">Long term growth. Diversified portfolio. Create sustained wealth for the future.</p>
+                <h3 className="font-display font-bold text-4xl mb-4 text-black dark:text-white uppercase leading-tight">Lotus Halal Investment Fund</h3>
+                <p className="font-medium text-lg text-black/80 dark:text-gray-200 mb-8">Long term growth. Diversified portfolio. Create sustained wealth for the future.</p>
              </div>
              
              <div className="space-y-4">
-                <div className="bg-white/50 p-4 rounded-xl font-medium flex justify-between items-center neo-border border-2 border-black/20">
+                <div className="bg-white/50 dark:bg-black/20 p-4 rounded-xl font-medium flex justify-between items-center neo-border border-2 border-black/20 dark:border-white/20 text-black dark:text-white">
                    <span>FY 2025 Return</span>
                    <span className="font-bold text-xl">36.76%</span>
                 </div>
@@ -939,12 +972,12 @@ const FeatureBenefits = () => {
 
 const FeatureMoreThanAnApp = () => {
   return (
-    <section className="py-24 bg-white relative">
+    <section className="py-24 bg-white dark:bg-gray-900 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="mb-12 text-center md:text-left">
           <p className="text-[#C10202] font-bold text-sm tracking-[0.2em] uppercase mb-4">More than an app</p>
-          <h2 className="text-5xl md:text-7xl font-display font-extrabold uppercase leading-none text-black">
+          <h2 className="text-5xl md:text-7xl font-display font-extrabold uppercase leading-none text-black dark:text-white">
             Learn. Invest. Belong.
           </h2>
         </div>
@@ -956,27 +989,27 @@ const FeatureMoreThanAnApp = () => {
               <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center">
                 <Sparkles className="w-6 h-6" />
               </div>
-              <div className="bg-white text-black font-bold text-[10px] sm:text-xs uppercase px-3 py-1.5 rounded-full mt-1">
+              <div className="bg-white dark:bg-gray-900 text-black dark:text-white font-bold text-[10px] sm:text-xs uppercase px-3 py-1.5 rounded-full mt-1">
                 VIBE CHECK
               </div>
             </div>
             <h3 className="font-display font-bold text-2xl mb-4 leading-tight">Find your investor archetype</h3>
-            <p className="text-black/80 font-medium text-sm leading-relaxed mt-auto">
+            <p className="text-black/80 dark:text-gray-200 font-medium text-sm leading-relaxed mt-auto">
               A 60-second quiz that maps your goals, risk appetite, and values to a personalised fund mix.
             </p>
           </div>
 
-          <div className="bg-white rounded-3xl p-8 neo-border neo-shadow-sm flex flex-col items-start hover:-translate-y-1 transition-transform border-[3px] border-black h-full">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 neo-border neo-shadow-sm flex flex-col items-start hover:-translate-y-1 transition-transform border-[3px] border-black h-full">
             <div className="flex justify-between items-start w-full mb-8">
               <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center">
                 <BookOpen className="w-6 h-6" />
               </div>
-              <div className="bg-white text-gray-800 font-bold text-[10px] sm:text-xs uppercase px-3 py-1.5 rounded-full mt-1 border border-gray-200 shadow-sm">
+              <div className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-bold text-[10px] sm:text-xs uppercase px-3 py-1.5 rounded-full mt-1 border border-gray-200 dark:border-gray-700 shadow-sm">
                 LEARNING HUB
               </div>
             </div>
             <h3 className="font-display font-bold text-2xl mb-4 leading-tight">Bite-sized money modules</h3>
-            <p className="text-gray-600 font-medium text-sm leading-relaxed mt-auto">
+            <p className="text-gray-600 dark:text-gray-300 font-medium text-sm leading-relaxed mt-auto">
               Earn badges as you master halal investing principles, market basics, and wealth strategy.
             </p>
           </div>
@@ -986,12 +1019,12 @@ const FeatureMoreThanAnApp = () => {
               <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center">
                 <Users className="w-6 h-6" />
               </div>
-              <div className="bg-white text-black font-bold text-[10px] sm:text-xs uppercase px-3 py-1.5 rounded-full mt-1">
+              <div className="bg-white dark:bg-gray-900 text-black dark:text-white font-bold text-[10px] sm:text-xs uppercase px-3 py-1.5 rounded-full mt-1">
                 COMMUNITY
               </div>
             </div>
             <h3 className="font-display font-bold text-2xl mb-4 leading-tight">Built with the tribe</h3>
-            <p className="text-black/80 font-medium text-sm leading-relaxed mt-auto">
+            <p className="text-black/80 dark:text-gray-200 font-medium text-sm leading-relaxed mt-auto">
               Join live AMAs with Shariah advisors, swap strategies, and grow with thousands of peers.
             </p>
           </div>
@@ -1026,10 +1059,10 @@ const FAQSection = () => {
   ];
 
   return (
-    <section className="py-24 bg-white">
+    <section className="py-24 bg-white dark:bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <div className="inline-block px-5 py-2 rounded-full bg-gray-100 font-bold uppercase text-xs tracking-wider mb-4 border border-gray-200">
+          <div className="inline-block px-5 py-2 rounded-full bg-gray-100 dark:bg-gray-800 font-bold uppercase text-xs tracking-wider mb-4 border border-gray-200 dark:border-gray-700">
             Got Questions?
           </div>
           <h2 className="text-4xl md:text-5xl font-display font-extrabold uppercase">
@@ -1041,7 +1074,7 @@ const FAQSection = () => {
           {faqs.map((faq, idx) => (
             <div 
               key={idx} 
-              className={`p-6 rounded-2xl neo-border cursor-pointer transition-all ${openIndex === idx ? 'bg-genz-lime neo-shadow-sm' : 'bg-gray-50 hover:bg-gray-100'}`}
+              className={`p-6 rounded-2xl neo-border cursor-pointer transition-all ${openIndex === idx ? 'bg-genz-lime neo-shadow-sm' : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
               onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
             >
               <div className="flex justify-between items-center">
@@ -1051,12 +1084,25 @@ const FAQSection = () => {
                 </div>
               </div>
               {openIndex === idx && (
-                <p className="mt-4 text-gray-800 font-medium leading-relaxed">
+                <p className="mt-4 text-gray-800 dark:text-gray-200 font-medium leading-relaxed">
                   {faq.a}
                 </p>
               )}
             </div>
           ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <p className="text-gray-500 dark:text-gray-400 font-bold mb-4 uppercase tracking-widest text-xs">Still have questions?</p>
+          <button 
+            onClick={() => {
+              const el = document.getElementById('squad');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="neo-btn bg-lotus-dark text-white w-full sm:w-auto px-8 py-4 uppercase text-sm shadow-xl hover:-translate-y-1 transition-transform"
+          >
+            Ask the Tribe
+          </button>
         </div>
       </div>
     </section>
@@ -1075,14 +1121,14 @@ const FeatureUnleash = () => {
             <h2 className="text-5xl md:text-7xl font-display font-extrabold uppercase leading-[0.9] tracking-tighter">
               Unleash Your <br/>Inner Investor – <br/>the Halal way
             </h2>
-            <p className="text-xl font-medium text-white/90 leading-relaxed">
+            <p className="text-xl font-medium text-white/90 dark:text-gray-200 leading-relaxed">
                Create Wealth and improve your financial intelligence with LOTUS Tribe the digital first investment App powered by LOTUS Capital.
             </p>
-            <p className="text-lg text-white/80 leading-relaxed">
+            <p className="text-lg text-white/80 dark:text-gray-300 leading-relaxed">
                At LOTUS Tribe, we believe in the digital first approach towards creating wealth. We have therefore created this fun, flexible and secure platform for your investing activities. Our team of experts are also like the "financial bodyguards" ensuring that your investments are managed responsibly and ethically.
             </p>
             <div className="pt-6">
-               <button className="bg-white text-[#C10202] font-bold uppercase px-8 py-4 rounded-xl text-lg hover:bg-gray-100 transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] active:shadow-none active:translate-y-1 active:translate-x-1">
+               <button className="bg-white dark:bg-gray-900 text-[#C10202] font-bold uppercase px-8 py-4 rounded-xl text-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] active:shadow-none active:translate-y-1 active:translate-x-1">
                  Join the Tribe | Invest Right
                </button>
                <p className="mt-4 font-display font-bold text-sm uppercase opacity-90 tracking-widest">
@@ -1102,7 +1148,7 @@ const HomePage = () => {
         <Hero />
         <FeatureUnleash />
         <FeatureBenefits />
-        <div className="bg-[#fafafa]">
+        <div className="bg-[#fafafa] dark:bg-[#111]">
           <FeatureProducts />
           <div className="pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto -mt-10 relative z-20">
             <Calculator />
@@ -1126,10 +1172,19 @@ import { InvestOnboarding } from './InvestOnboarding';
 import { InvestDashboard } from './Dashboard';
 
 export default function App() {
+  useEffect(() => {
+    // Check initial theme globally
+    const storedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <ScrollToTop />
-      <div className="min-h-screen bg-white font-sans text-lotus-dark selection:bg-genz-pink selection:text-lotus-dark">
+      <div className="min-h-screen bg-white dark:bg-gray-900 font-sans text-lotus-dark dark:text-white selection:bg-genz-pink selection:text-lotus-dark dark:text-white">
         <Navbar />
         <main>
           <Routes>

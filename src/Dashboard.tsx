@@ -18,11 +18,11 @@ const DashboardLayout = ({ children, activeTab, setActiveTab }: { children: Reac
     ];
 
     return (
-        <div className="min-h-screen bg-[#fafafa] pt-24 pb-20 md:pb-0 font-sans text-lotus-dark flex justify-center">
+        <div className="min-h-screen bg-[#fafafa] dark:bg-[#111] pt-24 pb-20 md:pb-0 font-sans text-lotus-dark dark:text-white flex justify-center">
             <div className="flex flex-col md:flex-row w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 gap-8 mt-8">
                 <aside className="md:flex flex-col w-full md:w-64 shrink-0 md:h-[calc(100vh-140px)] md:sticky top-32">
-                    <div className="bg-white rounded-3xl neo-border neo-shadow p-6 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible flex-1">
-                        <h2 className="hidden md:block font-display font-bold text-xl uppercase mb-6 text-gray-500">My Wealth</h2>
+                    <div className="bg-white dark:bg-gray-900 rounded-3xl neo-border neo-shadow p-6 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible flex-1">
+                        <h2 className="hidden md:block font-display font-bold text-xl uppercase mb-6 text-gray-500 dark:text-gray-400">My Wealth</h2>
                         
                         {navItems.map(item => (
                             <button 
@@ -31,14 +31,14 @@ const DashboardLayout = ({ children, activeTab, setActiveTab }: { children: Reac
                                 className={`flex items-center gap-4 px-4 py-3 rounded-2xl font-bold transition-all whitespace-nowrap 
                                     ${activeTab === item.id 
                                         ? 'bg-genz-lime neo-border shadow-[2px_2px_0_0_#121212] translate-y-[-2px]' 
-                                        : 'hover:bg-gray-100 text-gray-600 hover:text-black'}`}
+                                        : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 hover:text-black dark:text-white'}`}
                             >
                                 <item.icon className="w-6 h-6" /> <span className="hidden md:inline">{item.label}</span>
                             </button>
                         ))}
 
-                        <div className="hidden md:block mt-auto bg-gray-50 rounded-2xl p-4 border-2 border-gray-100">
-                            <p className="text-sm font-medium text-gray-500 mb-2">Need help with your portfolio?</p>
+                        <div className="hidden md:block mt-auto bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 border-2 border-gray-100 dark:border-gray-800">
+                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Need help with your portfolio?</p>
                             <button className="text-sm font-bold text-lotus-red hover:underline decoration-2 underline-offset-4">Talk to an Advisor</button>
                         </div>
                     </div>
@@ -78,15 +78,15 @@ export const InvestDashboard = () => {
                     {activeTab === 'overview' && (
                         <>
                             {/* Header Welcome */}
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b-2 border-gray-100 pb-6">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b-2 border-gray-100 dark:border-gray-800 pb-6">
                                 <div>
                                     <h1 className="text-4xl font-display font-extrabold uppercase">
                                         Welcome back, <span className="text-[#C10202]">{user?.displayName?.split(' ')[0] || 'Investor'}</span>!
                                     </h1>
-                                    <p className="text-gray-500 font-medium mt-1">Here's how your Halal portfolio is performing today.</p>
+                                    <p className="text-gray-500 dark:text-gray-400 font-medium mt-1">Here's how your Halal portfolio is performing today.</p>
                                 </div>
                                 <div className="flex gap-3">
-                                    <button className="neo-btn bg-white text-black px-6 py-3 text-sm hidden sm:flex items-center gap-2">
+                                    <button className="neo-btn bg-white dark:bg-gray-900 text-black dark:text-white px-6 py-3 text-sm hidden sm:flex items-center gap-2">
                                         <Download size={16}/> Statement
                                     </button>
                                     <button onClick={() => setActiveTab('funding')} className="neo-btn bg-black text-white px-8 py-3 text-sm">
@@ -116,8 +116,8 @@ export const InvestDashboard = () => {
                                     </div>
                                 </div>
                                 
-                                <div className="bg-white rounded-[2rem] p-6 neo-border neo-shadow-sm flex flex-col justify-between">
-                                    <h3 className="font-display font-bold text-gray-500 uppercase text-sm mb-4">Asset Allocation</h3>
+                                <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-6 neo-border neo-shadow-sm flex flex-col justify-between">
+                                    <h3 className="font-display font-bold text-gray-500 dark:text-gray-400 uppercase text-sm mb-4">Asset Allocation</h3>
                                     <div className="flex-1 flex flex-col justify-center">
                                         {/* Simple simulated chart layout */}
                                         <div className="flex items-end h-24 gap-2 mb-4">
@@ -139,15 +139,15 @@ export const InvestDashboard = () => {
                             </div>
 
                             {/* My Funds */}
-                            <h3 className="font-display font-bold text-2xl uppercase mt-8 mb-4 border-b-2 border-gray-100 pb-2">My Funds</h3>
+                            <h3 className="font-display font-bold text-2xl uppercase mt-8 mb-4 border-b-2 border-gray-100 dark:border-gray-800 pb-2">My Funds</h3>
                             
                             {totalBalance === 0 ? (
-                                <div className="bg-white p-8 rounded-[2rem] neo-border neo-shadow-sm text-center">
-                                    <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 neo-border">
+                                <div className="bg-white dark:bg-gray-900 p-8 rounded-[2rem] neo-border neo-shadow-sm text-center">
+                                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 neo-border">
                                         <Wallet className="w-8 h-8"/>
                                     </div>
                                     <h4 className="font-display font-bold text-xl uppercase mb-2">No Active Funds</h4>
-                                    <p className="text-gray-500 mb-6 font-medium">You don't have any active investments yet. Add funds to start growing your wealth.</p>
+                                    <p className="text-gray-500 dark:text-gray-400 mb-6 font-medium">You don't have any active investments yet. Add funds to start growing your wealth.</p>
                                     <button onClick={() => setActiveTab('funding')} className="neo-btn bg-black text-white px-8 py-3 text-sm">
                                         + Add Funds
                                     </button>
@@ -157,48 +157,48 @@ export const InvestDashboard = () => {
                                     <div className="grid md:grid-cols-2 gap-6">
                                         {/* Halal Fund Card */}
                                         {halalBalance > 0 && (
-                                            <div className="bg-white p-6 rounded-[2rem] neo-border neo-shadow-sm flex flex-col group cursor-pointer hover:border-black transition-all">
+                                            <div className="bg-white dark:bg-gray-900 p-6 rounded-[2rem] neo-border neo-shadow-sm flex flex-col group cursor-pointer hover:border-black transition-all">
                                                 <div className="flex justify-between items-start mb-6">
                                                     <div>
-                                                        <div className="inline-block px-3 py-1 bg-genz-pink text-black font-bold text-xs uppercase rounded-lg mb-2 neo-border">Moderate Risk</div>
+                                                        <div className="inline-block px-3 py-1 bg-genz-pink text-black dark:text-white font-bold text-xs uppercase rounded-lg mb-2 neo-border">Moderate Risk</div>
                                                         <h4 className="font-display font-bold text-2xl uppercase">Lotus Halal Fund</h4>
                                                     </div>
                                                     <TrendingUp className="text-green-500 w-6 h-6" />
                                                 </div>
                                                 <div className="mb-2">
-                                                    <p className="text-gray-500 text-sm font-medium uppercase mb-1">Current Value</p>
+                                                    <p className="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase mb-1">Current Value</p>
                                                     <p className="text-3xl font-display font-bold">₦{halalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                                                 </div>
                                                 <div className="flex justify-between items-end mt-4 pt-4 border-t-2 border-gray-50">
                                                     <div>
-                                                        <p className="text-xs text-gray-500 font-bold uppercase mb-1">Total Return</p>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-1">Total Return</p>
                                                         <p className="text-sm font-bold text-green-500">+ ₦0 (0.0%)</p>
                                                     </div>
-                                                    <button onClick={() => setActiveTab('funding')} className="text-sm font-bold bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl transition-colors">Manage</button>
+                                                    <button onClick={() => setActiveTab('funding')} className="text-sm font-bold bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 px-4 py-2 rounded-xl transition-colors">Manage</button>
                                                 </div>
                                             </div>
                                         )}
 
                                         {/* FIF Fund Card */}
                                         {fifBalance > 0 && (
-                                            <div className="bg-white p-6 rounded-[2rem] neo-border neo-shadow-sm flex flex-col group cursor-pointer hover:border-black transition-all">
+                                            <div className="bg-white dark:bg-gray-900 p-6 rounded-[2rem] neo-border neo-shadow-sm flex flex-col group cursor-pointer hover:border-black transition-all">
                                                 <div className="flex justify-between items-start mb-6">
                                                     <div>
-                                                        <div className="inline-block px-3 py-1 bg-genz-lime text-black font-bold text-xs uppercase rounded-lg mb-2 neo-border">Low Risk</div>
+                                                        <div className="inline-block px-3 py-1 bg-genz-lime text-black dark:text-white font-bold text-xs uppercase rounded-lg mb-2 neo-border">Low Risk</div>
                                                         <h4 className="font-display font-bold text-2xl uppercase">Lotus FIF Fund</h4>
                                                     </div>
                                                     <TrendingUp className="text-green-500 w-6 h-6" />
                                                 </div>
                                                 <div className="mb-2">
-                                                    <p className="text-gray-500 text-sm font-medium uppercase mb-1">Current Value</p>
+                                                    <p className="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase mb-1">Current Value</p>
                                                     <p className="text-3xl font-display font-bold">₦{fifBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                                                 </div>
                                                 <div className="flex justify-between items-end mt-4 pt-4 border-t-2 border-gray-50">
                                                     <div>
-                                                        <p className="text-xs text-gray-500 font-bold uppercase mb-1">Total Return</p>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-1">Total Return</p>
                                                         <p className="text-sm font-bold text-green-500">+ ₦0 (0.0%)</p>
                                                     </div>
-                                                    <button onClick={() => setActiveTab('funding')} className="text-sm font-bold bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl transition-colors">Manage</button>
+                                                    <button onClick={() => setActiveTab('funding')} className="text-sm font-bold bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 px-4 py-2 rounded-xl transition-colors">Manage</button>
                                                 </div>
                                             </div>
                                         )}
@@ -231,12 +231,12 @@ const FundingTab = ({ user, userProfile }: any) => {
 
     if (user && !userProfile?.kycCompleted) {
         return (
-            <div className="bg-white rounded-3xl p-10 neo-border neo-shadow-sm max-w-2xl mx-auto text-center mt-10">
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-10 neo-border neo-shadow-sm max-w-2xl mx-auto text-center mt-10">
                 <div className="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 neo-border border-red-500">
                     <CheckCircle className="w-10 h-10" />
                 </div>
                 <h3 className="font-display font-extrabold text-3xl uppercase mb-4">Complete Your KYC</h3>
-                <p className="text-gray-500 font-medium mb-8">You need to verify your identity before you can add funds to your investment portfolios.</p>
+                <p className="text-gray-500 dark:text-gray-400 font-medium mb-8">You need to verify your identity before you can add funds to your investment portfolios.</p>
                 <Link to="/invest/onboarding">
                     <button className="neo-btn bg-lotus-dark text-white px-8 py-3 uppercase hover:-translate-y-1 transition-transform inline-block">
                         Proceed to Verification
@@ -364,12 +364,12 @@ const FundingTab = ({ user, userProfile }: any) => {
 
     if (status === 'paystack') {
         return (
-            <div className="bg-white rounded-3xl p-8 neo-border neo-shadow-sm max-w-md mx-auto text-center mt-10">
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 neo-border neo-shadow-sm max-w-md mx-auto text-center mt-10">
                 <div className="bg-blue-500 text-white w-full py-4 rounded-xl font-bold uppercase mb-8">
                     Mock Paystack Terminal
                 </div>
                 <h3 className="font-display font-bold text-2xl uppercase mb-2">Fund your account</h3>
-                <p className="text-gray-500 mb-2 font-medium">You are about to pay <span className="font-bold text-black border-b-2 border-black">₦{Number(amount).toLocaleString()}</span> into {fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund'}</p>
+                <p className="text-gray-500 dark:text-gray-400 mb-2 font-medium">You are about to pay <span className="font-bold text-black dark:text-white border-b-2 border-black">₦{Number(amount).toLocaleString()}</span> into {fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund'}</p>
                 {frequency !== 'one-time' && (
                     <p className="text-sm font-bold text-blue-600 mb-6 bg-blue-50 py-2 rounded-lg border border-blue-200 uppercase">
                         {frequency} Auto-Invest Activated
@@ -380,7 +380,7 @@ const FundingTab = ({ user, userProfile }: any) => {
                     <button 
                         onClick={() => handlePaystackMock(true)} 
                         disabled={isLoading}
-                        className="neo-btn bg-green-400 text-black w-full uppercase py-3 shadow-md border-2 border-black disabled:opacity-50"
+                        className="neo-btn bg-green-400 text-black dark:text-white w-full uppercase py-3 shadow-md border-2 border-black disabled:opacity-50"
                     >
                         {isLoading ? 'Processing...' : 'Simulate Success'}
                     </button>
@@ -398,12 +398,12 @@ const FundingTab = ({ user, userProfile }: any) => {
 
     if (status === 'success') {
         return (
-            <div className="bg-white rounded-3xl p-10 neo-border neo-shadow-sm max-w-md mx-auto text-center mt-10">
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-10 neo-border neo-shadow-sm max-w-md mx-auto text-center mt-10">
                 <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 neo-border border-green-500">
                     <CheckCircle className="w-10 h-10" />
                 </div>
                 <h3 className="font-display font-extrabold text-3xl uppercase mb-4">Payment Successful!</h3>
-                <p className="text-gray-500 font-medium mb-8">Your ₦{Number(amount).toLocaleString()} deposit to the {fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund'} has been received.</p>
+                <p className="text-gray-500 dark:text-gray-400 font-medium mb-8">Your ₦{Number(amount).toLocaleString()} deposit to the {fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund'} has been received.</p>
                 {frequency !== 'one-time' && (
                     <p className="text-sm font-bold text-blue-600 mb-6 uppercase border-b-2 border-dashed border-blue-200 pb-2 inline-block">
                         {frequency} Auto-Invest Subscribed Successfully
@@ -418,12 +418,12 @@ const FundingTab = ({ user, userProfile }: any) => {
 
     if (status === 'withdraw_success') {
         return (
-            <div className="bg-white rounded-3xl p-10 neo-border neo-shadow-sm max-w-md mx-auto text-center mt-10">
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-10 neo-border neo-shadow-sm max-w-md mx-auto text-center mt-10">
                 <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 neo-border border-green-500">
                     <CheckCircle className="w-10 h-10" />
                 </div>
                 <h3 className="font-display font-extrabold text-3xl uppercase mb-4">Withdrawal Processed!</h3>
-                <p className="text-gray-500 font-medium mb-8">Your withdrawal of ₦{Number(amount).toLocaleString()} from the {fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund'} has been processed and sent to your bank account.</p>
+                <p className="text-gray-500 dark:text-gray-400 font-medium mb-8">Your withdrawal of ₦{Number(amount).toLocaleString()} from the {fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund'} has been processed and sent to your bank account.</p>
                 <button onClick={() => {
                     setStatus('idle');
                     setAmount('');
@@ -435,17 +435,17 @@ const FundingTab = ({ user, userProfile }: any) => {
     }
 
     return (
-        <div className="bg-white rounded-3xl p-8 neo-border neo-shadow-sm max-w-2xl mx-auto">
-            <div className="flex bg-gray-100 rounded-xl p-1 mb-8">
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 neo-border neo-shadow-sm max-w-2xl mx-auto">
+            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-8">
                 <button 
                     onClick={() => setActionType('deposit')}
-                    className={`flex-1 py-3 px-4 rounded-lg font-bold uppercase text-sm transition-all ${actionType === 'deposit' ? 'bg-white shadow-sm text-black border-2 border-black' : 'text-gray-500 border-2 border-transparent'}`}
+                    className={`flex-1 py-3 px-4 rounded-lg font-bold uppercase text-sm transition-all ${actionType === 'deposit' ? 'bg-white dark:bg-gray-900 shadow-sm text-black dark:text-white border-2 border-black' : 'text-gray-500 dark:text-gray-400 border-2 border-transparent'}`}
                 >
                     Deposit Funds
                 </button>
                 <button 
                     onClick={() => setActionType('withdraw')}
-                    className={`flex-1 py-3 px-4 rounded-lg font-bold uppercase text-sm transition-all ${actionType === 'withdraw' ? 'bg-white shadow-sm text-black border-2 border-black' : 'text-gray-500 border-2 border-transparent'}`}
+                    className={`flex-1 py-3 px-4 rounded-lg font-bold uppercase text-sm transition-all ${actionType === 'withdraw' ? 'bg-white dark:bg-gray-900 shadow-sm text-black dark:text-white border-2 border-black' : 'text-gray-500 dark:text-gray-400 border-2 border-transparent'}`}
                 >
                     Withdraw Funds
                 </button>
@@ -454,16 +454,16 @@ const FundingTab = ({ user, userProfile }: any) => {
             <h2 className="font-display font-extrabold text-3xl uppercase mb-2">
                 {actionType === 'deposit' ? 'Add Funds' : 'Withdraw Funds'}
             </h2>
-            <p className="text-gray-500 font-medium mb-8">
+            <p className="text-gray-500 dark:text-gray-400 font-medium mb-8">
                 {actionType === 'deposit' ? 'Invest into your preferred Lotus Tribe portfolios safely.' : 'Withdraw from your active portfolios directly to your bank account.'}
             </p>
             
             <div className="space-y-6">
                 <div>
                     <div className="flex justify-between items-end mb-2">
-                        <label className="block text-sm font-bold uppercase tracking-wider text-gray-600">Select Fund</label>
+                        <label className="block text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Select Fund</label>
                         {actionType === 'withdraw' && (
-                            <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">
+                            <span className="text-xs font-bold text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
                                 Available: ₦{currentBalance.toLocaleString()}
                             </span>
                         )}
@@ -471,23 +471,23 @@ const FundingTab = ({ user, userProfile }: any) => {
                     <div className="grid grid-cols-2 gap-4">
                         <button 
                             onClick={() => setFund('halal')} 
-                            className={`p-4 rounded-xl border-2 transition-all text-center ${fund === 'halal' ? 'border-genz-pink bg-pink-50' : 'border-gray-200'}`}
+                            className={`p-4 rounded-xl border-2 transition-all text-center ${fund === 'halal' ? 'border-genz-pink bg-pink-50' : 'border-gray-200 dark:border-gray-700'}`}
                         >
                             <div className="font-display font-bold uppercase">Halal Fund</div>
-                            <div className="text-xs text-gray-500">(Moderate Risk)</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">(Moderate Risk)</div>
                         </button>
                         <button 
                             onClick={() => setFund('fif')} 
-                            className={`p-4 rounded-xl border-2 transition-all text-center ${fund === 'fif' ? 'border-genz-lime bg-[#F4FFDC]' : 'border-gray-200'}`}
+                            className={`p-4 rounded-xl border-2 transition-all text-center ${fund === 'fif' ? 'border-genz-lime bg-[#F4FFDC]' : 'border-gray-200 dark:border-gray-700'}`}
                         >
                             <div className="font-display font-bold uppercase">FIF Fund</div>
-                            <div className="text-xs text-gray-500">(Low Risk)</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">(Low Risk)</div>
                         </button>
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-bold uppercase tracking-wider text-gray-600 mb-2">
+                    <label className="block text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 mb-2">
                         Amount to {actionType === 'deposit' ? 'Invest' : 'Withdraw'} (₦)
                     </label>
                     <div className="relative">
@@ -499,20 +499,20 @@ const FundingTab = ({ user, userProfile }: any) => {
                             value={amount}
                             onChange={e => setAmount(e.target.value)}
                             placeholder="0.00" 
-                            className="w-full bg-gray-50 border-2 border-gray-200 rounded-xl p-4 pl-12 font-display font-bold text-2xl focus:border-black outline-none transition-colors"
+                            className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 pl-12 font-display font-bold text-2xl focus:border-black outline-none transition-colors"
                         />
                     </div>
                 </div>
 
                 {actionType === 'deposit' && (
                     <div>
-                        <label className="block text-sm font-bold uppercase tracking-wider text-gray-600 mb-2">Auto-Invest Frequency</label>
+                        <label className="block text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 mb-2">Auto-Invest Frequency</label>
                         <div className="grid grid-cols-4 gap-2">
                             {['one-time', 'daily', 'weekly', 'monthly'].map((freq) => (
                                 <button 
                                     key={freq}
                                     onClick={() => setFrequency(freq)} 
-                                    className={`p-2 rounded-lg text-xs font-bold uppercase tracking-wider border-2 transition-all text-center ${frequency === freq ? 'border-lotus-dark bg-lotus-dark text-white' : 'border-gray-200 text-gray-500 hover:border-gray-400'}`}
+                                    className={`p-2 rounded-lg text-xs font-bold uppercase tracking-wider border-2 transition-all text-center ${frequency === freq ? 'border-lotus-dark bg-lotus-dark text-white' : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400'}`}
                                 >
                                     {freq.replace('-', ' ')}
                                 </button>
@@ -525,7 +525,7 @@ const FundingTab = ({ user, userProfile }: any) => {
                     <button 
                         onClick={handleProceed}
                         disabled={isLoading}
-                        className="neo-btn bg-genz-blue text-lotus-dark w-full py-4 text-lg uppercase flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="neo-btn bg-genz-blue text-lotus-dark dark:text-white w-full py-4 text-lg uppercase flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         {isLoading ? 'Processing...' : (actionType === 'deposit' ? 'Proceed to Payment' : 'Withdraw to Bank Account')}
                         {!isLoading && actionType === 'deposit' && <ArrowUpRight className="w-5 h-5"/>}
@@ -534,17 +534,17 @@ const FundingTab = ({ user, userProfile }: any) => {
             </div>
 
             {userProfile?.autoInvest && userProfile.autoInvest.length > 0 && (
-                <div className="mt-12 pt-8 border-t-2 border-gray-100">
+                <div className="mt-12 pt-8 border-t-2 border-gray-100 dark:border-gray-800">
                     <h3 className="font-display font-bold text-xl uppercase mb-4">Active Auto-Investments</h3>
                     <div className="space-y-3">
                         {userProfile.autoInvest.map((ai: any, i: number) => (
-                            <div key={i} className="flex justify-between items-center p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                            <div key={i} className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
                                         <TrendingUp size={20} />
                                     </div>
                                     <div>
-                                        <p className="font-bold text-black">{ai.fund === 'halal' ? 'Halal Fund' : 'FIF Fund'}</p>
+                                        <p className="font-bold text-black dark:text-white">{ai.fund === 'halal' ? 'Halal Fund' : 'FIF Fund'}</p>
                                         <p className="text-xs text-blue-600 font-bold uppercase tracking-widest">{ai.frequency}</p>
                                     </div>
                                 </div>
@@ -582,24 +582,24 @@ const TransactionsTab = ({ user }: { user: any }) => {
     }, [user]);
 
     return (
-        <div className="bg-white rounded-3xl p-6 md:p-8 neo-border neo-shadow-sm min-h-[60vh]">
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 md:p-8 neo-border neo-shadow-sm min-h-[60vh]">
             <h2 className="font-display font-extrabold text-3xl uppercase mb-8">Transaction History</h2>
             
             {loading ? (
-                <div className="text-center text-gray-500 py-10 font-bold uppercase tracking-widest">Loading...</div>
+                <div className="text-center text-gray-500 dark:text-gray-400 py-10 font-bold uppercase tracking-widest">Loading...</div>
             ) : transactions.length === 0 ? (
-                <div className="text-center text-gray-500 py-10 font-bold uppercase tracking-widest">No transactions yet</div>
+                <div className="text-center text-gray-500 dark:text-gray-400 py-10 font-bold uppercase tracking-widest">No transactions yet</div>
             ) : (
                 <div className="space-y-4">
                     {transactions.map((tc) => (
-                        <div key={tc.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100 gap-4">
+                        <div key={tc.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 gap-4">
                             <div className="flex items-center gap-4">
                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center neo-border shadow-sm shrink-0 ${tc.type === 'Auto-Invest' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
                                     {tc.type === 'Auto-Invest' ? <Target size={24} /> : <ArrowDownRight size={24} />}
                                 </div>
                                 <div>
                                     <p className="font-bold text-lg">{tc.type}: {tc.fund}</p>
-                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                                         {tc.createdAt?.toDate ? tc.createdAt.toDate().toLocaleDateString() : 'Just now'} • SUCCESS
                                     </p>
                                 </div>
@@ -617,28 +617,28 @@ const TransactionsTab = ({ user }: { user: any }) => {
 
 const SettingsTab = ({ user, userProfile }: any) => {
     return (
-        <div className="bg-white rounded-3xl p-6 md:p-8 neo-border neo-shadow-sm max-w-3xl mx-auto">
-            <h2 className="font-display font-extrabold text-3xl uppercase mb-8 border-b-2 border-gray-100 pb-4">Account Settings</h2>
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 md:p-8 neo-border neo-shadow-sm max-w-3xl mx-auto">
+            <h2 className="font-display font-extrabold text-3xl uppercase mb-8 border-b-2 border-gray-100 dark:border-gray-800 pb-4">Account Settings</h2>
             
             <div className="space-y-8">
                 {/* Profile Settings */}
                 <section>
-                    <h3 className="flex items-center gap-2 font-display font-bold text-xl uppercase mb-4 text-gray-500"><User className="w-5 h-5"/> Profile Information</h3>
+                    <h3 className="flex items-center gap-2 font-display font-bold text-xl uppercase mb-4 text-gray-500 dark:text-gray-400"><User className="w-5 h-5"/> Profile Information</h3>
                     <div className="grid md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs font-bold uppercase text-gray-400 mb-1">Full Name</label>
-                            <input type="text" readOnly value={user?.displayName || ''} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 font-medium outline-none text-gray-600 cursor-not-allowed" />
+                            <input type="text" readOnly value={user?.displayName || ''} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 font-medium outline-none text-gray-600 dark:text-gray-300 cursor-not-allowed" />
                         </div>
                         <div>
                             <label className="block text-xs font-bold uppercase text-gray-400 mb-1">Email Address</label>
-                            <input type="email" readOnly value={user?.email || ''} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 font-medium outline-none text-gray-600 cursor-not-allowed" />
+                            <input type="email" readOnly value={user?.email || ''} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 font-medium outline-none text-gray-600 dark:text-gray-300 cursor-not-allowed" />
                         </div>
                     </div>
                 </section>
 
                 {/* KYC Status */}
                 <section>
-                    <h3 className="flex items-center gap-2 font-display font-bold text-xl uppercase mb-4 text-gray-500"><FileText className="w-5 h-5"/> KYC & Verification</h3>
+                    <h3 className="flex items-center gap-2 font-display font-bold text-xl uppercase mb-4 text-gray-500 dark:text-gray-400"><FileText className="w-5 h-5"/> KYC & Verification</h3>
                     {userProfile?.kycCompleted ? (
                         <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -648,7 +648,7 @@ const SettingsTab = ({ user, userProfile }: any) => {
                                     <p className="text-sm font-medium text-green-700">Account verified</p>
                                 </div>
                             </div>
-                            <button className="text-sm font-bold bg-white text-green-700 px-4 py-2 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">Upgrade to Tier 3</button>
+                            <button className="text-sm font-bold bg-white dark:bg-gray-900 text-green-700 px-4 py-2 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">Upgrade to Tier 3</button>
                         </div>
                     ) : (
                         <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 flex items-center justify-between">
@@ -666,37 +666,37 @@ const SettingsTab = ({ user, userProfile }: any) => {
                     )}
                 </section>
 
-                <hr className="border-gray-100" />
+                <hr className="border-gray-100 dark:border-gray-800" />
 
                 {/* Security */}
                 <section>
-                    <h3 className="flex items-center gap-2 font-display font-bold text-xl uppercase mb-4 text-gray-500"><Lock className="w-5 h-5"/> Security</h3>
+                    <h3 className="flex items-center gap-2 font-display font-bold text-xl uppercase mb-4 text-gray-500 dark:text-gray-400"><Lock className="w-5 h-5"/> Security</h3>
                     <div className="space-y-3">
                         <div className="flex items-center justify-between py-3">
                             <div>
                                 <p className="font-bold">Two-Factor Authentication</p>
-                                <p className="text-sm text-gray-500">Add an extra layer of security to your account.</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Add an extra layer of security to your account.</p>
                             </div>
                             <button className="px-4 py-2 bg-black text-white text-sm font-bold rounded-lg uppercase">Enable 2FA</button>
                         </div>
                         <div className="flex items-center justify-between py-3 border-t border-gray-50">
                             <div>
                                 <p className="font-bold">Change Password</p>
-                                <p className="text-sm text-gray-500">Update your account password</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Update your account password</p>
                             </div>
-                            <button className="px-4 py-2 border-2 border-gray-200 text-black text-sm font-bold rounded-lg uppercase hover:border-black transition-colors">Update</button>
+                            <button className="px-4 py-2 border-2 border-gray-200 dark:border-gray-700 text-black dark:text-white text-sm font-bold rounded-lg uppercase hover:border-black transition-colors">Update</button>
                         </div>
                     </div>
                 </section>
                 
-                <hr className="border-gray-100" />
+                <hr className="border-gray-100 dark:border-gray-800" />
                 
                 <div className="flex justify-between items-center bg-red-50 p-4 rounded-xl border border-red-100">
                     <div>
                         <p className="font-bold text-red-600">Danger Zone</p>
                         <p className="text-xs text-red-500">Permanently delete your account and data.</p>
                     </div>
-                    <button className="px-4 py-2 bg-white text-red-600 border border-red-200 text-sm font-bold rounded-lg hover:bg-red-100 transition-colors">Delete Account</button>
+                    <button className="px-4 py-2 bg-white dark:bg-gray-900 text-red-600 border border-red-200 text-sm font-bold rounded-lg hover:bg-red-100 transition-colors">Delete Account</button>
                 </div>
             </div>
         </div>
@@ -723,12 +723,12 @@ const CertificateTab = ({ user, userProfile }: any) => {
 
     if (!userProfile?.riskProfile) {
         return (
-            <div className="bg-white p-8 rounded-3xl neo-border neo-shadow-sm text-center min-h-[60vh] flex flex-col items-center justify-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+            <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl neo-border neo-shadow-sm text-center min-h-[60vh] flex flex-col items-center justify-center">
+                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
                     <Info className="w-8 h-8 text-gray-400" />
                 </div>
                 <h3 className="font-display font-bold text-2xl uppercase mb-2">No Certificate Yet!</h3>
-                <p className="text-gray-500 font-medium mb-6">You need to complete the Vibe Check assessment to generate your investor certificate.</p>
+                <p className="text-gray-500 dark:text-gray-400 font-medium mb-6">You need to complete the Vibe Check assessment to generate your investor certificate.</p>
                 <Link to="/quiz">
                     <button className="neo-btn bg-black text-white px-8 py-3 text-sm">
                         Take Vibe Check
@@ -747,7 +747,7 @@ const CertificateTab = ({ user, userProfile }: any) => {
                 </button>
             </div>
             
-            <div id="dashboard-vibe-certificate" className="bg-white p-2 rounded-3xl neo-shadow mb-8 border-4 border-black inline-block w-full">
+            <div id="dashboard-vibe-certificate" className="bg-white dark:bg-gray-900 p-2 rounded-3xl neo-shadow mb-8 border-4 border-black inline-block w-full">
                 <div className="bg-[#fffdf9] p-8 md:p-12 rounded-2xl border-2 border-dashed border-gray-400 relative overflow-hidden">
                    {/* Ornate corners */}
                    <div className="absolute top-2 left-2 w-8 h-8 border-t-4 border-l-4 border-lotus-dark"></div>
@@ -761,38 +761,38 @@ const CertificateTab = ({ user, userProfile }: any) => {
                    </div>
                    
                    <div className="relative z-10 text-center">
-                     <h2 className="font-display font-black text-3xl md:text-5xl uppercase text-lotus-dark mb-2 tracking-widest">
+                     <h2 className="font-display font-black text-3xl md:text-5xl uppercase text-lotus-dark dark:text-white mb-2 tracking-widest">
                        Certificate of Vibe
                      </h2>
-                     <p className="text-gray-500 font-bold uppercase tracking-widest text-xs mb-8">Official Lotus Tribe Assessment</p>
+                     <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-xs mb-8">Official Lotus Tribe Assessment</p>
                      
                      <div className="text-7xl mb-6">
                        {userProfile.riskProfile === 'Steady Saver' ? '🐢' : userProfile.riskProfile === 'Calculated Thinker' ? '🧠' : '🚀'}
                      </div>
                      
-                     <div className="bg-gray-100 p-6 rounded-2xl mb-8 border border-gray-200">
-                        <p className="font-display font-bold text-xl md:text-2xl text-lotus-dark leading-relaxed">
+                     <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-2xl mb-8 border border-gray-200 dark:border-gray-700">
+                        <p className="font-display font-bold text-xl md:text-2xl text-lotus-dark dark:text-white leading-relaxed">
                            Dear <span className="text-lotus-red border-b-2 border-lotus-red px-2">{user?.displayName || 'Tribe Member'}</span>, <br/><br/>
                            This is to certify that you have successfully completed your Lotus Tribe Investment Vibe Check. Your investment personality is formally recognized as:
                         </p>
-                        <h1 className="font-display font-black text-4xl md:text-5xl uppercase mt-6 mb-4 text-lotus-dark bg-genz-lime inline-block px-4 py-2 transform -rotate-1 shadow-md border-2 border-black">
+                        <h1 className="font-display font-black text-4xl md:text-5xl uppercase mt-6 mb-4 text-lotus-dark dark:text-white bg-genz-lime inline-block px-4 py-2 transform -rotate-1 shadow-md border-2 border-black">
                           {userProfile.riskProfile}
                         </h1>
-                        <p className="text-lg md:text-xl font-bold text-gray-700 mt-2">
+                        <p className="text-lg md:text-xl font-bold text-gray-700 dark:text-gray-200 mt-2">
                            You are on course to be a {userProfile.riskProfile === 'Steady Saver' ? 'low-risk' : userProfile.riskProfile === 'Calculated Thinker' ? 'calculated' : 'high-risk'} Billionaire investor. 🥂
                         </p>
                      </div>
                      
-                     <div className="flex justify-between items-end border-t-2 border-gray-200 pt-6 mt-10">
+                     <div className="flex justify-between items-end border-t-2 border-gray-200 dark:border-gray-700 pt-6 mt-10">
                         <div className="text-left">
-                           <div className="font-[signature] font-bold text-3xl text-lotus-dark mb-1 opacity-70">Lotus Tribe</div>
+                           <div className="font-[signature] font-bold text-3xl text-lotus-dark dark:text-white mb-1 opacity-70">Lotus Tribe</div>
                            <div className="w-32 h-px bg-black mb-1"></div>
-                           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Authorized Signature</p>
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Authorized Signature</p>
                         </div>
                         <div className="text-right">
-                           <div className="font-mono font-bold text-sm text-lotus-dark mb-1">{new Date().toLocaleDateString()}</div>
+                           <div className="font-mono font-bold text-sm text-lotus-dark dark:text-white mb-1">{new Date().toLocaleDateString()}</div>
                            <div className="w-24 h-px bg-black mb-1 ml-auto"></div>
-                           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Date of Issue</p>
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Date of Issue</p>
                         </div>
                      </div>
                      
@@ -804,7 +804,7 @@ const CertificateTab = ({ user, userProfile }: any) => {
             </div>
             <div className="text-center mt-6">
                  <Link to="/quiz">
-                    <button className="text-gray-500 font-bold uppercase text-xs hover:text-black hover:underline underline-offset-4 transition-all">
+                    <button className="text-gray-500 dark:text-gray-400 font-bold uppercase text-xs hover:text-black dark:text-white hover:underline underline-offset-4 transition-all">
                         Retake Vibe Check
                     </button>
                  </Link>
@@ -846,18 +846,18 @@ const FundPerformanceChart = () => {
     }, [period]);
 
     return (
-        <div className="bg-white rounded-3xl p-6 mt-8 neo-border neo-shadow-sm min-h-[400px]">
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 mt-8 neo-border neo-shadow-sm min-h-[400px]">
              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                  <div>
                     <h3 className="font-display font-bold text-xl uppercase mb-1">Portfolio Performance</h3>
-                    <p className="text-gray-500 font-medium text-sm">Track your investment growth over time.</p>
+                    <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">Track your investment growth over time.</p>
                  </div>
-                 <div className="flex bg-gray-100 rounded-lg p-1 overflow-x-auto w-full sm:w-auto">
+                 <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 overflow-x-auto w-full sm:w-auto">
                     {periods.map(p => (
                         <button 
                             key={p} 
                             onClick={() => setPeriod(p)}
-                            className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase transition-colors shrink-0 ${period === p ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                            className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase transition-colors shrink-0 ${period === p ? 'bg-white dark:bg-gray-900 shadow-sm text-black dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-black dark:text-white'}`}
                         >
                             {p}
                         </button>
