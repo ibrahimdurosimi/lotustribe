@@ -15,7 +15,10 @@ import {
   Image as ImageIcon,
   CheckCircle,
   HelpCircle,
-  Calendar
+  Calendar,
+  Users,
+  Send,
+  DollarSign
 } from 'lucide-react';
 import { 
   db, 
@@ -27,11 +30,13 @@ import {
   getDocs, 
   orderBy, 
   Timestamp,
-  doc
+  doc,
+  collectionGroup
 } from './lib/firebase';
 import { coursesData } from './data/courses';
 import { AuthContext } from './App';
 import { motion, AnimatePresence } from 'motion/react';
+import { sendEmailNotification } from './lib/email';
 
 const Notification = ({ message, type, onClose }: { message: string, type: 'success' | 'error', onClose: () => void }) => {
   useEffect(() => {
@@ -55,7 +60,7 @@ const Notification = ({ message, type, onClose }: { message: string, type: 'succ
 };
 
 export const AdminDashboard = () => {
-  const { user } = useContext(AuthContext);
+  const { user, loading: authLoading } = useContext(AuthContext);
   const [courses, setCourses] = useState<any[]>([]);
   const [modules, setModules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,11 +71,18 @@ export const AdminDashboard = () => {
   const [currentEvent, setCurrentEvent] = useState<any>(null);
   const [isEditingEvent, setIsEditingEvent] = useState(false);
   const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
-  const [activeTab, setActiveTab] = useState<'courses' | 'modules' | 'events'>('courses');
+  const [activeTab, setActiveTab] = useState<'courses' | 'modules' | 'events' | 'users' | 'transactions' | 'broadcast'>('courses');
 
   // Admin emails
   const adminEmails = ['ibrahimdurosimi@gmail.com']; 
   const isAdmin = user && adminEmails.includes(user.email || '');
+
+  const [events, setEvents] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  
+  // Broadcast State
+  const [broadcastMessage, setBroadcastMessage] = useState({ subject: '', content: '' });
 
   useEffect(() => {
     if (isAdmin) {
@@ -83,10 +95,10 @@ export const AdminDashboard = () => {
          // Clean URL
          window.history.replaceState({}, document.title, window.location.pathname);
       }
+    } else if (!authLoading) {
+        setLoading(false);
     }
-  }, [isAdmin]);
-
-  const [events, setEvents] = useState<any[]>([]);
+  }, [isAdmin, authLoading]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -94,16 +106,38 @@ export const AdminDashboard = () => {
       const cq = query(collection(db, 'courses'), orderBy('id'));
       const mq = query(collection(db, 'modules'), orderBy('order', 'asc'));
       const eq = query(collection(db, 'events'), orderBy('date', 'asc'));
+      const uq = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
+      const tq = query(collectionGroup(db, 'transactions'), orderBy('createdAt', 'desc'));
       
-      const [cSnap, mSnap, eSnap] = await Promise.all([
+      const [cSnap, mSnap, eSnap, uSnap, tSnap] = await Promise.all([
         getDocs(cq), 
         getDocs(mq),
-        getDocs(eq)
+        getDocs(eq),
+        getDocs(uq),
+        getDocs(tq)
       ]);
       
       setCourses(cSnap.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() })));
       setModules(mSnap.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() })));
       setEvents(eSnap.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() })));
+      setUsers(uSnap.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() })));
+      
+      // Since transactions are in a collection group, we don't naturally have user email attached.
+      // We can grab the user uid from the reference if needed, but for now we just show the transaction.
+      const txs = tSnap.docs.map(doc => {
+         const data = doc.data();
+         // The document path for a transaction is /users/{userId}/transactions/{txId}
+         const userId = doc.ref.parent.parent?.id; 
+         const userObj = userId ? uSnap.docs.find(u => u.id === userId)?.data() : null;
+         return {
+            firestoreId: doc.id,
+            userId,
+            userEmail: userObj?.email || 'Unknown',
+            userName: userObj?.displayName || 'Unknown',
+            ...data
+         };
+      });
+      setTransactions(txs);
     } catch (err) {
       console.error(err);
       notify("Failed to fetch data", "error");
@@ -286,6 +320,10 @@ export const AdminDashboard = () => {
     }
   };
 
+  if (authLoading || loading) {
+    return <div className="min-h-[60vh] flex items-center justify-center font-bold uppercase text-gray-400">Loading...</div>;
+  }
+
   if (!user || !isAdmin) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 bg-white dark:bg-gray-900 rounded-3xl neo-border neo-shadow max-w-md mx-auto mt-24">
@@ -309,28 +347,34 @@ export const AdminDashboard = () => {
              Architect Mode
           </div>
           <h1 className="font-display font-black text-5xl md:text-7xl text-lotus-dark dark:text-white leading-none uppercase tracking-tighter">
-            Curate <span className="text-lotus-red">Knowledge.</span>
+            {activeTab === 'users' ? <>Tribe <span className="text-lotus-red">Members.</span></> : 
+             activeTab === 'transactions' ? <>Financial <span className="text-lotus-red">Ledger.</span></> :
+             activeTab === 'broadcast' ? <>Mass <span className="text-lotus-red">Comms.</span></> :
+             <>Curate <span className="text-lotus-red">Knowledge.</span></>}
           </h1>
         </div>
-        <div className="flex gap-4">
-          <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl flex gap-1">
-             <button onClick={() => setActiveTab('courses')} className={`px-6 py-3 rounded-xl font-bold uppercase text-xs transition-all ${activeTab === 'courses' ? 'bg-white dark:bg-gray-900 shadow-sm text-lotus-dark dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:text-gray-300'}`}>Courses</button>
-             <button onClick={() => setActiveTab('modules')} className={`px-6 py-3 rounded-xl font-bold uppercase text-xs transition-all ${activeTab === 'modules' ? 'bg-white dark:bg-gray-900 shadow-sm text-lotus-dark dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:text-gray-300'}`}>Modules</button>
-             <button onClick={() => setActiveTab('events')} className={`px-6 py-3 rounded-xl font-bold uppercase text-xs transition-all ${activeTab === 'events' ? 'bg-white dark:bg-gray-900 shadow-sm text-lotus-dark dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:text-gray-300'}`}>Events</button>
+        <div className="flex flex-col gap-4">
+          <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl flex flex-wrap gap-1">
+             <button onClick={() => setActiveTab('courses')} className={`px-4 py-3 rounded-xl font-bold uppercase text-[10px] transition-all ${activeTab === 'courses' ? 'bg-white dark:bg-gray-900 shadow-sm text-lotus-dark dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:text-gray-300'}`}>Courses</button>
+             <button onClick={() => setActiveTab('modules')} className={`px-4 py-3 rounded-xl font-bold uppercase text-[10px] transition-all ${activeTab === 'modules' ? 'bg-white dark:bg-gray-900 shadow-sm text-lotus-dark dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:text-gray-300'}`}>Modules</button>
+             <button onClick={() => setActiveTab('events')} className={`px-4 py-3 rounded-xl font-bold uppercase text-[10px] transition-all ${activeTab === 'events' ? 'bg-white dark:bg-gray-900 shadow-sm text-lotus-dark dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:text-gray-300'}`}>Events</button>
+             <button onClick={() => setActiveTab('users')} className={`px-4 py-3 rounded-xl font-bold uppercase text-[10px] transition-all ${activeTab === 'users' ? 'bg-white dark:bg-gray-900 shadow-sm text-lotus-dark dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:text-gray-300'}`}>Users</button>
+             <button onClick={() => setActiveTab('transactions')} className={`px-4 py-3 rounded-xl font-bold uppercase text-[10px] transition-all ${activeTab === 'transactions' ? 'bg-white dark:bg-gray-900 shadow-sm text-lotus-dark dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:text-gray-300'}`}>Transactions</button>
+             <button onClick={() => setActiveTab('broadcast')} className={`px-4 py-3 rounded-xl font-bold uppercase text-[10px] transition-all ${activeTab === 'broadcast' ? 'bg-white dark:bg-gray-900 shadow-sm text-lotus-dark dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:text-gray-300'}`}>Broadcast</button>
           </div>
           {activeTab === 'courses' ? (
-            <button onClick={startNew} className="neo-btn bg-lotus-dark text-white px-8 py-4 uppercase flex items-center gap-3 font-bold shadow-xl">
+            <button onClick={startNew} className="neo-btn bg-lotus-dark text-white px-8 py-4 w-full uppercase flex items-center justify-center gap-3 font-bold shadow-xl">
               <Plus size={20} /> New Course
             </button>
           ) : activeTab === 'modules' ? (
-            <button onClick={startNewModule} className="neo-btn bg-lotus-dark text-white px-8 py-4 uppercase flex items-center gap-3 font-bold shadow-xl">
+            <button onClick={startNewModule} className="neo-btn bg-lotus-dark text-white px-8 py-4 w-full uppercase flex items-center justify-center gap-3 font-bold shadow-xl">
               <Plus size={20} /> New Module
             </button>
-          ) : (
-            <button onClick={() => { setCurrentEvent({ title: '', date: '', time: '6:00 PM', location: 'Zoom', category: 'Live Webinar' }); setIsEditingEvent(true); }} className="neo-btn bg-lotus-dark text-white px-8 py-4 uppercase flex items-center gap-3 font-bold shadow-xl">
+          ) : activeTab === 'events' ? (
+            <button onClick={() => { setCurrentEvent({ title: '', date: '', time: '6:00 PM', location: 'Zoom', category: 'Live Webinar' }); setIsEditingEvent(true); }} className="neo-btn bg-lotus-dark text-white px-8 py-4 w-full uppercase flex items-center justify-center gap-3 font-bold shadow-xl">
               <Plus size={20} /> New Event
             </button>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -398,7 +442,7 @@ export const AdminDashboard = () => {
              <Plus size={20} /> Add New Module
           </button>
         </div>
-      ) : (
+      ) : activeTab === 'events' ? (
         <div className="grid gap-6">
            {events.map(event => (
               <div key={event.firestoreId} className="bg-white dark:bg-gray-900 rounded-[2rem] neo-border neo-shadow-sm p-6 flex items-center justify-between gap-6 border border-gray-100 dark:border-gray-800">
@@ -422,7 +466,148 @@ export const AdminDashboard = () => {
               <Plus size={20} /> Create New Event
            </button>
         </div>
-      )}
+      ) : activeTab === 'users' ? (
+        <div className="grid gap-6">
+           {users.map(u => (
+              <div key={u.firestoreId} className="bg-white dark:bg-gray-900 rounded-[2rem] neo-border neo-shadow-sm p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 border border-gray-100 dark:border-gray-800">
+                 <div className="flex items-center gap-6">
+                    <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center text-lotus-dark dark:text-white">
+                       <Users size={20} />
+                    </div>
+                    <div>
+                       <h3 className="font-display font-bold text-xl uppercase">{u.displayName || 'Unknown Name'}</h3>
+                       <p className="text-xs font-bold text-gray-500 uppercase">{u.email}</p>
+                       <p className="text-[10px] text-gray-400 mt-1 uppercase">
+                          KYC: {u.kycCompleted ? '✅' : '❌'} | Onboarded: {u.onboarded ? '✅' : '❌'}
+                       </p>
+                    </div>
+                 </div>
+                 <div className="flex flex-col gap-2 items-end">
+                    <div className="flex gap-4">
+                       <div className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-2 border border-gray-200 dark:border-gray-700 text-center">
+                          <p className="text-[10px] uppercase font-bold text-gray-400">Halal Balance</p>
+                          <p className="font-bold">₦{Number(u.halalBalance || 0).toLocaleString()}</p>
+                       </div>
+                       <div className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-2 border border-gray-200 dark:border-gray-700 text-center">
+                          <p className="text-[10px] uppercase font-bold text-gray-400">FIF Balance</p>
+                          <p className="font-bold">₦{Number(u.fifBalance || 0).toLocaleString()}</p>
+                       </div>
+                    </div>
+                    {!u.kycCompleted && (
+                       <button 
+                          onClick={async () => {
+                             try {
+                                await updateDoc(doc(db, 'users', u.firestoreId), { kycCompleted: true, onboarded: true });
+                                notify("User verified!", "success");
+                                await sendEmailNotification(u.email, 'Account Verified - Lotus Tribe', `
+                                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #111;">
+                                        <h2 style="color: #0A0A0A; text-transform: uppercase;">You're Verified!</h2>
+                                        <p>Hi ${u.displayName || 'Investor'},</p>
+                                        <p>Your account has been manually verified by Lotus Tribe administrators.</p>
+                                        <p>You can now start investing in our Halal and Fixed Income funds to build your wealth.</p>
+                                        <p>We're excited to have you on board!</p>
+                                    </div>
+                                `);
+                                fetchData();
+                             } catch (err) {
+                                notify("Verification failed", "error");
+                             }
+                          }}
+                          className="px-4 py-2 mt-2 bg-genz-lime rounded-xl uppercase text-[10px] font-bold border-2 border-black w-full"
+                       >
+                          Verify Account
+                       </button>
+                    )}
+                 </div>
+              </div>
+           ))}
+        </div>
+      ) : activeTab === 'transactions' ? (
+        <div className="grid gap-6">
+           {transactions.length === 0 ? (
+              <div className="p-12 text-center text-gray-400 font-bold uppercase">No transactions found.</div>
+           ) : transactions.map(tx => (
+              <div key={tx.firestoreId} className="bg-white dark:bg-gray-900 rounded-[2rem] neo-border neo-shadow-sm p-6 flex items-center justify-between gap-6 border border-gray-100 dark:border-gray-800">
+                 <div className="flex items-center gap-6">
+                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
+                       <DollarSign size={20} />
+                    </div>
+                    <div>
+                       <h3 className="font-display font-bold text-xl uppercase">₦{Number(tx.amount || 0).toLocaleString()} <span className="text-sm text-gray-400">{tx.type}</span></h3>
+                       <p className="text-xs font-bold text-gray-500 uppercase">{tx.userEmail} • {tx.fund}</p>
+                    </div>
+                 </div>
+                 <div className="text-right">
+                    <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full text-[10px] font-bold uppercase">{tx.status}</span>
+                    <p className="text-[10px] text-gray-400 mt-2">{tx.createdAt?.toDate ? tx.createdAt.toDate().toLocaleString() : 'N/A'}</p>
+                 </div>
+              </div>
+           ))}
+        </div>
+      ) : activeTab === 'broadcast' ? (
+        <div className="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-[3rem] p-8 md:p-12 neo-border neo-shadow-sm border border-gray-100 dark:border-gray-800">
+           <div className="flex items-center gap-4 mb-8">
+              <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600">
+                 <Send size={28} />
+              </div>
+              <div>
+                 <h2 className="font-display font-black text-3xl uppercase">Mass Broadcast</h2>
+                 <p className="text-gray-500 font-bold text-xs uppercase">Send to {users.length} active users</p>
+              </div>
+           </div>
+           
+           <div className="space-y-6">
+              <div>
+                 <label className="block text-xs uppercase font-bold text-gray-500 mb-2">Subject</label>
+                 <input 
+                    value={broadcastMessage.subject}
+                    onChange={e => setBroadcastMessage({...broadcastMessage, subject: e.target.value})}
+                    placeholder="Enter email subject"
+                    className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-bold" 
+                 />
+              </div>
+              <div>
+                 <label className="block text-xs uppercase font-bold text-gray-500 mb-2">Message Body (HTML Allowed)</label>
+                 <textarea 
+                    value={broadcastMessage.content}
+                    onChange={e => setBroadcastMessage({...broadcastMessage, content: e.target.value})}
+                    placeholder="<p>Write your message here...</p>"
+                    className="w-full h-64 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-4 font-mono text-sm" 
+                 />
+              </div>
+              <button 
+                 onClick={async () => {
+                    if (!broadcastMessage.subject || !broadcastMessage.content) {
+                       notify("Subject and body required", "error");
+                       return;
+                    }
+                    if (window.confirm(`Send broadcast to ${users.length} users?`)) {
+                       setLoading(true);
+                       try {
+                          let successCount = 0;
+                          for (const u of users) {
+                             if (u.email) {
+                                await sendEmailNotification(u.email, broadcastMessage.subject, broadcastMessage.content);
+                                successCount++;
+                             }
+                          }
+                          notify(`Broadcast sent to ${successCount} users!`, "success");
+                          setBroadcastMessage({ subject: '', content: '' });
+                       } catch (e) {
+                          notify("Failed to send broadcast", "error");
+                       } finally {
+                          setLoading(false);
+                       }
+                    }
+                 }}
+                 disabled={loading}
+                 className="w-full neo-btn bg-lotus-dark text-white py-5 uppercase font-black text-lg shadow-xl hover:bg-black mt-4 flex items-center justify-center gap-3"
+              >
+                 {loading ? 'Sending Broadcast...' : <><Send size={24} /> Dispatch to {users.length} Users</>}
+              </button>
+           </div>
+        </div>
+      ) : null}
 
       {/* Module Editor Modal */}
       <AnimatePresence>

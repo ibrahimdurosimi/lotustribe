@@ -1,6 +1,7 @@
 import React, { useState, useContext, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
+import { usePaystackPayment } from 'react-paystack';
 import { LayoutDashboard, Wallet, TrendingUp, History, Download, ArrowUpRight, ArrowDownRight, Settings, Target, Plus, User, FileText, Bell, Lock, CheckCircle, Share2, Info } from 'lucide-react';
 import { AuthContext } from './App';
 import { doc, updateDoc, collection, addDoc, query, getDocs, orderBy, serverTimestamp, where, arrayUnion } from 'firebase/firestore';
@@ -209,7 +210,7 @@ export const InvestDashboard = () => {
                         </>
                     )}
 
-                    {activeTab === 'funding' && <FundingTab user={user} userProfile={userProfile} />}
+                    {activeTab === 'funding' && <FundingTab user={user} userProfile={userProfile} setActiveTab={setActiveTab} />}
                     {activeTab === 'transactions' && <TransactionsTab user={user} />}
                     {activeTab === 'certificate' && <CertificateTab user={user} userProfile={userProfile} />}
                     {activeTab === 'settings' && <SettingsTab user={user} userProfile={userProfile} />}
@@ -220,7 +221,7 @@ export const InvestDashboard = () => {
     );
 };
 
-const FundingTab = ({ user, userProfile }: any) => {
+const FundingTab = ({ user, userProfile, setActiveTab }: any) => {
     const { refreshProfile } = useContext(AuthContext);
     const [actionType, setActionType] = useState<'deposit' | 'withdraw'>('deposit');
     const [amount, setAmount] = useState('');
@@ -228,6 +229,39 @@ const FundingTab = ({ user, userProfile }: any) => {
     const [status, setStatus] = useState<'idle' | 'paystack' | 'success' | 'withdraw_success'>('idle');
     const [isLoading, setIsLoading] = useState(false);
     const [frequency, setFrequency] = useState('one-time');
+    const [countdown, setCountdown] = useState(15);
+
+    React.useEffect(() => {
+        let timer: any;
+        if (status === 'success' && countdown > 0) {
+            timer = setInterval(() => {
+                setCountdown((prev) => prev - 1);
+            }, 1000);
+        } else if (status === 'success' && countdown <= 0) {
+            setActiveTab('overview');
+            setStatus('idle');
+            setCountdown(15);
+        }
+        return () => clearInterval(timer);
+    }, [status, countdown, setActiveTab]);
+
+    const config: any = {
+        reference: (new Date()).getTime().toString(),
+        email: user?.email || "user@example.com",
+        amount: Number(amount) * 100, // Paystack amount is in kobo
+        publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder_key_replace_me",
+    };
+
+    if (frequency === 'daily' && import.meta.env.VITE_PAYSTACK_PLAN_DAILY) {
+        config.plan = import.meta.env.VITE_PAYSTACK_PLAN_DAILY;
+    } else if (frequency === 'weekly' && import.meta.env.VITE_PAYSTACK_PLAN_WEEKLY) {
+        config.plan = import.meta.env.VITE_PAYSTACK_PLAN_WEEKLY;
+    } else if (frequency === 'monthly' && import.meta.env.VITE_PAYSTACK_PLAN_MONTHLY) {
+        config.plan = import.meta.env.VITE_PAYSTACK_PLAN_MONTHLY;
+    }
+    
+    // We can init the hook here to obey rules of hooks.
+    const initializePayment = usePaystackPayment(config);
 
     if (user && !userProfile?.kycCompleted) {
         return (
@@ -291,6 +325,27 @@ const FundingTab = ({ user, userProfile }: any) => {
                     new Promise(resolve => setTimeout(resolve, 3000))
                 ]).catch(e => console.warn('Offline update warning:', e));
 
+                try {
+                    await fetch('/api/send-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            to: user.email,
+                            subject: 'Withdrawal Processed - Lotus Tribe',
+                            html: `
+                                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #111;">
+                                    <h2 style="color: #0A0A0A; text-transform: uppercase;">Withdrawal Processed!</h2>
+                                    <p>Hello ${userProfile?.firstName || 'Investor'},</p>
+                                    <p>Your withdrawal of <strong>₦${Number(amount).toLocaleString()}</strong> from the <strong>${fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund'}</strong> has been processed to your bank account.</p>
+                                    <p>Thank you for investing with Lotus Tribe.</p>
+                                </div>
+                            `
+                        })
+                    });
+                } catch (emailErr) {
+                    console.error('Failed to send email notification:', emailErr);
+                }
+
                 setTimeout(() => {
                     setIsLoading(false);
                     setStatus('withdraw_success');
@@ -340,6 +395,29 @@ const FundingTab = ({ user, userProfile }: any) => {
                         new Promise(resolve => setTimeout(resolve, 3000))
                     ]).catch(e => console.warn('Offline update warning:', e));
 
+                    // Send email notification via backend
+                    try {
+                        await fetch('/api/send-email', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                to: user.email,
+                                subject: 'Deposit Successful - Lotus Tribe',
+                                html: `
+                                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #111;">
+                                        <h2 style="color: #0A0A0A; text-transform: uppercase;">Payment Received!</h2>
+                                        <p>Hello ${userProfile?.firstName || 'Investor'},</p>
+                                        <p>Your deposit of <strong>₦${Number(amount).toLocaleString()}</strong> to the <strong>${fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund'}</strong> has been processed successfully.</p>
+                                        ${frequency !== 'one-time' ? `<p style="color: #2563eb; font-weight: bold;">You have successfully set up a ${frequency} Auto-Invest plan.</p>` : ''}
+                                        <p>Thank you for investing with Lotus Tribe.</p>
+                                    </div>
+                                `
+                            })
+                        });
+                    } catch (emailErr) {
+                        console.error('Failed to send email notification:', emailErr);
+                    }
+
                     setTimeout(() => {
                         setIsLoading(false);
                         setStatus('success');
@@ -363,13 +441,22 @@ const FundingTab = ({ user, userProfile }: any) => {
     };
 
     if (status === 'paystack') {
+        const onSuccess = (reference: any) => {
+            console.log('Payment complete! Reference:', reference);
+            handlePaystackMock(true);
+        };
+        const onClose = () => {
+            console.log('Payment closed by user.');
+            setIsLoading(false);
+            setStatus('idle');
+        };
+
         return (
             <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 neo-border neo-shadow-sm max-w-md mx-auto text-center mt-10">
-                <div className="bg-blue-500 text-white w-full py-4 rounded-xl font-bold uppercase mb-8">
-                    Mock Paystack Terminal
-                </div>
-                <h3 className="font-display font-bold text-2xl uppercase mb-2">Fund your account</h3>
-                <p className="text-gray-500 dark:text-gray-400 mb-2 font-medium">You are about to pay <span className="font-bold text-black dark:text-white border-b-2 border-black">₦{Number(amount).toLocaleString()}</span> into {fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund'}</p>
+                <h3 className="font-display font-bold text-2xl uppercase mb-4">Paystack Integration Setup</h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-6 font-medium leading-relaxed">
+                    You are about to pay <span className="font-bold text-black dark:text-white border-b-2 border-black">₦{Number(amount).toLocaleString()}</span> into {fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund'}
+                </p>
                 {frequency !== 'one-time' && (
                     <p className="text-sm font-bold text-blue-600 mb-6 bg-blue-50 py-2 rounded-lg border border-blue-200 uppercase">
                         {frequency} Auto-Invest Activated
@@ -378,18 +465,26 @@ const FundingTab = ({ user, userProfile }: any) => {
                 
                 <div className="space-y-4">
                     <button 
-                        onClick={() => handlePaystackMock(true)} 
+                        onClick={() => {
+                            setIsLoading(true);
+                            if (!import.meta.env.VITE_PAYSTACK_PUBLIC_KEY) {
+                                alert("VITE_PAYSTACK_PUBLIC_KEY is not defined in your environment variables. Please add it to test live payments. Simulating success for now.");
+                                setTimeout(() => handlePaystackMock(true), 1500);
+                            } else {
+                                initializePayment({ onSuccess, onClose });
+                            }
+                        }} 
                         disabled={isLoading}
-                        className="neo-btn bg-green-400 text-black dark:text-white w-full uppercase py-3 shadow-md border-2 border-black disabled:opacity-50"
+                        className="neo-btn bg-black text-white w-full uppercase py-4 shadow-md disabled:opacity-50 flex items-center justify-center gap-3"
                     >
-                        {isLoading ? 'Processing...' : 'Simulate Success'}
+                        {isLoading ? 'Connecting...' : 'Pay securely with Paystack'}
                     </button>
                     <button 
-                        onClick={() => handlePaystackMock(false)} 
+                        onClick={() => setStatus('idle')} 
                         disabled={isLoading}
-                        className="neo-btn bg-red-100 text-red-600 w-full uppercase py-3 border-2 border-transparent hover:border-red-600 disabled:opacity-50"
+                        className="neo-btn bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 w-full uppercase py-3 border-2 border-transparent disabled:opacity-50"
                     >
-                        Simulate Failure / Cancel
+                        Cancel
                     </button>
                 </div>
             </div>
@@ -409,9 +504,26 @@ const FundingTab = ({ user, userProfile }: any) => {
                         {frequency} Auto-Invest Subscribed Successfully
                     </p>
                 )}
-                <button onClick={() => setStatus('idle')} className="neo-btn bg-black text-white w-full py-3 uppercase">
-                    Make another deposit
-                </button>
+                
+                <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-6 border border-gray-200 dark:border-gray-800 rounded-lg p-2 inline-block">
+                    Redirecting to dashboard in {countdown}s...
+                </p>
+
+                <div className="space-y-4">
+                    <button onClick={() => {
+                        setStatus('idle');
+                        setCountdown(15);
+                    }} className="neo-btn bg-black text-white w-full py-4 uppercase">
+                        Make another deposit
+                    </button>
+                    <button onClick={() => {
+                        setActiveTab('overview');
+                        setStatus('idle');
+                        setCountdown(15);
+                    }} className="neo-btn bg-white dark:bg-gray-800 text-black dark:text-white border-2 border-black dark:border-white w-full py-4 uppercase hover:-translate-y-1 transition-transform">
+                        Return to Dashboard
+                    </button>
+                </div>
             </div>
         );
     }
@@ -470,14 +582,16 @@ const FundingTab = ({ user, userProfile }: any) => {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <button 
-                            onClick={() => setFund('halal')} 
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); setFund('halal'); }} 
                             className={`p-4 rounded-xl border-2 transition-all text-center ${fund === 'halal' ? 'border-genz-pink bg-pink-50' : 'border-gray-200 dark:border-gray-700'}`}
                         >
                             <div className="font-display font-bold uppercase">Halal Fund</div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">(Moderate Risk)</div>
                         </button>
                         <button 
-                            onClick={() => setFund('fif')} 
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); setFund('fif'); }} 
                             className={`p-4 rounded-xl border-2 transition-all text-center ${fund === 'fif' ? 'border-genz-lime bg-[#F4FFDC]' : 'border-gray-200 dark:border-gray-700'}`}
                         >
                             <div className="font-display font-bold uppercase">FIF Fund</div>
@@ -511,7 +625,8 @@ const FundingTab = ({ user, userProfile }: any) => {
                             {['one-time', 'daily', 'weekly', 'monthly'].map((freq) => (
                                 <button 
                                     key={freq}
-                                    onClick={() => setFrequency(freq)} 
+                                    type="button"
+                                    onClick={(e) => { e.preventDefault(); setFrequency(freq); }} 
                                     className={`p-2 rounded-lg text-xs font-bold uppercase tracking-wider border-2 transition-all text-center ${frequency === freq ? 'border-lotus-dark bg-lotus-dark text-white' : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400'}`}
                                 >
                                     {freq.replace('-', ' ')}

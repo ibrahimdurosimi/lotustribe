@@ -1,6 +1,7 @@
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, increment, arrayUnion } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from './firebase';
 import { User } from 'firebase/auth';
+import { sendEmailNotification } from './email';
 
 export interface UserProfile {
   uid: string;
@@ -41,6 +42,20 @@ export const syncUserProfile = async (user: User): Promise<UserProfile> => {
         updatedAt: serverTimestamp(),
       };
       await setDoc(userRef, newProfile);
+      
+      // Send welcome email
+      if (newProfile.email) {
+          sendEmailNotification(newProfile.email, 'Welcome to Lotus Tribe!', `
+              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #111;">
+                  <h2 style="color: #0A0A0A; text-transform: uppercase;">Welcome to Lotus Tribe</h2>
+                  <p>Hi ${newProfile.displayName},</p>
+                  <p>We're thrilled to have you join Lotus Tribe! Your journey to financial wellbeing starts here.</p>
+                  <p>Explore our Halal and Fixed Income funds, complete the Investor Vibe Check, and join the community.</p>
+                  <p>Welcome aboard!</p>
+              </div>
+          `).catch(console.error); // Catch any unhandled promise rejections silently
+      }
+
       return newProfile;
     }
     return { uid: userSnap.id, ...userSnap.data() } as UserProfile;

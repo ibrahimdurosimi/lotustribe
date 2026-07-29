@@ -32,6 +32,7 @@ import { LMSLayout, LMSDashboard, LMSCourses, LMSCoursePlayer, LMSAchievements }
 import { Community } from './Community';
 import { ScrollToTop } from './components/ScrollToTop';
 import { AdminDashboard } from './Admin';
+import { sendEmailNotification } from './lib/email';
 
 // --- Auth Context ---
 interface AuthContextType {
@@ -664,6 +665,19 @@ const QuizPage = () => {
           updatedAt: serverTimestamp()
         });
         refreshProfile();
+
+        // Send Email Notification
+        if (user.email) {
+            sendEmailNotification(user.email, 'Investor Vibe Check Completed - Lotus Tribe', `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #111;">
+                    <h2 style="color: #0A0A0A; text-transform: uppercase;">Vibe Check Complete!</h2>
+                    <p>Hi,</p>
+                    <p>You've successfully completed the Investor Vibe Check.</p>
+                    <p>Your unique investor profile is: <strong>${profile}</strong></p>
+                    <p>Based on your profile, we recommend getting started with your personalized investment journey on Lotus Tribe.</p>
+                </div>
+            `).catch(console.error);
+        }
       } catch (e) {
          handleFirestoreError(e, OperationType.UPDATE, 'users');
       } finally {
@@ -1197,6 +1211,8 @@ export default function App() {
              <Route path="/invest/fif" element={<InvestFIF />} />
              <Route path="/invest/halal" element={<InvestHalal />} />
              
+             <Route path="/admin" element={<AdminDashboard />} />
+             
              {/* LMS Routes */}
              <Route path="/learn" element={<LMSWrapper />}>
                 <Route index element={<LMSDashboard />} />
@@ -1204,7 +1220,6 @@ export default function App() {
                 <Route path="lessons" element={<LMSCoursePlayer />} />
                 <Route path="courses/:courseId" element={<LMSCoursePlayer />} />
                 <Route path="achievements" element={<LMSAchievements />} />
-                <Route path="admin" element={<AdminDashboard />} />
              </Route>
           </Routes>
         </main>

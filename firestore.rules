@@ -34,6 +34,10 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow update: if isSignedIn();
       allow delete: if isAdmin();
+      
+      match /transactions/{transactionId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
     }
 
     match /courses/{courseId} {

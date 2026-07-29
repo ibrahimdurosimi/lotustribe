@@ -5,6 +5,7 @@ import { Camera, Upload, CheckCircle2, ArrowRight, ShieldCheck, ChevronLeft } fr
 import { AuthContext } from './App';
 import { db } from './lib/firebase';
 import { updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { sendEmailNotification } from './lib/email';
 
 export const InvestOnboarding = () => {
     const location = useLocation();
@@ -84,6 +85,19 @@ export const InvestOnboarding = () => {
                 ]).catch(e => console.warn('Offline update warning:', e));
                 
                 refreshProfile();
+
+                // Send Email Notification
+                if (user.email) {
+                    sendEmailNotification(user.email, 'Account Verified - Lotus Tribe', `
+                        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #111;">
+                            <h2 style="color: #0A0A0A; text-transform: uppercase;">You're Verified!</h2>
+                            <p>Hi ${formData.firstName},</p>
+                            <p>Your KYC details have been successfully submitted and your Lotus Tribe account is now fully verified.</p>
+                            <p>You can now start investing in our Halal and Fixed Income funds to build your wealth.</p>
+                            <p>We're excited to have you on board!</p>
+                        </div>
+                    `).catch(console.error);
+                }
             }
             
             setIsSuccess(true);

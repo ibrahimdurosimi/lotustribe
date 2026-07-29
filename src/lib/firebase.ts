@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { initializeFirestore, doc, getDoc, setDoc, serverTimestamp, collection, addDoc, updateDoc, deleteDoc, query, getDocs, orderBy, where, Timestamp, limit, increment, arrayUnion } from 'firebase/firestore';
+import { initializeFirestore, doc, getDoc, setDoc, serverTimestamp, collection, addDoc, updateDoc, deleteDoc, query, getDocs, orderBy, where, Timestamp, limit, increment, arrayUnion, collectionGroup } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
@@ -10,7 +10,7 @@ export const db = initializeFirestore(app, {
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-export { collection, addDoc, updateDoc, deleteDoc, query, getDocs, orderBy, where, serverTimestamp, doc, getDoc, setDoc, Timestamp, limit, increment, arrayUnion };
+export { collection, addDoc, updateDoc, deleteDoc, query, getDocs, orderBy, where, serverTimestamp, doc, getDoc, setDoc, Timestamp, limit, increment, arrayUnion, collectionGroup };
 
 export enum OperationType {
   CREATE = 'create',
