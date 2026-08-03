@@ -1,5 +1,5 @@
-import React, { useState, useContext, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useContext, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence, animate } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { usePaystackPayment } from 'react-paystack';
 import { LayoutDashboard, Wallet, TrendingUp, History, Download, ArrowUpRight, ArrowDownRight, Settings, Target, Plus, User, FileText, Bell, Lock, CheckCircle, Share2, Info } from 'lucide-react';
@@ -8,6 +8,21 @@ import { doc, updateDoc, collection, addDoc, query, getDocs, orderBy, serverTime
 import { db } from './lib/firebase';
 import html2canvas from 'html2canvas';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+const CountUp = ({ to, duration = 1.5 }: { to: number; duration?: number }) => {
+    const [value, setValue] = useState(0);
+
+    useEffect(() => {
+        const controls = animate(0, to, {
+            duration,
+            onUpdate: (latest) => setValue(latest),
+            ease: "easeOut"
+        });
+        return () => controls.stop();
+    }, [to, duration]);
+
+    return <>{value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>;
+};
 
 const DashboardLayout = ({ children, activeTab, setActiveTab }: { children: React.ReactNode, activeTab: string, setActiveTab: (t: string) => void }) => {
     const navItems = [
@@ -104,7 +119,9 @@ export const InvestDashboard = () => {
                                         Total Balance
                                         <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-lg text-xs font-bold">+ 0.0% All Time</span>
                                     </p>
-                                    <h2 className="text-5xl md:text-6xl font-display font-extrabold text-white mb-2 relative z-10">₦{totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
+                                    <h2 className="text-5xl md:text-6xl font-display font-extrabold text-white mb-2 relative z-10">
+                                        ₦<CountUp to={totalBalance} />
+                                    </h2>
                                     <div className="flex items-center gap-2 mt-8 relative z-10">
                                     <div className="bg-white/10 px-4 py-2 rounded-xl text-sm font-medium border border-white/20">
                                         <span className="text-gray-400 block text-xs">Total Earnings</span>
@@ -122,8 +139,8 @@ export const InvestDashboard = () => {
                                     <div className="flex-1 flex flex-col justify-center">
                                         {/* Simple simulated chart layout */}
                                         <div className="flex items-end h-24 gap-2 mb-4">
-                                            <div className="w-1/2 bg-genz-pink rounded-t-xl transition-all" style={{ height: `${halalPercent}%` }}></div>
-                                            <div className="w-1/2 bg-genz-lime rounded-t-xl border border-black/10 transition-all" style={{ height: `${fifPercent}%` }}></div>
+                                            <motion.div initial={{ height: 0 }} animate={{ height: `${halalPercent}%` }} transition={{ duration: 1, ease: "easeOut" }} className="w-1/2 bg-genz-pink rounded-t-xl" />
+                                            <motion.div initial={{ height: 0 }} animate={{ height: `${fifPercent}%` }} transition={{ duration: 1, ease: "easeOut", delay: 0.2 }} className="w-1/2 bg-genz-lime rounded-t-xl border border-black/10" />
                                         </div>
                                         <div className="space-y-3">
                                             <div className="flex justify-between items-center text-sm">
@@ -168,7 +185,7 @@ export const InvestDashboard = () => {
                                                 </div>
                                                 <div className="mb-2">
                                                     <p className="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase mb-1">Current Value</p>
-                                                    <p className="text-3xl font-display font-bold">₦{halalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                                                    <p className="text-3xl font-display font-bold">₦<CountUp to={halalBalance} duration={1} /></p>
                                                 </div>
                                                 <div className="flex justify-between items-end mt-4 pt-4 border-t-2 border-gray-50">
                                                     <div>
@@ -192,7 +209,7 @@ export const InvestDashboard = () => {
                                                 </div>
                                                 <div className="mb-2">
                                                     <p className="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase mb-1">Current Value</p>
-                                                    <p className="text-3xl font-display font-bold">₦{fifBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                                                    <p className="text-3xl font-display font-bold">₦<CountUp to={fifBalance} duration={1} /></p>
                                                 </div>
                                                 <div className="flex justify-between items-end mt-4 pt-4 border-t-2 border-gray-50">
                                                     <div>
@@ -961,7 +978,7 @@ const FundPerformanceChart = () => {
     }, [period]);
 
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 mt-8 neo-border neo-shadow-sm min-h-[400px]">
+        <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} className="bg-white dark:bg-gray-900 rounded-3xl p-6 mt-8 neo-border neo-shadow-sm min-h-[400px]">
              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                  <div>
                     <h3 className="font-display font-bold text-xl uppercase mb-1">Portfolio Performance</h3>
@@ -1001,6 +1018,6 @@ const FundPerformanceChart = () => {
                      </AreaChart>
                  </ResponsiveContainer>
              </div>
-        </div>
+        </motion.div>
     );
 };
