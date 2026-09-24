@@ -17,6 +17,13 @@ export interface UserProfile {
   fifBalance: number;
   halalBalance: number;
   totalInvested: number;
+  kycCompleted?: boolean;
+  kycTier?: 'tier1' | 'tier2' | 'tier3';
+  tier1Completed?: boolean;
+  tier2Completed?: boolean;
+  depositLimit?: number | null;
+  firstInvestmentCompleted?: boolean;
+  autoInvest?: any[];
   createdAt: any;
   updatedAt: any;
 }

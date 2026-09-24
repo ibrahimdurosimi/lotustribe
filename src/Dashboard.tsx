@@ -1,13 +1,18 @@
 import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, animate } from 'motion/react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { usePaystackPayment } from 'react-paystack';
-import { LayoutDashboard, Wallet, TrendingUp, History, Download, ArrowUpRight, ArrowDownRight, Settings, Target, Plus, User, FileText, Bell, Lock, CheckCircle, Share2, Info } from 'lucide-react';
+import { 
+    LayoutDashboard, Wallet, TrendingUp, History, Download, ArrowUpRight, ArrowDownRight, 
+    Settings, Target, Plus, User, FileText, Bell, Lock, CheckCircle, Share2, Info,
+    Zap, Sparkles, X, Award, AlertTriangle, ShieldCheck, Check
+} from 'lucide-react';
 import { AuthContext } from './App';
-import { doc, updateDoc, collection, addDoc, query, getDocs, orderBy, serverTimestamp, where, arrayUnion } from 'firebase/firestore';
+import { doc, updateDoc, collection, addDoc, query, getDocs, orderBy, serverTimestamp, where, arrayUnion, increment } from 'firebase/firestore';
 import { db } from './lib/firebase';
 import html2canvas from 'html2canvas';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import confetti from 'canvas-confetti';
 
 const CountUp = ({ to, duration = 1.5 }: { to: number; duration?: number }) => {
     const [value, setValue] = useState(0);
@@ -22,6 +27,337 @@ const CountUp = ({ to, duration = 1.5 }: { to: number; duration?: number }) => {
     }, [to, duration]);
 
     return <>{value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>;
+};
+
+// Gamified First Investment Celebration Modal
+const FirstInvestmentRewardModal = ({
+    isOpen,
+    onClose,
+    amount,
+    xp = 250
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    amount: number;
+    xp?: number;
+}) => {
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+            <motion.div
+                initial={{ scale: 0.85, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white dark:bg-gray-900 border-4 border-black dark:border-white rounded-[2.5rem] p-8 md:p-10 max-w-md w-full text-center relative neo-shadow overflow-hidden"
+            >
+                <button
+                    onClick={onClose}
+                    className="absolute top-5 right-5 w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
+                >
+                    <X size={20} />
+                </button>
+
+                <div className="relative mx-auto w-24 h-24 mb-5 flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-full bg-genz-lime animate-ping opacity-25"></div>
+                    <div className="w-20 h-20 rounded-full bg-genz-lime border-4 border-black flex items-center justify-center shadow-lg relative z-10 text-4xl">
+                        🎒
+                    </div>
+                </div>
+
+                <div className="inline-flex items-center gap-1.5 bg-black text-genz-lime px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-widest mb-3">
+                    <Sparkles size={14} /> Achievement Unlocked
+                </div>
+
+                <h2 className="font-display font-black text-3xl uppercase text-lotus-dark dark:text-white mb-2 leading-tight">
+                    First Bag Secured!
+                </h2>
+
+                <div className="bg-amber-100 dark:bg-amber-950/60 border-2 border-amber-400 rounded-2xl p-4 mb-5 text-center">
+                    <div className="font-display font-black text-2xl text-amber-900 dark:text-amber-200">
+                        +{xp} XP EARNED ⭐
+                    </div>
+                    <p className="text-xs font-bold text-amber-800 dark:text-amber-300 mt-0.5">
+                        Added to your Tribe Investor Rank
+                    </p>
+                </div>
+
+                <p className="text-gray-600 dark:text-gray-300 text-sm font-medium leading-relaxed mb-6">
+                    You officially funded your first investment of <strong className="text-black dark:text-white">₦{amount.toLocaleString()}</strong>! The hardest step in investing is getting started. Welcome to the Tribe of halal wealth builders.
+                </p>
+
+                <button
+                    onClick={onClose}
+                    className="neo-btn bg-black text-white w-full py-4 text-base font-extrabold uppercase hover:scale-[1.02] transition-transform"
+                >
+                    Flex My Bag & View Portfolio 🚀
+                </button>
+            </motion.div>
+        </div>
+    );
+};
+
+// Quick Deposit Modal directly on Dashboard Overview
+const QuickDepositModal = ({
+    isOpen,
+    onClose,
+    user,
+    userProfile,
+    initialFund = 'halal',
+    onSuccessDeposit,
+    onOpenFullFunding
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    user: any;
+    userProfile: any;
+    initialFund?: 'halal' | 'fif';
+    onSuccessDeposit: (amount: number, fund: 'halal' | 'fif') => void;
+    onOpenFullFunding: (fund: 'halal' | 'fif', amount: string) => void;
+}) => {
+    const [fund, setFund] = useState<'halal' | 'fif'>(initialFund);
+    const [amount, setAmount] = useState('10000');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
+
+    useEffect(() => {
+        if (isOpen) {
+            setFund(initialFund);
+            setErrorMsg('');
+        }
+    }, [isOpen, initialFund]);
+
+    if (!isOpen) return null;
+
+    const isTier1 = userProfile?.kycTier === 'tier1';
+    const presets = [5000, 10000, 25000, 50000];
+
+    const handleQuickDeposit = async () => {
+        const numAmount = Number(amount);
+        if (isNaN(numAmount) || numAmount < 1000) {
+            setErrorMsg('Minimum investment amount is ₦1,000.');
+            return;
+        }
+
+        if (isTier1 && numAmount > 50000) {
+            setErrorMsg('Tier 1 accounts have a maximum deposit cap of ₦50,000. Upgrade to Tier 2 for unlimited deposits.');
+            return;
+        }
+
+        setIsSubmitting(true);
+        setErrorMsg('');
+
+        try {
+            if (user) {
+                const dbField = fund === 'halal' ? 'halalBalance' : 'fifBalance';
+                const currentBalance = (fund === 'halal' ? userProfile?.halalBalance : userProfile?.fifBalance) || 0;
+                
+                const isFirstDeposit = (!userProfile?.badges || !userProfile.badges.includes('First Bag Secured')) &&
+                                       (!userProfile?.firstInvestmentCompleted) &&
+                                       (!userProfile?.totalInvested || userProfile.totalInvested === 0);
+
+                const updates: any = {
+                    [dbField]: currentBalance + numAmount,
+                    totalInvested: increment(numAmount),
+                };
+
+                if (isFirstDeposit) {
+                    updates.badges = arrayUnion('First Bag Secured');
+                    updates.xp = increment(250);
+                    updates.firstInvestmentCompleted = true;
+                }
+
+                await updateDoc(doc(db, 'users', user.uid), updates);
+                await addDoc(collection(db, 'users', user.uid, 'transactions'), {
+                    type: 'Quick Deposit',
+                    fund: fund === 'halal' ? 'Lotus Halal Fund' : 'Lotus FIF Fund',
+                    amount: numAmount,
+                    status: 'SUCCESS',
+                    createdAt: serverTimestamp()
+                });
+
+                setIsSubmitting(false);
+                onClose();
+                onSuccessDeposit(numAmount, fund);
+            }
+        } catch (e) {
+            console.error('Quick deposit error:', e);
+            setErrorMsg('Unable to complete payment simulation. Please try again.');
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white dark:bg-gray-900 border-4 border-black dark:border-white rounded-[2.5rem] p-6 md:p-8 max-w-lg w-full relative neo-shadow overflow-hidden"
+            >
+                <div className="flex justify-between items-start mb-6">
+                    <div>
+                        <div className="inline-flex items-center gap-1.5 bg-genz-lime text-black font-extrabold text-xs px-3 py-1 rounded-full border border-black uppercase mb-2">
+                            <Zap size={14} className="fill-black" /> Quick Deposit
+                        </div>
+                        <h2 className="font-display font-extrabold text-2xl uppercase">
+                            Instant Portfolio Funding
+                        </h2>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
+                    >
+                        <X size={18} />
+                    </button>
+                </div>
+
+                {isTier1 && (
+                    <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-300 rounded-xl p-3 mb-5 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="text-base">⚡</span>
+                            <p className="text-xs text-amber-900 dark:text-amber-200 font-bold">
+                                Tier 1 Active (₦50,000 Deposit Limit)
+                            </p>
+                        </div>
+                        <Link 
+                            to="/invest/onboarding?upgrade=true"
+                            className="text-[11px] font-extrabold text-black dark:text-white underline hover:opacity-80"
+                        >
+                            Upgrade
+                        </Link>
+                    </div>
+                )}
+
+                {/* Fund Selection */}
+                <div className="mb-5">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+                        Select Target Fund
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setFund('halal')}
+                            className={`p-3 rounded-2xl border-2 text-left transition-all ${
+                                fund === 'halal'
+                                    ? 'border-black bg-genz-pink/20 shadow-sm'
+                                    : 'border-gray-200 dark:border-gray-700'
+                            }`}
+                        >
+                            <div className="font-display font-bold text-sm uppercase">Lotus Halal Fund</div>
+                            <div className="text-[11px] text-gray-500 font-medium">Equities • Growth</div>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setFund('fif')}
+                            className={`p-3 rounded-2xl border-2 text-left transition-all ${
+                                fund === 'fif'
+                                    ? 'border-black bg-genz-lime/20 shadow-sm'
+                                    : 'border-gray-200 dark:border-gray-700'
+                            }`}
+                        >
+                            <div className="font-display font-bold text-sm uppercase">Lotus FIF Fund</div>
+                            <div className="text-[11px] text-gray-500 font-medium">Fixed Income • Low Risk</div>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Amount Selection */}
+                <div className="mb-5">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+                        Amount (₦)
+                    </label>
+                    <div className="relative mb-3">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-display font-bold text-xl text-gray-400">₦</span>
+                        <input
+                            type="number"
+                            value={amount}
+                            onChange={(e) => {
+                                setAmount(e.target.value);
+                                setErrorMsg('');
+                            }}
+                            className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3.5 pl-10 font-display font-bold text-xl focus:border-black outline-none"
+                            placeholder="10000"
+                        />
+                    </div>
+
+                    {/* Quick Amount Chips */}
+                    <div className="grid grid-cols-4 gap-2">
+                        {presets.map((amt) => (
+                            <button
+                                key={amt}
+                                type="button"
+                                onClick={() => {
+                                    setAmount(amt.toString());
+                                    setErrorMsg('');
+                                }}
+                                className={`py-2 px-1 rounded-xl text-xs font-bold transition-all border ${
+                                    amount === amt.toString()
+                                        ? 'bg-black text-white border-black'
+                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-transparent hover:border-gray-400'
+                                }`}
+                            >
+                                ₦{amt >= 1000 ? `${amt / 1000}k` : amt}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {errorMsg && (
+                    <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-bold mb-4 flex items-center justify-between">
+                        <span>{errorMsg}</span>
+                        {isTier1 && Number(amount) > 50000 && (
+                            <button
+                                type="button"
+                                onClick={() => setAmount('50000')}
+                                className="underline ml-2 uppercase"
+                            >
+                                Cap to ₦50k
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {/* Reward Callout */}
+                {(!userProfile?.badges || !userProfile.badges.includes('First Bag Secured')) && (
+                    <div className="bg-genz-lime/20 border border-black/20 rounded-xl p-3 mb-5 flex items-center gap-2">
+                        <span className="text-xl">🎒</span>
+                        <p className="text-xs font-bold text-black dark:text-white">
+                            First deposit awards <strong>"First Bag Secured" Badge</strong> and <strong>+250 XP</strong>!
+                        </p>
+                    </div>
+                )}
+
+                <div className="space-y-2">
+                    <button
+                        type="button"
+                        onClick={handleQuickDeposit}
+                        disabled={isSubmitting}
+                        className="neo-btn bg-lotus-dark text-white w-full py-4 text-base font-extrabold uppercase flex items-center justify-center gap-2 disabled:opacity-60"
+                    >
+                        {isSubmitting ? (
+                            <span>Processing Deposit...</span>
+                        ) : (
+                            <>
+                                <span>Deposit ₦{Number(amount || 0).toLocaleString()} Now</span>
+                                <Zap size={18} className="fill-current" />
+                            </>
+                        )}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            onClose();
+                            onOpenFullFunding(fund, amount);
+                        }}
+                        className="w-full py-2.5 text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white uppercase transition-colors"
+                    >
+                        Or use full Funding Options (Auto-Invest, Bank Transfer) →
+                    </button>
+                </div>
+            </motion.div>
+        </div>
+    );
 };
 
 const DashboardLayout = ({ children, activeTab, setActiveTab }: { children: React.ReactNode, activeTab: string, setActiveTab: (t: string) => void }) => {
@@ -69,8 +405,29 @@ const DashboardLayout = ({ children, activeTab, setActiveTab }: { children: Reac
 };
 
 export const InvestDashboard = () => {
-    const { user, userProfile } = useContext(AuthContext);
+    const { user, userProfile, refreshProfile } = useContext(AuthContext);
     const [activeTab, setActiveTab] = useState('overview');
+    const location = useLocation();
+
+    // Quick Deposit Modal State
+    const [isQuickDepositOpen, setIsQuickDepositOpen] = useState(false);
+    const [quickDepositFund, setQuickDepositFund] = useState<'halal' | 'fif'>('halal');
+    const [prefilledAmount, setPrefilledAmount] = useState('10000');
+
+    // Gamification Reward Celebration Modal
+    const [rewardCelebration, setRewardCelebration] = useState<{
+        isOpen: boolean;
+        amount: number;
+        xp: number;
+    } | null>(null);
+
+    // Trigger Quick Deposit if navigated with state
+    useEffect(() => {
+        if (location.state?.openQuickDeposit) {
+            if (location.state?.fund) setQuickDepositFund(location.state.fund);
+            setIsQuickDepositOpen(true);
+        }
+    }, [location.state]);
 
     const fifBalance = userProfile?.fifBalance || 0;
     const halalBalance = userProfile?.halalBalance || 0;
@@ -80,6 +437,41 @@ export const InvestDashboard = () => {
     // Default allocations if 0 to show visual
     const halalPercent = totalBalance > 0 ? Math.round((halalBalance / totalBalance) * 100) : 50;
     const fifPercent = totalBalance > 0 ? Math.round((fifBalance / totalBalance) * 100) : 50;
+
+    const handleOpenQuickDeposit = (fund: 'halal' | 'fif' = 'halal', amount: string = '10000') => {
+        setQuickDepositFund(fund);
+        setPrefilledAmount(amount);
+        setIsQuickDepositOpen(true);
+    };
+
+    const handleRewardUnlocked = (reward: { badge: string; xp: number; amount: number }) => {
+        setRewardCelebration({
+            isOpen: true,
+            amount: reward.amount,
+            xp: reward.xp
+        });
+    };
+
+    const handleQuickDepositSuccess = (amount: number, fund: 'halal' | 'fif') => {
+        refreshProfile();
+        const isFirst = (!userProfile?.badges || !userProfile.badges.includes('First Bag Secured')) &&
+                        (!userProfile?.firstInvestmentCompleted) &&
+                        (!userProfile?.totalInvested || userProfile.totalInvested === 0);
+
+        if (isFirst) {
+            confetti({
+                particleCount: 160,
+                spread: 90,
+                origin: { y: 0.5 },
+                colors: ['#000000', '#D1FD0A', '#FF70A6', '#FFFFFF', '#0A2540']
+            });
+            handleRewardUnlocked({
+                badge: 'First Bag Secured',
+                xp: 250,
+                amount
+            });
+        }
+    };
 
     return (
         <DashboardLayout activeTab={activeTab} setActiveTab={setActiveTab}>
@@ -93,7 +485,7 @@ export const InvestDashboard = () => {
                 >
                     {activeTab === 'overview' && (
                         <>
-                            {/* Header Welcome */}
+                            {/* Header Welcome & Quick Action Shortcuts */}
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b-2 border-gray-100 dark:border-gray-800 pb-6">
                                 <div>
                                     <h1 className="text-4xl font-display font-extrabold uppercase">
@@ -101,36 +493,140 @@ export const InvestDashboard = () => {
                                     </h1>
                                     <p className="text-gray-500 dark:text-gray-400 font-medium mt-1">Here's how your Halal portfolio is performing today.</p>
                                 </div>
-                                <div className="flex gap-3">
-                                    <button className="neo-btn bg-white dark:bg-gray-900 text-black dark:text-white px-6 py-3 text-sm hidden sm:flex items-center gap-2">
+                                <div className="flex flex-wrap gap-3">
+                                    <button className="neo-btn bg-white dark:bg-gray-900 text-black dark:text-white px-5 py-3 text-sm hidden sm:flex items-center gap-2">
                                         <Download size={16}/> Statement
                                     </button>
-                                    <button onClick={() => setActiveTab('funding')} className="neo-btn bg-black text-white px-8 py-3 text-sm">
-                                        + Invest Now
+                                    <button 
+                                        onClick={() => handleOpenQuickDeposit('halal')} 
+                                        className="neo-btn bg-genz-lime text-black px-6 py-3 text-sm font-extrabold flex items-center gap-2 border-2 border-black"
+                                    >
+                                        <Zap size={16} className="fill-black" /> + Quick Deposit
+                                    </button>
+                                    <button onClick={() => setActiveTab('funding')} className="neo-btn bg-black text-white px-6 py-3 text-sm font-bold">
+                                        Funding Tab
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Portfolio Value Summary */}
+                            {/* Progressive KYC Tier Status Banner */}
+                            {userProfile?.kycTier === 'tier1' && (
+                                <div className="bg-amber-50 dark:bg-amber-950/40 border-2 border-black rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 neo-shadow-sm">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-amber-300 text-black flex items-center justify-center font-black text-lg border-2 border-black shrink-0">
+                                            ⚡
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <h4 className="font-display font-bold text-sm uppercase text-amber-950 dark:text-amber-100">
+                                                    Tier 1 Starter Account Active (₦50,000 Deposit Cap)
+                                                </h4>
+                                                <span className="bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-amber-400">
+                                                    Express KYC
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-amber-800 dark:text-amber-300 font-medium mt-0.5">
+                                                You can deposit up to ₦50,000 right now. Upgrade to Tier 2 for unlimited investments and instant bank withdrawals.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <Link 
+                                        to="/invest/onboarding?upgrade=true"
+                                        className="neo-btn bg-amber-300 hover:bg-amber-400 text-black px-4 py-2 text-xs font-extrabold uppercase shrink-0 transition-transform"
+                                    >
+                                        Upgrade to Tier 2 →
+                                    </Link>
+                                </div>
+                            )}
+
+                            {!userProfile?.kycCompleted && (
+                                <div className="bg-genz-lime/20 border-2 border-black rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 neo-shadow-sm">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-genz-lime text-black flex items-center justify-center font-black text-lg border-2 border-black shrink-0">
+                                            ⚡
+                                        </div>
+                                        <div>
+                                            <h4 className="font-display font-bold text-sm uppercase">
+                                                Activate Your Investor Account
+                                            </h4>
+                                            <p className="text-xs text-gray-600 dark:text-gray-300 font-medium mt-0.5">
+                                                Start in 60s with Tier 1 (Name & Phone only - Up to ₦50k) or complete Full SEC Verification.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Link 
+                                            to="/invest/onboarding?tier=tier1"
+                                            className="neo-btn bg-genz-lime text-black px-4 py-2 text-xs font-extrabold uppercase shrink-0"
+                                        >
+                                            ⚡ 60s Quick Start
+                                        </Link>
+                                        <Link 
+                                            to="/invest/onboarding?tier=full"
+                                            className="neo-btn bg-black text-white px-4 py-2 text-xs font-extrabold uppercase shrink-0"
+                                        >
+                                            Full KYC
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Portfolio Value Summary with Quick Deposit Preset Bar */}
                             <div className="grid md:grid-cols-3 gap-6">
-                                <div className="md:col-span-2 bg-lotus-dark text-white rounded-[2rem] p-8 neo-border neo-shadow border-2 border-black relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
-                                    <p className="text-gray-400 font-medium mb-2 uppercase tracking-wider text-sm flex items-center justify-between relative z-10">
-                                        Total Balance
-                                        <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-lg text-xs font-bold">+ 0.0% All Time</span>
-                                    </p>
-                                    <h2 className="text-5xl md:text-6xl font-display font-extrabold text-white mb-2 relative z-10">
-                                        ₦<CountUp to={totalBalance} />
-                                    </h2>
-                                    <div className="flex items-center gap-2 mt-8 relative z-10">
-                                    <div className="bg-white/10 px-4 py-2 rounded-xl text-sm font-medium border border-white/20">
-                                        <span className="text-gray-400 block text-xs">Total Earnings</span>
-                                        <span className="text-green-400 font-bold">+ ₦{totalEarnings}</span>
+                                <div className="md:col-span-2 bg-lotus-dark text-white rounded-[2rem] p-8 neo-border neo-shadow border-2 border-black relative overflow-hidden flex flex-col justify-between">
+                                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
+                                    <div>
+                                        <div className="flex items-center justify-between mb-2 relative z-10">
+                                            <p className="text-gray-400 font-medium uppercase tracking-wider text-sm">
+                                                Total Portfolio Balance
+                                            </p>
+                                            <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-lg text-xs font-bold border border-green-500/30">
+                                                + 0.0% All Time
+                                            </span>
+                                        </div>
+                                        <h2 className="text-5xl md:text-6xl font-display font-extrabold text-white mb-4 relative z-10">
+                                            ₦<CountUp to={totalBalance} />
+                                        </h2>
+
+                                        {/* Prominent Quick Deposit Action Bar directly inside Hero */}
+                                        <div className="bg-white/10 p-4 rounded-2xl border border-white/20 relative z-10 mb-4 backdrop-blur-sm">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                                <div className="flex items-center gap-2">
+                                                    <Zap size={18} className="text-genz-lime fill-genz-lime" />
+                                                    <span className="text-xs font-extrabold uppercase tracking-wider text-white">
+                                                        Instant Top-Up:
+                                                    </span>
+                                                </div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {[5000, 10000, 25000, 50000].map(amt => (
+                                                        <button
+                                                            key={amt}
+                                                            onClick={() => handleOpenQuickDeposit('halal', amt.toString())}
+                                                            className="bg-white/15 hover:bg-genz-lime hover:text-black text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-white/20 transition-all"
+                                                        >
+                                                            +₦{amt >= 1000 ? `${amt / 1000}k` : amt}
+                                                        </button>
+                                                    ))}
+                                                    <button
+                                                        onClick={() => handleOpenQuickDeposit('halal')}
+                                                        className="bg-genz-lime text-black font-extrabold text-xs px-3.5 py-1.5 rounded-lg border border-black hover:opacity-90 transition-all flex items-center gap-1"
+                                                    >
+                                                        + Custom
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="bg-white/10 px-4 py-2 rounded-xl text-sm font-medium border border-white/20">
-                                        <span className="text-gray-400 block text-xs">Pending Deposits</span>
-                                        <span className="text-white font-bold">₦0.00</span>
-                                    </div>
+
+                                    <div className="flex flex-wrap items-center gap-2 relative z-10 pt-2 border-t border-white/10">
+                                        <div className="bg-white/10 px-4 py-2 rounded-xl text-sm font-medium border border-white/20">
+                                            <span className="text-gray-400 block text-xs">Total Earnings</span>
+                                            <span className="text-green-400 font-bold">+ ₦{totalEarnings}</span>
+                                        </div>
+                                        <div className="bg-white/10 px-4 py-2 rounded-xl text-sm font-medium border border-white/20">
+                                            <span className="text-gray-400 block text-xs">Pending Deposits</span>
+                                            <span className="text-white font-bold">₦0.00</span>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -156,6 +652,136 @@ export const InvestDashboard = () => {
                                 </div>
                             </div>
 
+                            {/* Gamified Tribe Investor Badges & XP Showcase */}
+                            <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-6 neo-border neo-shadow-sm">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b-2 border-gray-100 dark:border-gray-800 pb-4">
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-display font-extrabold text-2xl uppercase">Tribe Investor Rank</h3>
+                                            <span className="bg-genz-lime text-black font-extrabold text-xs px-3 py-1 rounded-full border border-black uppercase">
+                                                ⭐ {userProfile?.xp || 0} XP
+                                            </span>
+                                        </div>
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mt-1">
+                                            Level {Math.floor((userProfile?.xp || 0) / 250) + 1} • Halal Wealth Builder
+                                        </p>
+                                    </div>
+                                    <div className="text-xs font-bold uppercase text-gray-400">
+                                        {userProfile?.badges?.includes('First Bag Secured') ? '1 of 3 Badges Unlocked' : '0 of 3 Badges Unlocked'}
+                                    </div>
+                                </div>
+
+                                <div className="grid sm:grid-cols-3 gap-4">
+                                    {/* Badge 1: First Bag Secured */}
+                                    <div className={`p-5 rounded-2xl border-2 transition-all flex flex-col justify-between ${
+                                        userProfile?.badges?.includes('First Bag Secured')
+                                            ? 'bg-genz-lime/20 border-black dark:border-white shadow-sm'
+                                            : 'bg-gray-50 dark:bg-gray-800/50 border-dashed border-gray-300 dark:border-gray-700'
+                                    }`}>
+                                        <div>
+                                            <div className="flex justify-between items-start mb-3">
+                                                <span className="text-3xl">🎒</span>
+                                                {userProfile?.badges?.includes('First Bag Secured') ? (
+                                                    <span className="bg-black text-genz-lime text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase border border-genz-lime">
+                                                        Unlocked
+                                                    </span>
+                                                ) : (
+                                                    <span className="bg-amber-100 text-amber-900 dark:bg-amber-900 dark:text-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                                                        +250 XP
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <h4 className="font-display font-bold text-base uppercase mb-1">First Bag Secured</h4>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+                                                {userProfile?.badges?.includes('First Bag Secured')
+                                                    ? 'Funded your first halal investment in Lotus Tribe!'
+                                                    : 'Make your first deposit to secure the bag & claim +250 XP.'}
+                                            </p>
+                                        </div>
+                                        {!userProfile?.badges?.includes('First Bag Secured') && (
+                                            <button
+                                                onClick={() => handleOpenQuickDeposit('halal')}
+                                                className="mt-4 text-xs font-extrabold text-black bg-genz-lime py-2 px-3 rounded-xl text-center uppercase hover:opacity-90 border border-black flex items-center justify-center gap-1.5"
+                                            >
+                                                <Zap size={13} className="fill-black" /> Deposit & Unlock
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Badge 2: Vibe Checked */}
+                                    <div className={`p-5 rounded-2xl border-2 transition-all flex flex-col justify-between ${
+                                        userProfile?.riskProfile
+                                            ? 'bg-purple-50 dark:bg-purple-950/30 border-black dark:border-white shadow-sm'
+                                            : 'bg-gray-50 dark:bg-gray-800/50 border-dashed border-gray-300 dark:border-gray-700'
+                                    }`}>
+                                        <div>
+                                            <div className="flex justify-between items-start mb-3">
+                                                <span className="text-3xl">🧠</span>
+                                                {userProfile?.riskProfile ? (
+                                                    <span className="bg-black text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">
+                                                        Unlocked
+                                                    </span>
+                                                ) : (
+                                                    <span className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                                                        +100 XP
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <h4 className="font-display font-bold text-base uppercase mb-1">Vibe Checked</h4>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+                                                {userProfile?.riskProfile
+                                                    ? `Certified as ${userProfile.riskProfile} risk tolerance!`
+                                                    : 'Take the quick investor quiz to discover your vibe.'}
+                                            </p>
+                                        </div>
+                                        {!userProfile?.riskProfile && (
+                                            <Link
+                                                to="/quiz"
+                                                className="mt-4 text-xs font-bold text-black dark:text-white bg-gray-200 dark:bg-gray-700 py-2 px-3 rounded-xl text-center uppercase hover:bg-black hover:text-white transition-colors block"
+                                            >
+                                                Take Vibe Check
+                                            </Link>
+                                        )}
+                                    </div>
+
+                                    {/* Badge 3: Halal Scholar */}
+                                    <div className={`p-5 rounded-2xl border-2 transition-all flex flex-col justify-between ${
+                                        (userProfile?.completedLessons?.length || 0) > 0
+                                            ? 'bg-blue-50 dark:bg-blue-950/30 border-black dark:border-white shadow-sm'
+                                            : 'bg-gray-50 dark:bg-gray-800/50 border-dashed border-gray-300 dark:border-gray-700'
+                                    }`}>
+                                        <div>
+                                            <div className="flex justify-between items-start mb-3">
+                                                <span className="text-3xl">📚</span>
+                                                {(userProfile?.completedLessons?.length || 0) > 0 ? (
+                                                    <span className="bg-black text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">
+                                                        Unlocked
+                                                    </span>
+                                                ) : (
+                                                    <span className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                                                        +150 XP
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <h4 className="font-display font-bold text-base uppercase mb-1">Halal Scholar</h4>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+                                                {(userProfile?.completedLessons?.length || 0) > 0
+                                                    ? `${userProfile.completedLessons.length} lessons mastered in LMS.`
+                                                    : 'Learn how Islamic finance and sukuk work in our Academy.'}
+                                            </p>
+                                        </div>
+                                        {(!userProfile?.completedLessons || userProfile.completedLessons.length === 0) && (
+                                            <Link
+                                                to="/learn"
+                                                className="mt-4 text-xs font-bold text-black dark:text-white bg-gray-200 dark:bg-gray-700 py-2 px-3 rounded-xl text-center uppercase hover:bg-black hover:text-white transition-colors block"
+                                            >
+                                                Start Learning
+                                            </Link>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* My Funds */}
                             <h3 className="font-display font-bold text-2xl uppercase mt-8 mb-4 border-b-2 border-gray-100 dark:border-gray-800 pb-2">My Funds</h3>
                             
@@ -165,9 +791,12 @@ export const InvestDashboard = () => {
                                         <Wallet className="w-8 h-8"/>
                                     </div>
                                     <h4 className="font-display font-bold text-xl uppercase mb-2">No Active Funds</h4>
-                                    <p className="text-gray-500 dark:text-gray-400 mb-6 font-medium">You don't have any active investments yet. Add funds to start growing your wealth.</p>
-                                    <button onClick={() => setActiveTab('funding')} className="neo-btn bg-black text-white px-8 py-3 text-sm">
-                                        + Add Funds
+                                    <p className="text-gray-500 dark:text-gray-400 mb-6 font-medium">You don't have any active investments yet. Make a quick deposit to start growing your halal wealth.</p>
+                                    <button 
+                                        onClick={() => handleOpenQuickDeposit('halal')} 
+                                        className="neo-btn bg-black text-white px-8 py-3 text-sm font-extrabold uppercase flex items-center justify-center gap-2 mx-auto"
+                                    >
+                                        <Zap size={16} className="text-genz-lime fill-genz-lime" /> + Quick Deposit
                                     </button>
                                 </div>
                             ) : (
@@ -175,7 +804,7 @@ export const InvestDashboard = () => {
                                     <div className="grid md:grid-cols-2 gap-6">
                                         {/* Halal Fund Card */}
                                         {halalBalance > 0 && (
-                                            <div className="bg-white dark:bg-gray-900 p-6 rounded-[2rem] neo-border neo-shadow-sm flex flex-col group cursor-pointer hover:border-black transition-all">
+                                            <div className="bg-white dark:bg-gray-900 p-6 rounded-[2rem] neo-border neo-shadow-sm flex flex-col group hover:border-black transition-all">
                                                 <div className="flex justify-between items-start mb-6">
                                                     <div>
                                                         <div className="inline-block px-3 py-1 bg-genz-pink text-black dark:text-white font-bold text-xs uppercase rounded-lg mb-2 neo-border">Moderate Risk</div>
@@ -192,14 +821,24 @@ export const InvestDashboard = () => {
                                                         <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-1">Total Return</p>
                                                         <p className="text-sm font-bold text-green-500">+ ₦0 (0.0%)</p>
                                                     </div>
-                                                    <button onClick={() => setActiveTab('funding')} className="text-sm font-bold bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 px-4 py-2 rounded-xl transition-colors">Manage</button>
+                                                    <div className="flex gap-2">
+                                                        <button 
+                                                            onClick={() => handleOpenQuickDeposit('halal')} 
+                                                            className="text-xs font-extrabold bg-genz-pink text-black px-3 py-2 rounded-xl transition-all border border-black"
+                                                        >
+                                                            + Deposit
+                                                        </button>
+                                                        <button onClick={() => setActiveTab('funding')} className="text-xs font-bold bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 px-3 py-2 rounded-xl transition-colors">
+                                                            Manage
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
 
                                         {/* FIF Fund Card */}
                                         {fifBalance > 0 && (
-                                            <div className="bg-white dark:bg-gray-900 p-6 rounded-[2rem] neo-border neo-shadow-sm flex flex-col group cursor-pointer hover:border-black transition-all">
+                                            <div className="bg-white dark:bg-gray-900 p-6 rounded-[2rem] neo-border neo-shadow-sm flex flex-col group hover:border-black transition-all">
                                                 <div className="flex justify-between items-start mb-6">
                                                     <div>
                                                         <div className="inline-block px-3 py-1 bg-genz-lime text-black dark:text-white font-bold text-xs uppercase rounded-lg mb-2 neo-border">Low Risk</div>
@@ -216,7 +855,17 @@ export const InvestDashboard = () => {
                                                         <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-1">Total Return</p>
                                                         <p className="text-sm font-bold text-green-500">+ ₦0 (0.0%)</p>
                                                     </div>
-                                                    <button onClick={() => setActiveTab('funding')} className="text-sm font-bold bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 px-4 py-2 rounded-xl transition-colors">Manage</button>
+                                                    <div className="flex gap-2">
+                                                        <button 
+                                                            onClick={() => handleOpenQuickDeposit('fif')} 
+                                                            className="text-xs font-extrabold bg-genz-lime text-black px-3 py-2 rounded-xl transition-all border border-black"
+                                                        >
+                                                            + Deposit
+                                                        </button>
+                                                        <button onClick={() => setActiveTab('funding')} className="text-xs font-bold bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 px-3 py-2 rounded-xl transition-colors">
+                                                            Manage
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
@@ -227,26 +876,75 @@ export const InvestDashboard = () => {
                         </>
                     )}
 
-                    {activeTab === 'funding' && <FundingTab user={user} userProfile={userProfile} setActiveTab={setActiveTab} />}
+                    {activeTab === 'funding' && (
+                        <FundingTab 
+                            user={user} 
+                            userProfile={userProfile} 
+                            setActiveTab={setActiveTab} 
+                            onRewardUnlocked={handleRewardUnlocked}
+                            initialFund={quickDepositFund}
+                            initialAmount={prefilledAmount}
+                        />
+                    )}
                     {activeTab === 'transactions' && <TransactionsTab user={user} />}
                     {activeTab === 'certificate' && <CertificateTab user={user} userProfile={userProfile} />}
                     {activeTab === 'settings' && <SettingsTab user={user} userProfile={userProfile} />}
 
                 </motion.div>
             </AnimatePresence>
+
+            {/* Quick Deposit Modal */}
+            <QuickDepositModal
+                isOpen={isQuickDepositOpen}
+                onClose={() => setIsQuickDepositOpen(false)}
+                user={user}
+                userProfile={userProfile}
+                initialFund={quickDepositFund}
+                onSuccessDeposit={handleQuickDepositSuccess}
+                onOpenFullFunding={(fund, amt) => {
+                    setQuickDepositFund(fund);
+                    setPrefilledAmount(amt);
+                    setActiveTab('funding');
+                }}
+            />
+
+            {/* First Investment Achievement Reward Modal */}
+            {rewardCelebration && (
+                <FirstInvestmentRewardModal
+                    isOpen={rewardCelebration.isOpen}
+                    onClose={() => setRewardCelebration(null)}
+                    amount={rewardCelebration.amount}
+                    xp={rewardCelebration.xp}
+                />
+            )}
         </DashboardLayout>
     );
 };
 
-const FundingTab = ({ user, userProfile, setActiveTab }: any) => {
+const FundingTab = ({ 
+    user, 
+    userProfile, 
+    setActiveTab, 
+    onRewardUnlocked,
+    initialFund = 'halal',
+    initialAmount = ''
+}: { 
+    user: any; 
+    userProfile: any; 
+    setActiveTab: (t: string) => void;
+    onRewardUnlocked?: (reward: { badge: string; xp: number; amount: number }) => void;
+    initialFund?: 'halal' | 'fif';
+    initialAmount?: string;
+}) => {
     const { refreshProfile } = useContext(AuthContext);
     const [actionType, setActionType] = useState<'deposit' | 'withdraw'>('deposit');
-    const [amount, setAmount] = useState('');
-    const [fund, setFund] = useState<'halal' | 'fif'>('halal');
+    const [amount, setAmount] = useState(initialAmount || '');
+    const [fund, setFund] = useState<'halal' | 'fif'>(initialFund || 'halal');
     const [status, setStatus] = useState<'idle' | 'paystack' | 'success' | 'withdraw_success'>('idle');
     const [isLoading, setIsLoading] = useState(false);
     const [frequency, setFrequency] = useState('one-time');
     const [countdown, setCountdown] = useState(15);
+    const [validationError, setValidationError] = useState('');
 
     React.useEffect(() => {
         let timer: any;
@@ -261,6 +959,9 @@ const FundingTab = ({ user, userProfile, setActiveTab }: any) => {
         }
         return () => clearInterval(timer);
     }, [status, countdown, setActiveTab]);
+
+    const isTier1 = userProfile?.kycTier === 'tier1';
+    const hasAnyKyc = userProfile?.kycCompleted || userProfile?.tier1Completed || isTier1;
 
     const config: any = {
         reference: (new Date()).getTime().toString(),
@@ -280,19 +981,60 @@ const FundingTab = ({ user, userProfile, setActiveTab }: any) => {
     // We can init the hook here to obey rules of hooks.
     const initializePayment = usePaystackPayment(config);
 
-    if (user && !userProfile?.kycCompleted) {
+    if (user && !hasAnyKyc) {
         return (
-            <div className="bg-white dark:bg-gray-900 rounded-3xl p-10 neo-border neo-shadow-sm max-w-2xl mx-auto text-center mt-10">
-                <div className="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 neo-border border-red-500">
-                    <CheckCircle className="w-10 h-10" />
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 md:p-10 neo-border neo-shadow-sm max-w-2xl mx-auto text-center mt-6">
+                <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950/60 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-5 neo-border border-black text-2xl">
+                    ⚡
                 </div>
-                <h3 className="font-display font-extrabold text-3xl uppercase mb-4">Complete Your KYC</h3>
-                <p className="text-gray-500 dark:text-gray-400 font-medium mb-8">You need to verify your identity before you can add funds to your investment portfolios.</p>
-                <Link to="/invest/onboarding">
-                    <button className="neo-btn bg-lotus-dark text-white px-8 py-3 uppercase hover:-translate-y-1 transition-transform inline-block">
-                        Proceed to Verification
-                    </button>
-                </Link>
+                <h3 className="font-display font-extrabold text-3xl uppercase mb-2">Choose How to Start</h3>
+                <p className="text-gray-500 dark:text-gray-400 font-medium mb-8 max-w-lg mx-auto text-sm">
+                    Lotus Tribe supports Progressive KYC. You can start investing immediately with Express verification, or complete full verification for unlimited access.
+                </p>
+
+                <div className="grid sm:grid-cols-2 gap-4 text-left mb-6">
+                    <div className="p-5 rounded-2xl border-2 border-black bg-genz-lime/20 flex flex-col justify-between">
+                        <div>
+                            <div className="inline-block px-2.5 py-0.5 bg-black text-genz-lime font-extrabold text-[10px] uppercase rounded-md mb-2">
+                                60 Seconds
+                            </div>
+                            <h4 className="font-display font-extrabold text-lg uppercase mb-1">Tier 1 Express</h4>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 font-medium mb-3">
+                                Only your Name, Phone, and State needed. No BVN or documents required today.
+                            </p>
+                            <div className="text-xs font-bold text-black dark:text-white">
+                                • Deposit cap: ₦50,000<br/>
+                                • Full access to Halal & FIF portfolios
+                            </div>
+                        </div>
+                        <Link to="/invest/onboarding?tier=tier1" className="mt-4">
+                            <button className="neo-btn bg-black text-white w-full py-2.5 text-xs font-extrabold uppercase">
+                                Start Express (60s) →
+                            </button>
+                        </Link>
+                    </div>
+
+                    <div className="p-5 rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 flex flex-col justify-between">
+                        <div>
+                            <div className="inline-block px-2.5 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold text-[10px] uppercase rounded-md mb-2">
+                                Full Access
+                            </div>
+                            <h4 className="font-display font-extrabold text-lg uppercase mb-1">Tier 2/3 SEC Full</h4>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-3">
+                                Complete verification with BVN/NIN for full institutional investment privileges.
+                            </p>
+                            <div className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                                • Unlimited deposits<br/>
+                                • Instant bank withdrawals anytime
+                            </div>
+                        </div>
+                        <Link to="/invest/onboarding?tier=full" className="mt-4">
+                            <button className="neo-btn bg-white dark:bg-gray-900 text-black dark:text-white border-2 border-black w-full py-2.5 text-xs font-extrabold uppercase">
+                                Full Verification →
+                            </button>
+                        </Link>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -300,20 +1042,33 @@ const FundingTab = ({ user, userProfile, setActiveTab }: any) => {
     const currentBalance = (fund === 'halal' ? userProfile?.halalBalance : userProfile?.fifBalance) || 0;
 
     const handleProceed = () => {
-        if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-            alert('Please enter a valid amount');
+        setValidationError('');
+        const numAmount = Number(amount);
+        if (!amount || isNaN(numAmount) || numAmount < 1000) {
+            setValidationError('Please enter a valid amount (minimum investment is ₦1,000).');
+            return;
+        }
+
+        if (actionType === 'deposit' && isTier1 && numAmount > 50000) {
+            setValidationError('⚠️ Tier 1 accounts have a maximum deposit cap of ₦50,000 per SEC guidelines. Please adjust to ₦50,000 or upgrade to Tier 2 for unlimited deposits.');
             return;
         }
         
-        if (actionType === 'withdraw' && Number(amount) > currentBalance) {
-            alert('Insufficient funds for this withdrawal.');
+        if (actionType === 'withdraw') {
+            if (isTier1) {
+                setValidationError('⚠️ Withdrawals require SEC-compliant Tier 2 KYC verification (Settlement Bank Account & BVN). Please upgrade your account to withdraw funds.');
+                return;
+            }
+            if (numAmount > currentBalance) {
+                setValidationError('Insufficient funds for this withdrawal.');
+                return;
+            }
+            handleWithdrawal();
             return;
         }
 
         if (actionType === 'deposit') {
             setStatus('paystack');
-        } else {
-            handleWithdrawal();
         }
     };
 
@@ -384,9 +1139,20 @@ const FundingTab = ({ user, userProfile, setActiveTab }: any) => {
                     const dbField = fund === 'halal' ? 'halalBalance' : 'fifBalance';
                     const currentBalance = (fund === 'halal' ? userProfile?.halalBalance : userProfile?.fifBalance) || 0;
                     
+                    const isFirstDeposit = (!userProfile?.badges || !userProfile.badges.includes('First Bag Secured')) &&
+                                           (!userProfile?.firstInvestmentCompleted) &&
+                                           (!userProfile?.totalInvested || userProfile.totalInvested === 0);
+
                     const updates: any = {
                         [dbField]: currentBalance + Number(amount),
+                        totalInvested: increment(Number(amount)),
                     };
+
+                    if (isFirstDeposit) {
+                        updates.badges = arrayUnion('First Bag Secured');
+                        updates.xp = increment(250);
+                        updates.firstInvestmentCompleted = true;
+                    }
 
                     if (frequency !== 'one-time') {
                         updates.autoInvest = arrayUnion({
@@ -435,10 +1201,26 @@ const FundingTab = ({ user, userProfile, setActiveTab }: any) => {
                         console.error('Failed to send email notification:', emailErr);
                     }
 
+                    if (isFirstDeposit) {
+                        confetti({
+                            particleCount: 160,
+                            spread: 90,
+                            origin: { y: 0.5 },
+                            colors: ['#000000', '#D1FD0A', '#FF70A6', '#FFFFFF', '#0A2540']
+                        });
+                        if (onRewardUnlocked) {
+                            onRewardUnlocked({
+                                badge: 'First Bag Secured',
+                                xp: 250,
+                                amount: Number(amount)
+                            });
+                        }
+                    }
+
                     setTimeout(() => {
                         setIsLoading(false);
                         setStatus('success');
-                        refreshProfile(); // Get fresh auth context data quickly for this demo
+                        refreshProfile(); // Get fresh auth context data quickly
                     }, 500);
                 } catch (e) {
                     console.error('Error updating balance', e);
@@ -565,15 +1347,50 @@ const FundingTab = ({ user, userProfile, setActiveTab }: any) => {
 
     return (
         <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 neo-border neo-shadow-sm max-w-2xl mx-auto">
+            {isTier1 && (
+                <div className="bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-300 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-amber-300 text-black flex items-center justify-center font-black text-sm border-2 border-black shrink-0">
+                            ⚡
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <span className="font-display font-extrabold text-xs uppercase text-amber-900 dark:text-amber-200">
+                                    Tier 1 Express Account Active
+                                </span>
+                                <span className="bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-amber-400">
+                                    ₦50,000 Cap
+                                </span>
+                            </div>
+                            <p className="text-xs text-amber-800 dark:text-amber-300 font-medium mt-0.5">
+                                You can deposit up to ₦50,000. Upgrade to Tier 2 for unlimited deposits and instant bank withdrawals.
+                            </p>
+                        </div>
+                    </div>
+                    <Link 
+                        to="/invest/onboarding?upgrade=true"
+                        className="neo-btn bg-black text-white px-3.5 py-1.5 text-xs font-extrabold uppercase shrink-0"
+                    >
+                        Upgrade →
+                    </Link>
+                </div>
+            )}
+
             <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-8">
                 <button 
-                    onClick={() => setActionType('deposit')}
+                    onClick={() => {
+                        setActionType('deposit');
+                        setValidationError('');
+                    }}
                     className={`flex-1 py-3 px-4 rounded-lg font-bold uppercase text-sm transition-all ${actionType === 'deposit' ? 'bg-white dark:bg-gray-900 shadow-sm text-black dark:text-white border-2 border-black' : 'text-gray-500 dark:text-gray-400 border-2 border-transparent'}`}
                 >
                     Deposit Funds
                 </button>
                 <button 
-                    onClick={() => setActionType('withdraw')}
+                    onClick={() => {
+                        setActionType('withdraw');
+                        setValidationError('');
+                    }}
                     className={`flex-1 py-3 px-4 rounded-lg font-bold uppercase text-sm transition-all ${actionType === 'withdraw' ? 'bg-white dark:bg-gray-900 shadow-sm text-black dark:text-white border-2 border-black' : 'text-gray-500 dark:text-gray-400 border-2 border-transparent'}`}
                 >
                     Withdraw Funds
@@ -586,6 +1403,24 @@ const FundingTab = ({ user, userProfile, setActiveTab }: any) => {
             <p className="text-gray-500 dark:text-gray-400 font-medium mb-8">
                 {actionType === 'deposit' ? 'Invest into your preferred Lotus Tribe portfolios safely.' : 'Withdraw from your active portfolios directly to your bank account.'}
             </p>
+
+            {validationError && (
+                <div className="p-4 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-2 border-red-300 rounded-2xl text-xs font-bold mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                    <span>{validationError}</span>
+                    {isTier1 && Number(amount) > 50000 && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setAmount('50000');
+                                setValidationError('');
+                            }}
+                            className="neo-btn bg-red-600 text-white px-3 py-1 text-[11px] uppercase shrink-0"
+                        >
+                            Set to ₦50,000
+                        </button>
+                    )}
+                </div>
+            )}
             
             <div className="space-y-6">
                 <div>
@@ -628,11 +1463,38 @@ const FundingTab = ({ user, userProfile, setActiveTab }: any) => {
                             min="1000"
                             max={actionType === 'withdraw' ? currentBalance : undefined}
                             value={amount}
-                            onChange={e => setAmount(e.target.value)}
+                            onChange={e => {
+                                setAmount(e.target.value);
+                                setValidationError('');
+                            }}
                             placeholder="0.00" 
                             className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 pl-12 font-display font-bold text-2xl focus:border-black outline-none transition-colors"
                         />
                     </div>
+
+                    {/* Quick Amount Preset Chips for Deposits */}
+                    {actionType === 'deposit' && (
+                        <div className="flex flex-wrap items-center gap-2 mt-3">
+                            <span className="text-xs text-gray-400 font-bold uppercase">Quick amounts:</span>
+                            {[5000, 10000, 25000, 50000].map(amt => (
+                                <button
+                                    key={amt}
+                                    type="button"
+                                    onClick={() => {
+                                        setAmount(amt.toString());
+                                        setValidationError('');
+                                    }}
+                                    className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition-all ${
+                                        amount === amt.toString()
+                                            ? 'bg-black text-white border-black'
+                                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-transparent hover:border-gray-400'
+                                    }`}
+                                >
+                                    ₦{amt >= 1000 ? `${amt / 1000}k` : amt}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {actionType === 'deposit' && (

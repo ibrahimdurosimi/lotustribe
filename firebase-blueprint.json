@@ -22,6 +22,9 @@
         "fifBalance": { "type": "number" },
         "halalBalance": { "type": "number" },
         "totalInvested": { "type": "number" },
+        "kycTier": { "type": "string", "enum": ["tier1", "tier2", "tier3"] },
+        "depositLimit": { "type": "number" },
+        "firstInvestmentCompleted": { "type": "boolean" },
         "createdAt": { "type": "timestamp" },
         "updatedAt": { "type": "timestamp" }
       },

@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Camera, Upload, CheckCircle2, ArrowRight, ShieldCheck, ChevronLeft } from 'lucide-react';
+import { Camera, Upload, CheckCircle2, ArrowRight, ShieldCheck, ChevronLeft, Zap, Lock, Sparkles, AlertCircle } from 'lucide-react';
 import { AuthContext } from './App';
 import { db } from './lib/firebase';
 import { updateDoc, doc, serverTimestamp } from 'firebase/firestore';
@@ -11,12 +11,25 @@ export const InvestOnboarding = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { user, userProfile, refreshProfile } = useContext(AuthContext);
+    
+    // Parse query params for tier preference and upgrade intent
+    const searchParams = new URLSearchParams(location.search);
+    const isUpgrade = searchParams.get('upgrade') === 'true';
+    const initialTierParam = searchParams.get('tier');
+    
+    // Mode can be 'tier1' (Express Starter - 60s) or 'full' (Tier 2/3 Full Verification)
+    const [mode, setMode] = useState<'tier1' | 'full'>(
+        isUpgrade || initialTierParam === 'full' || (userProfile?.kycTier === 'tier1' && isUpgrade) 
+            ? 'full' 
+            : 'tier1'
+    );
+    
     const [step, setStep] = useState(1);
-    const [fundSelected] = useState(location.state?.fund || 'fif');
+    const [fundSelected, setFundSelected] = useState<'fif' | 'halal'>(location.state?.fund || 'fif');
     
     // Form State
     const [formData, setFormData] = useState({
-        // Step 1: Personal
+        // Step 1 / Tier 1: Personal
         firstName: '', middleName: '', lastName: '', dob: '', gender: '',
         residentialAddress: '', stateOfResidence: '', mobileNumber: '', emailAddress: '',
         cityOfBirth: '', countryOfBirth: '', stateOfOrigin: '', lga: '',
@@ -47,10 +60,20 @@ export const InvestOnboarding = () => {
             setFormData(prev => ({
                 ...prev,
                 firstName: nameParts[0] || prev.firstName,
-                lastName: nameParts[nameParts.length - 1] || prev.lastName,
+                lastName: nameParts.length > 1 ? nameParts[nameParts.length - 1] : prev.lastName,
+                emailAddress: user.email || prev.emailAddress,
+                mobileNumber: (userProfile as any)?.mobileNumber || prev.mobileNumber,
+                stateOfResidence: (userProfile as any)?.stateOfResidence || prev.stateOfResidence,
             }));
         }
     }, [userProfile, user]);
+
+    // If already Tier 1 and upgrading, start on Step 2 (Identity) to save time
+    useEffect(() => {
+        if (isUpgrade && userProfile?.tier1Completed) {
+            setStep(2);
+        }
+    }, [isUpgrade, userProfile]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -62,23 +85,28 @@ export const InvestOnboarding = () => {
     const nextStep = () => setStep(prev => prev + 1);
     const prevStep = () => setStep(prev => prev - 1);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    // Fast Tier 1 Express Submission (Name, Phone, State)
+    const handleTier1Submit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
         
         try {
-            // Simulate API call to Lotus Capital Investment API
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise(resolve => setTimeout(resolve, 1200));
 
             if (user) {
-                // Update Firestore profile
                 const updatePromise = updateDoc(doc(db, 'users', user.uid), {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    mobileNumber: formData.mobileNumber,
+                    stateOfResidence: formData.stateOfResidence,
                     kycCompleted: true,
+                    kycTier: 'tier1',
+                    tier1Completed: true,
+                    depositLimit: 50000,
                     onboarded: true,
                     updatedAt: serverTimestamp(),
                 });
                 
-                // Allow a max of 2 seconds for the firebase update. If it's offline, avoid getting stuck.
                 await Promise.race([
                     updatePromise,
                     new Promise(resolve => setTimeout(resolve, 2000))
@@ -86,15 +114,74 @@ export const InvestOnboarding = () => {
                 
                 refreshProfile();
 
-                // Send Email Notification
                 if (user.email) {
-                    sendEmailNotification(user.email, 'Account Verified - Lotus Tribe', `
+                    sendEmailNotification(user.email, 'Tier 1 Account Activated - Lotus Tribe', `
                         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #111;">
-                            <h2 style="color: #0A0A0A; text-transform: uppercase;">You're Verified!</h2>
+                            <h2 style="color: #0A0A0A; text-transform: uppercase;">Tier 1 Activated!</h2>
                             <p>Hi ${formData.firstName},</p>
-                            <p>Your KYC details have been successfully submitted and your Lotus Tribe account is now fully verified.</p>
-                            <p>You can now start investing in our Halal and Fixed Income funds to build your wealth.</p>
-                            <p>We're excited to have you on board!</p>
+                            <p>Your Tier 1 starter account is active with a ₦50,000 deposit limit.</p>
+                            <p>You can now fund your account and earn your <strong>First Bag Secured 🎒</strong> badge and <strong>+250 XP</strong>!</p>
+                        </div>
+                    `).catch(console.error);
+                }
+            }
+            setIsSuccess(true);
+        } catch (error) {
+            console.error("Tier 1 submission error", error);
+            setIsSuccess(true);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // Full Tier 2/3 SEC Compliant Submission
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        
+        try {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            if (user) {
+                const updatePromise = updateDoc(doc(db, 'users', user.uid), {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    dob: formData.dob,
+                    gender: formData.gender,
+                    residentialAddress: formData.residentialAddress,
+                    stateOfResidence: formData.stateOfResidence,
+                    mobileNumber: formData.mobileNumber,
+                    bvn: formData.bvn ? `***${formData.bvn.slice(-4)}` : '',
+                    nin: formData.nin ? `***${formData.nin.slice(-4)}` : '',
+                    idCardType: formData.idCardType,
+                    taxResidence: formData.taxResidence,
+                    bankCode: formData.bankCode,
+                    accountNumber: formData.accountNumber,
+                    accountName: formData.accountName,
+                    distributionPayment: formData.distributionPayment,
+                    kycCompleted: true,
+                    kycTier: 'tier2',
+                    tier1Completed: true,
+                    tier2Completed: true,
+                    depositLimit: null, // Unlimited
+                    onboarded: true,
+                    updatedAt: serverTimestamp(),
+                });
+                
+                await Promise.race([
+                    updatePromise,
+                    new Promise(resolve => setTimeout(resolve, 2000))
+                ]).catch(e => console.warn('Offline update warning:', e));
+                
+                refreshProfile();
+
+                if (user.email) {
+                    sendEmailNotification(user.email, 'Account Fully Verified - Lotus Tribe', `
+                        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #111;">
+                            <h2 style="color: #0A0A0A; text-transform: uppercase;">Tier 2 Full Verification Approved!</h2>
+                            <p>Hi ${formData.firstName},</p>
+                            <p>Your full regulatory verification is complete. You have unlocked unlimited deposits, automated debits, and instant withdrawals.</p>
+                            <p>Welcome to the top tier of Lotus Tribe!</p>
                         </div>
                     `).catch(console.error);
                 }
@@ -103,7 +190,6 @@ export const InvestOnboarding = () => {
             setIsSuccess(true);
         } catch (error) {
             console.error("KYC Submission error", error);
-            // On offline failure, let's still transition them gracefully.
             setIsSuccess(true);
         } finally {
             setIsSubmitting(false);
@@ -111,19 +197,52 @@ export const InvestOnboarding = () => {
     };
 
     if (isSuccess) {
+        const isTier1 = mode === 'tier1' && userProfile?.kycTier !== 'tier2';
         return (
-            <div className="min-h-screen bg-genz-blue/10 flex items-center justify-center p-4">
-                <div className="bg-white dark:bg-gray-900 p-10 md:p-16 rounded-[3rem] neo-border neo-shadow text-center max-w-lg w-full">
-                    <div className="w-24 h-24 bg-genz-lime rounded-full flex items-center justify-center mx-auto mb-8 border border-lotus-dark/10 shadow-inner">
-                        <CheckCircle2 size={48} className="text-lotus-dark dark:text-white" />
+            <div className="min-h-screen bg-[#FFFDF9] dark:bg-gray-950 flex items-center justify-center p-4">
+                <div className="bg-white dark:bg-gray-900 p-8 md:p-14 rounded-[3rem] neo-border neo-shadow text-center max-w-lg w-full">
+                    <div className={`w-24 h-24 ${isTier1 ? 'bg-genz-lime' : 'bg-emerald-400'} rounded-full flex items-center justify-center mx-auto mb-8 border-2 border-black shadow-inner`}>
+                        {isTier1 ? <Zap size={48} className="text-black fill-black" /> : <CheckCircle2 size={48} className="text-black" />}
                     </div>
-                    <h2 className="font-display font-extrabold text-4xl uppercase mb-4 text-lotus-dark dark:text-white">Account Verified!</h2>
-                    <p className="font-medium text-gray-500 dark:text-gray-400 mb-8 text-lg leading-relaxed">
-                        Your KYC has been approved. Welcome to the Lotus Tribe! Your {fundSelected.toUpperCase()} investment account is now active and ready to fund.
+                    
+                    <div className="inline-block px-4 py-1 rounded-full bg-black text-white font-bold text-xs uppercase tracking-widest mb-3">
+                        {isTier1 ? '⚡ Tier 1 Verified' : '🛡️ Full Tier 2 Verified'}
+                    </div>
+
+                    <h2 className="font-display font-extrabold text-3xl md:text-4xl uppercase mb-3 text-lotus-dark dark:text-white">
+                        {isTier1 ? 'Quick Start Active!' : 'Account Fully Verified!'}
+                    </h2>
+                    
+                    <p className="font-medium text-gray-600 dark:text-gray-300 mb-8 text-base leading-relaxed">
+                        {isTier1 ? (
+                            <>
+                                Your starter account is live with a <strong className="text-black dark:text-white">₦50,000 deposit limit</strong>. Make your first deposit to claim the exclusive <strong className="text-lotus-dark dark:text-white">"First Bag Secured" 🎒 Badge</strong> and <strong className="text-lotus-dark dark:text-white">+250 XP</strong>!
+                            </>
+                        ) : (
+                            <>
+                                Your Tier 2 SEC KYC has been approved. You now enjoy <strong className="text-black dark:text-white">unlimited deposits</strong>, automated savings, and seamless withdrawals.
+                            </>
+                        )}
                     </p>
-                    <Link to="/dashboard" className="neo-btn bg-lotus-dark text-white px-8 py-4 uppercase block w-full text-xl hover:-translate-y-1 transition-transform">
-                        Go to Dashboard
-                    </Link>
+
+                    <div className="space-y-3">
+                        <Link 
+                            to="/dashboard" 
+                            state={{ openQuickDeposit: true, fund: fundSelected }}
+                            className="neo-btn bg-lotus-dark text-white px-8 py-4 uppercase block w-full text-lg hover:-translate-y-1 transition-transform font-bold"
+                        >
+                            {isTier1 ? 'Make First Deposit & Claim 250 XP 🚀' : 'Go to Investment Dashboard'}
+                        </Link>
+
+                        {isTier1 && (
+                            <button
+                                onClick={() => { setIsSuccess(false); setMode('full'); setStep(2); }}
+                                className="text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white uppercase tracking-wider py-2"
+                            >
+                                Or upgrade to Tier 2 (Unlimited) now →
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         );
@@ -148,20 +267,38 @@ export const InvestOnboarding = () => {
                     </p>
 
                     <div className="space-y-6">
-                        {[
-                            { step: 1, label: "Personal Details" },
-                            { step: 2, label: "Identity & Tax" },
-                            { step: 3, label: "Employment" },
-                            { step: 4, label: "Next of Kin" },
-                            { step: 5, label: "Bank & Declaration" }
-                        ].map((item) => (
-                            <div key={item.step} className={`flex items-center gap-4 ${step >= item.step ? 'opacity-100' : 'opacity-30'}`}>
-                                <div className={`w-10 h-10 rounded-full border flex items-center justify-center font-bold text-sm transition-colors ${step === item.step ? 'border-white bg-white dark:bg-gray-900 text-black dark:text-white' : step > item.step ? 'border-genz-lime bg-genz-lime text-black dark:text-white' : 'border-white/20 text-white/20 dark:text-gray-600'}`}>
-                                    {step > item.step ? <CheckCircle2 size={18} /> : item.step}
+                        {mode === 'tier1' ? (
+                            [
+                                { step: 1, label: "Basic Details (Name & Phone)", active: true, done: false },
+                                { step: 2, label: "₦50k Deposit Cap", active: false, done: false },
+                                { step: 3, label: "+250 XP First Bag Reward", active: false, done: false }
+                            ].map((item, idx) => (
+                                <div key={idx} className="flex items-center gap-4">
+                                    <div className={`w-10 h-10 rounded-full border flex items-center justify-center font-bold text-sm transition-colors ${item.active ? 'border-genz-lime bg-genz-lime text-black font-extrabold' : 'border-white/20 text-white/40'}`}>
+                                        {idx === 0 ? <Zap size={18} className="fill-current text-black" /> : idx + 1}
+                                    </div>
+                                    <div>
+                                        <span className={`font-bold uppercase tracking-wider text-sm block ${item.active ? 'text-white' : 'text-gray-500'}`}>{item.label}</span>
+                                        {idx === 0 && <span className="text-[11px] text-genz-lime font-medium">⚡ 60-Second Express Flow</span>}
+                                    </div>
                                 </div>
-                                <span className={`font-bold uppercase tracking-wider text-sm ${step === item.step ? 'text-white' : step > item.step ? 'text-genz-lime' : 'text-gray-500 dark:text-gray-400'}`}>{item.label}</span>
-                            </div>
-                        ))}
+                            ))
+                        ) : (
+                            [
+                                { step: 1, label: "Personal Details" },
+                                { step: 2, label: "Identity & Tax" },
+                                { step: 3, label: "Employment" },
+                                { step: 4, label: "Next of Kin" },
+                                { step: 5, label: "Bank & Declaration" }
+                            ].map((item) => (
+                                <div key={item.step} className={`flex items-center gap-4 ${step >= item.step ? 'opacity-100' : 'opacity-30'}`}>
+                                    <div className={`w-10 h-10 rounded-full border flex items-center justify-center font-bold text-sm transition-colors ${step === item.step ? 'border-white bg-white dark:bg-gray-900 text-black dark:text-white' : step > item.step ? 'border-genz-lime bg-genz-lime text-black dark:text-white' : 'border-white/20 text-white/20 dark:text-gray-600'}`}>
+                                        {step > item.step ? <CheckCircle2 size={18} /> : item.step}
+                                    </div>
+                                    <span className={`font-bold uppercase tracking-wider text-sm ${step === item.step ? 'text-white' : step > item.step ? 'text-genz-lime' : 'text-gray-500 dark:text-gray-400'}`}>{item.label}</span>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
 
@@ -178,14 +315,183 @@ export const InvestOnboarding = () => {
             <div className="w-full lg:w-2/3 bg-gray-50 dark:bg-gray-800 flex flex-col p-6 lg:p-20 overflow-y-auto">
                 <div className="max-w-2xl w-full mx-auto my-auto">
                     
-                    <div className="lg:hidden mb-10">
-                        <Link to="/invest" className="inline-flex items-center gap-2 font-display font-bold uppercase mb-8 hover:text-lotus-dark dark:text-white transition-colors text-gray-400">
+                    <div className="lg:hidden mb-6">
+                        <Link to="/invest" className="inline-flex items-center gap-2 font-display font-bold uppercase mb-4 hover:text-lotus-dark dark:text-white transition-colors text-gray-400">
                             <ChevronLeft size={18} /> Back
                         </Link>
-                        <h1 className="text-4xl font-display font-bold text-lotus-dark dark:text-white uppercase mb-2">KYC Profile</h1>
-                        <p className="text-gray-500 dark:text-gray-400 font-medium uppercase tracking-widest text-xs">Step {step} of 5</p>
+                        <h1 className="text-3xl font-display font-bold text-lotus-dark dark:text-white uppercase mb-1">
+                            {mode === 'tier1' ? '⚡ Tier 1 Quick Onboarding' : 'KYC Verification'}
+                        </h1>
+                        <p className="text-gray-500 dark:text-gray-400 font-medium uppercase tracking-widest text-xs">
+                            {mode === 'tier1' ? '60 Seconds • Up to ₦50k Limit' : `Step ${step} of 5`}
+                        </p>
                     </div>
 
+                    {/* Progressive KYC Tier Mode Switcher */}
+                    <div className="bg-white dark:bg-gray-900 p-2 rounded-2xl border-2 border-black neo-shadow-sm mb-8 grid grid-cols-2 gap-2">
+                        <button
+                            type="button"
+                            onClick={() => { setMode('tier1'); setStep(1); }}
+                            className={`p-3 rounded-xl text-left transition-all ${
+                                mode === 'tier1' 
+                                    ? 'bg-genz-lime text-black font-extrabold border-2 border-black shadow-sm' 
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white font-bold'
+                            }`}
+                        >
+                            <div className="flex items-center gap-1.5 text-xs uppercase tracking-wider mb-1">
+                                <Zap size={14} className="fill-current text-black" />
+                                <span className="font-display">Tier 1 Express</span>
+                                <span className="bg-black text-white text-[10px] px-1.5 py-0.5 rounded ml-auto font-mono">60s</span>
+                            </div>
+                            <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">Deposit up to ₦50k instantly</p>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => { setMode('full'); }}
+                            className={`p-3 rounded-xl text-left transition-all ${
+                                mode === 'full' 
+                                    ? 'bg-black text-white font-extrabold shadow-sm' 
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white font-bold'
+                            }`}
+                        >
+                            <div className="flex items-center gap-1.5 text-xs uppercase tracking-wider mb-1">
+                                <ShieldCheck size={14} className={mode === 'full' ? "text-genz-lime" : ""} />
+                                <span className="font-display">Tier 2/3 Full SEC</span>
+                                <span className="bg-genz-lime text-black text-[10px] px-1.5 py-0.5 rounded ml-auto font-mono">PRO</span>
+                            </div>
+                            <p className={`text-xs font-semibold ${mode === 'full' ? 'text-gray-200' : 'text-gray-600 dark:text-gray-400'}`}>
+                                Unlimited deposits & withdrawals
+                            </p>
+                        </button>
+                    </div>
+
+                    {/* TIER 1 EXPRESS FORM */}
+                    {mode === 'tier1' ? (
+                        <form onSubmit={handleTier1Submit} className="space-y-6 bg-white dark:bg-gray-900 p-8 rounded-3xl border-2 border-black neo-shadow">
+                            <div className="border-b-2 border-gray-100 dark:border-gray-800 pb-4">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-2xl font-display font-extrabold uppercase text-lotus-dark dark:text-white flex items-center gap-2">
+                                        <Zap className="text-black fill-black" size={24} /> Express Starter Details
+                                    </h2>
+                                    <span className="bg-genz-lime text-black text-xs font-extrabold px-3 py-1 rounded-full border border-black uppercase">
+                                        ₦50k Cap
+                                    </span>
+                                </div>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                                    Get started in 60 seconds with no BVN or NIN needed today. Start investing small and upgrade anytime.
+                                </p>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div className="group">
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">First Name *</label>
+                                    <input 
+                                        required 
+                                        name="firstName" 
+                                        value={formData.firstName} 
+                                        onChange={handleInput} 
+                                        className="w-full bg-gray-50 dark:bg-gray-800 p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-black dark:focus:border-white font-medium outline-none" 
+                                        placeholder="First name" 
+                                    />
+                                </div>
+
+                                <div className="group">
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Surname / Last Name *</label>
+                                    <input 
+                                        required 
+                                        name="lastName" 
+                                        value={formData.lastName} 
+                                        onChange={handleInput} 
+                                        className="w-full bg-gray-50 dark:bg-gray-800 p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-black dark:focus:border-white font-medium outline-none" 
+                                        placeholder="Last name" 
+                                    />
+                                </div>
+
+                                <div className="group">
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Mobile Phone Number *</label>
+                                    <input 
+                                        required 
+                                        type="tel"
+                                        name="mobileNumber" 
+                                        value={formData.mobileNumber} 
+                                        onChange={handleInput} 
+                                        className="w-full bg-gray-50 dark:bg-gray-800 p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-black dark:focus:border-white font-medium outline-none" 
+                                        placeholder="08012345678" 
+                                    />
+                                </div>
+
+                                <div className="group">
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">State of Residence *</label>
+                                    <input 
+                                        required 
+                                        name="stateOfResidence" 
+                                        value={formData.stateOfResidence} 
+                                        onChange={handleInput} 
+                                        className="w-full bg-gray-50 dark:bg-gray-800 p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-black dark:focus:border-white font-medium outline-none" 
+                                        placeholder="e.g. Lagos, Abuja, Kano" 
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Fund Target Picker */}
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Initial Fund Selection</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setFundSelected('fif')}
+                                        className={`p-3 rounded-xl border-2 text-left transition-all ${
+                                            fundSelected === 'fif' 
+                                                ? 'border-black bg-genz-lime/30 dark:bg-genz-lime/10' 
+                                                : 'border-gray-200 dark:border-gray-700'
+                                        }`}
+                                    >
+                                        <div className="font-bold text-sm">Lotus FIF Fund</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Fixed Income • Low Risk</div>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setFundSelected('halal')}
+                                        className={`p-3 rounded-xl border-2 text-left transition-all ${
+                                            fundSelected === 'halal' 
+                                                ? 'border-black bg-genz-pink/30 dark:bg-genz-pink/10' 
+                                                : 'border-gray-200 dark:border-gray-700'
+                                        }`}
+                                    >
+                                        <div className="font-bold text-sm">Lotus Halal Fund</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Halal Equities • Growth</div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Incentive & Regulatory Disclosure */}
+                            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-4 rounded-xl space-y-2">
+                                <div className="flex items-start gap-2">
+                                    <Sparkles size={18} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                                    <p className="text-xs text-amber-900 dark:text-amber-200 font-medium leading-relaxed">
+                                        <strong>Bonus:</strong> Completing your first deposit unlocks the exclusive <strong className="underline">"First Bag Secured" 🎒 Badge</strong> and awards <strong className="underline">+250 XP</strong> to your Tribe rank!
+                                    </p>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <AlertCircle size={18} className="text-gray-400 shrink-0 mt-0.5" />
+                                    <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
+                                        Tier 1 is compliant with SEC progressive KYC guidelines for retail accounts up to ₦50,000. Full BVN and ID verification are required for withdrawals and unlimited investments.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button 
+                                type="submit" 
+                                disabled={isSubmitting}
+                                className="neo-btn bg-lotus-dark text-white text-lg py-4 flex justify-center items-center gap-3 w-full uppercase font-bold"
+                            >
+                                {isSubmitting ? 'Activating Account...' : 'Activate Tier 1 & Fund Account ⚡'}
+                            </button>
+                        </form>
+                    ) : (
+                    /* TIER 2/3 FULL SEC COMPLIANCE WIZARD */
                     <form onSubmit={step === 5 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
                         <AnimatePresence mode="wait">
                             {/* STEP 1 */}
@@ -664,6 +970,7 @@ export const InvestOnboarding = () => {
                             )}
                         </AnimatePresence>
                     </form>
+                    )}
                 </div>
             </div>
         </div>
