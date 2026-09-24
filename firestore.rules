@@ -1,65 +1,70 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
-    }
-
-    function isValidId(id) { 
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
-    }
-    function incoming() { return request.resource.data; }
-    function existing() { return resource.data; }
-    function isSignedIn() { return request.auth != null; }
-
-    function isValidUser(data) {
-      return data.keys().hasAll(['email', 'createdAt', 'updatedAt'])
-        && data.email is string && data.email.size() <= 256
-        && data.createdAt == request.time
-        && data.updatedAt == request.time;
+    function isSignedIn() { 
+      return request.auth != null; 
     }
     
-    function isUpdateValidUser() {
-      return incoming().updatedAt == request.time
-        && incoming().createdAt == existing().createdAt
-        && incoming().email == existing().email;
-    }
-
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email == 'ibrahimdurosimi@gmail.com';
+      return isSignedIn() && (
+        request.auth.token.email == 'ibrahimdurosimi@gmail.com' || 
+        request.auth.token.email == 'admin@lotustribe.com'
+      );
     }
 
+    // User profiles & Leaderboard
     match /users/{userId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
+      allow read: if true;
+      allow create: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       allow delete: if isAdmin();
       
+      // Transactions subcollection
       match /transactions/{transactionId} {
-        allow read, write: if isSignedIn() && request.auth.uid == userId;
+        allow read: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+        allow create, update: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+        allow delete: if isAdmin();
       }
     }
 
+    // Collection Group query for transactions across all users (Admin dashboard)
+    match /{path=**}/transactions/{transactionId} {
+      allow read: if isAdmin() || (isSignedIn() && resource != null && resource.data.userId == request.auth.uid);
+      allow write: if isAdmin() || (isSignedIn() && request.resource != null && request.resource.data.userId == request.auth.uid);
+    }
+
+    // Educational Courses catalog
     match /courses/{courseId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
+    // Course modules
     match /modules/{moduleId} {
       allow read: if true;
       allow write: if isAdmin();
     }
     
+    // Community events & webinars
     match /events/{eventId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    match /community_questions/{questionId} {
-      allow read: if isSignedIn();
+    // Community Q&A - Support 'questions' collection used by Community.tsx
+    match /questions/{questionId} {
+      allow read: if true;
       allow create: if isSignedIn();
       allow update: if isSignedIn();
-      allow delete: if isAdmin() || (isSignedIn() && existing().userId == request.auth.uid);
+      allow delete: if isAdmin() || (isSignedIn() && resource != null && resource.data.userId == request.auth.uid);
+    }
+
+    // Fallback alias for community_questions
+    match /community_questions/{questionId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isAdmin() || (isSignedIn() && resource != null && resource.data.userId == request.auth.uid);
     }
   }
 }

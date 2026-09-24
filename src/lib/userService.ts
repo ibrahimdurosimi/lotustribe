@@ -65,17 +65,51 @@ export const syncUserProfile = async (user: User): Promise<UserProfile> => {
   }
 };
 
-export const completeLesson = async (uid: string, courseId: string, lessonIdx: number, xpGained: number) => {
+export const completeLesson = async (
+  uid: string,
+  courseId: string,
+  lessonIdx: number,
+  xpGained: number,
+  alreadyCompleted: boolean = false
+) => {
    const userRef = doc(db, 'users', uid);
    const lessonId = `${courseId}_lesson_${lessonIdx}`;
    
    try {
-      // For simplicity, we just add the lesson and the XP.
-      await updateDoc(userRef, {
+      const updateData: Record<string, unknown> = {
          completedLessons: arrayUnion(lessonId),
-         xp: increment(xpGained),
          updatedAt: serverTimestamp()
-      });
+      };
+      // Only increment XP if lesson wasn't previously completed
+      if (!alreadyCompleted && xpGained > 0) {
+         updateData.xp = increment(xpGained);
+      }
+      await updateDoc(userRef, updateData);
+   } catch(e) {
+      handleFirestoreError(e, OperationType.UPDATE, 'users');
+   }
+};
+
+export const completeCourse = async (
+  uid: string,
+  courseId: string,
+  badgeName?: string,
+  bonusXp: number = 50,
+  alreadyCompleted: boolean = false
+) => {
+   const userRef = doc(db, 'users', uid);
+   try {
+      const updateData: Record<string, unknown> = {
+         completedCourses: arrayUnion(courseId),
+         updatedAt: serverTimestamp()
+      };
+      if (badgeName) {
+         updateData.badges = arrayUnion(badgeName);
+      }
+      if (!alreadyCompleted && bonusXp > 0) {
+         updateData.xp = increment(bonusXp);
+      }
+      await updateDoc(userRef, updateData);
    } catch(e) {
       handleFirestoreError(e, OperationType.UPDATE, 'users');
    }

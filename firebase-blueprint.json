@@ -2,71 +2,128 @@
   "entities": {
     "User": {
       "title": "User",
-      "description": "User profile containing their quiz result and risk profile.",
+      "description": "User profile containing their quiz result, risk profile, XP, and wallet balances.",
       "type": "object",
       "properties": {
-        "uid": {
-          "type": "string"
-        },
-        "email": {
-          "type": "string",
-          "description": "The user's email."
-        },
-        "displayName": {
-          "type": "string",
-          "description": "The user's display name."
-        },
+        "uid": { "type": "string" },
+        "email": { "type": "string", "description": "The user's email." },
+        "displayName": { "type": "string", "description": "The user's display name." },
         "riskProfile": {
           "type": "string",
           "enum": ["Steady Saver", "Calculated Thinker", "Risk Taker"],
           "description": "The determined risk profile."
         },
-        "quizCompleted": {
-          "type": "boolean"
-        },
-        "xp": {
-          "type": "number"
-        },
-        "level": {
-          "type": "number"
-        },
-        "completedLessons": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "completedCourses": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "badges": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "fifBalance": {
-          "type": "number"
-        },
-        "halalBalance": {
-          "type": "number"
-        },
-        "totalInvested": {
-          "type": "number"
-        },
-        "createdAt": {
-          "type": "timestamp"
-        },
-        "updatedAt": {
-          "type": "timestamp"
-        }
+        "quizCompleted": { "type": "boolean" },
+        "xp": { "type": "number" },
+        "level": { "type": "number" },
+        "completedLessons": { "type": "array", "items": { "type": "string" } },
+        "completedCourses": { "type": "array", "items": { "type": "string" } },
+        "badges": { "type": "array", "items": { "type": "string" } },
+        "fifBalance": { "type": "number" },
+        "halalBalance": { "type": "number" },
+        "totalInvested": { "type": "number" },
+        "createdAt": { "type": "timestamp" },
+        "updatedAt": { "type": "timestamp" }
       },
       "required": ["email", "createdAt", "updatedAt"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "User deposit, withdrawal, or auto-investment transaction record.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "fund": { "type": "string" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["amount", "type", "createdAt"]
+    },
+    "Question": {
+      "title": "Question",
+      "description": "Community question and discussion thread with answers and upvotes.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhoto": { "type": "string" },
+        "upvotes": { "type": "number" },
+        "replies": { "type": "number" },
+        "answers": { "type": "array" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["title", "category", "createdAt"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Learning course module with lessons and quizzes.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "module": { "type": "string" },
+        "xp": { "type": "number" },
+        "level": { "type": "string" },
+        "color": { "type": "string" },
+        "badgeIcon": { "type": "string" },
+        "badgeName": { "type": "string" },
+        "lessons": { "type": "array" }
+      },
+      "required": ["id", "title", "module"]
+    },
+    "Module": {
+      "title": "Module",
+      "description": "Curriculum module categorization.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["id", "title", "order"]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "Community events and workshops.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "link": { "type": "string" }
+      },
+      "required": ["title", "date"]
     }
   },
   "firestore": {
     "/users/{userId}": {
-      "schema": {
-        "$ref": "#/entities/User"
-      },
-      "description": "User profiles and their investment vibe check results."
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles and investment vibe check records."
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": { "$ref": "#/entities/Transaction" },
+      "description": "User transactions."
+    },
+    "/questions/{questionId}": {
+      "schema": { "$ref": "#/entities/Question" },
+      "description": "Community questions and discussion posts."
+    },
+    "/courses/{courseId}": {
+      "schema": { "$ref": "#/entities/Course" },
+      "description": "Educational courses."
+    },
+    "/modules/{moduleId}": {
+      "schema": { "$ref": "#/entities/Module" },
+      "description": "LMS modules."
+    },
+    "/events/{eventId}": {
+      "schema": { "$ref": "#/entities/Event" },
+      "description": "Community events."
     }
   }
 }

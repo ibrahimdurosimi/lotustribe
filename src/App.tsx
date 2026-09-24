@@ -33,6 +33,8 @@ import { Community } from './Community';
 import { ScrollToTop } from './components/ScrollToTop';
 import { AdminDashboard } from './Admin';
 import { sendEmailNotification } from './lib/email';
+import { PWAInstallBanner } from './components/PWAInstallBanner';
+import { OfflineIndicator } from './components/OfflineIndicator';
 
 // --- Auth Context ---
 interface AuthContextType {
@@ -1051,59 +1053,198 @@ const FeatureMoreThanAnApp = () => {
 };
 
 const FAQSection = () => {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const categories = ['All', 'Getting Started', 'Halal & Ethics', 'Money & Returns', 'Safety & Tech'];
 
   const faqs = [
     {
+      category: 'Getting Started',
       q: "What makes Lotus different from other investing apps?",
-      a: "We blend financial education with real, SEC-regulated investment opportunities—specifically focusing on Halal, ethical products. Plus, we've designed it to be simple, engaging, and transparent."
+      a: "We blend financial education with real, SEC-regulated investment opportunities—specifically focusing on Halal, ethical products. Plus, we've gamified the experience with XP, badges, interactive courses, and a thriving community squad so you never have to navigate wealth-building alone."
     },
     {
-      q: "Is Lotus Capital regulated?",
-      a: "Yes! Lotus Capital is fully regulated by the Securities and Exchange Commission (SEC) of Nigeria, ensuring your investments are secure and managed according to best practices."
+      category: 'Getting Started',
+      q: "How much money do I actually need to get started?",
+      a: "No gatekeeping here! You can kickstart your wealth-building journey with as little as ₦5,000 in our mutual funds. Start small, set up recurring monthly contributions on payday, and watch your compounding take off."
     },
     {
+      category: 'Getting Started',
+      q: "I'm a complete beginner. Will I get overwhelmed?",
+      a: "Not at all. We built Lotus Tribe specifically to kill financial jargon. Start by taking our 2-minute 'Vibe Check' quiz to discover your investor archetype, then explore bite-sized 3-minute gamified lessons in our Learning Hub to earn XP while you learn."
+    },
+    {
+      category: 'Halal & Ethics',
+      q: "What does 'Halal Investing' actually mean?",
+      a: "Halal investing means your money is deployed strictly into ethical, socially responsible ventures governed by Islamic jurisprudence. That means zero interest (riba), zero gambling (maysir), zero deceptive speculation (gharar), and strict exclusions of harmful industries like alcohol, tobacco, weapons, and adult entertainment."
+    },
+    {
+      category: 'Halal & Ethics',
+      q: "Do I have to be Muslim to invest with Lotus Tribe?",
+      a: "Not at all! Ethical finance is universal. Anyone who values financial transparency, tangible asset backing, and socially conscious wealth creation is warmly welcomed in the Lotus Tribe squad."
+    },
+    {
+      category: 'Halal & Ethics',
+      q: "How do I earn returns if interest (riba) is forbidden?",
+      a: "Instead of earning interest from debt, your returns come from real economic activity: profits from leasing high-grade equipment/real estate (Ijarah), rental income from Sovereign and Corporate Sukuk bonds, and profit-sharing partnerships (Mudarabah/Musharakah) in vetted ethical businesses."
+    },
+    {
+      category: 'Money & Returns',
       q: "Can I withdraw my money at any time?",
-      a: "Absolutely. Our funds offer competitive liquidity. You can request a withdrawal from your dashboard, and it will be processed according to the specific fund's terms (typically within a few business days)."
+      a: "Absolutely. Our mutual funds offer competitive liquidity. You can request a withdrawal right from your dashboard anytime, and funds are disbursed straight to your verified Nigerian bank account within standard settlement timeframes (typically 2 to 3 business days)."
     },
     {
-      q: "What does 'Halal Investing' mean?",
-      a: "It means we invest your money in ethical, socially responsible assets that comply with Islamic finance principles. No interest (riba), no gambling, and no investments in harmful industries (like alcohol or weapons)."
+      category: 'Money & Returns',
+      q: "Are there hidden charges or surprise exit fees?",
+      a: "Zero hidden surprises. What you see on your dashboard is your genuine net asset value. Management fees are regulated by the SEC and already built transparently into the fund's published NAV, with no penal traps for withdrawing your hard-earned cash."
+    },
+    {
+      category: 'Money & Returns',
+      q: "How and when do I get paid my investment yields?",
+      a: "Depending on your selected fund, distributions occur on a periodic schedule (quarterly for our Fixed Income Fund, or semi-annually/annually for equities). You can choose to automatically reinvest your returns to accelerate compound growth, or have them paid out to your bank."
+    },
+    {
+      category: 'Safety & Tech',
+      q: "Is Lotus Capital regulated and is my money safe?",
+      a: "Yes! Lotus Capital Limited is fully registered, licensed, and regulated as a Fund/Portfolio Manager by the Securities and Exchange Commission (SEC) of Nigeria. All investor assets are held independently by an accredited third-party custodian bank, ensuring your capital is safeguarded."
+    },
+    {
+      category: 'Safety & Tech',
+      q: "Can I install Lotus Tribe as an app on my phone?",
+      a: "Yes! Lotus Tribe is built as a next-gen Progressive Web App (PWA). Simply tap the 'Install' button on our floating banner (or 'Add to Home Screen' in Safari on iOS) to install Lotus Tribe directly to your launcher without hogging your device's memory."
+    },
+    {
+      category: 'Safety & Tech',
+      q: "What happens if I lose my phone or change devices?",
+      a: "Your funds and records are safely stored on the cloud with bank-grade encryption—not locally on your physical device. Simply log back into your Lotus Tribe account on any phone or computer with your credentials to regain instant access."
     }
   ];
 
+  const filteredFaqs = faqs.filter(faq => {
+    const matchesCategory = activeCategory === 'All' || faq.category === activeCategory;
+    const matchesQuery = 
+      faq.q.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      faq.a.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesQuery;
+  });
+
   return (
-    <section className="py-24 bg-white dark:bg-gray-900">
+    <section className="py-24 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
+        <div className="text-center mb-12">
           <div className="inline-block px-5 py-2 rounded-full bg-gray-100 dark:bg-gray-800 font-bold uppercase text-xs tracking-wider mb-4 border border-gray-200 dark:border-gray-700">
-            Got Questions?
+            Got Questions? We Got Answers
           </div>
           <h2 className="text-4xl md:text-5xl font-display font-extrabold uppercase">
             Frequently Asked <span className="text-[#C10202]">Vibes</span>
           </h2>
+          <p className="mt-4 text-base md:text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto">
+            Everything you need to know about ethical investing, Halal returns, SEC security, and building wealth with the Tribe.
+          </p>
+        </div>
+
+        {/* Category Filter Pills & Search */}
+        <div className="flex flex-col gap-4 mb-8">
+          {/* Category Tabs */}
+          <div className="flex flex-wrap justify-center gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => {
+                  setActiveCategory(cat);
+                  setOpenIndex(null);
+                }}
+                className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold uppercase transition-all cursor-pointer neo-border ${
+                  activeCategory === cat
+                    ? 'bg-genz-lime text-black shadow-[2px_2px_0_0_#000]'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Quick Search Bar */}
+          <div className="relative max-w-md mx-auto w-full">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setOpenIndex(null);
+              }}
+              placeholder="Search questions (e.g. halal, minimum, withdraw, safe)..."
+              className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 text-sm border-2 border-black dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C10202] text-gray-900 dark:text-white"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 hover:text-gray-600 dark:hover:text-white"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
         
+        {/* FAQ Accordion List */}
         <div className="flex flex-col gap-4">
-          {faqs.map((faq, idx) => (
-            <div 
-              key={idx} 
-              className={`p-6 rounded-2xl neo-border cursor-pointer transition-all ${openIndex === idx ? 'bg-genz-lime neo-shadow-sm' : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
-              onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
-            >
-              <div className="flex justify-between items-center">
-                <h3 className="font-display font-bold text-lg md:text-xl">{faq.q}</h3>
-                <div className={`transform transition-transform ${openIndex === idx ? 'rotate-180' : ''}`}>
-                  <ChevronRight className="w-5 h-5 rotate-90" />
-                </div>
-              </div>
-              {openIndex === idx && (
-                <p className="mt-4 text-gray-800 dark:text-gray-200 font-medium leading-relaxed">
-                  {faq.a}
-                </p>
-              )}
+          {filteredFaqs.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 dark:bg-gray-800/50 rounded-2xl neo-border p-6">
+              <p className="text-gray-500 dark:text-gray-400 font-bold mb-2">No matching vibes found!</p>
+              <p className="text-xs text-gray-400">Try searching for something else or reset your filter.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setActiveCategory('All');
+                }}
+                className="mt-4 px-4 py-2 rounded-xl bg-black text-white text-xs font-bold neo-border"
+              >
+                Reset Filter
+              </button>
             </div>
-          ))}
+          ) : (
+            filteredFaqs.map((faq, idx) => (
+              <div 
+                key={faq.q} 
+                className={`p-5 md:p-6 rounded-2xl neo-border cursor-pointer transition-all ${
+                  openIndex === idx ? 'bg-genz-lime neo-shadow-sm' : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-750'
+                }`}
+                onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+              >
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/70 dark:bg-black/30 text-gray-700 dark:text-gray-300 border border-black/10 inline-block mb-1.5">
+                      {faq.category}
+                    </span>
+                    <h3 className="font-display font-bold text-lg md:text-xl text-gray-900 dark:text-white leading-snug">
+                      {faq.q}
+                    </h3>
+                  </div>
+                  <div className={`transform transition-transform mt-1 ${openIndex === idx ? 'rotate-180' : ''}`}>
+                    <ChevronRight className="w-5 h-5 rotate-90 text-gray-700 dark:text-gray-200" />
+                  </div>
+                </div>
+                {openIndex === idx && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <p className="mt-4 text-gray-800 dark:text-gray-200 font-medium leading-relaxed text-sm md:text-base border-t border-black/10 dark:border-white/10 pt-3">
+                      {faq.a}
+                    </p>
+                  </motion.div>
+                )}
+              </div>
+            ))
+          )}
         </div>
 
         <div className="mt-12 text-center">
@@ -1113,7 +1254,7 @@ const FAQSection = () => {
               const el = document.getElementById('squad');
               if (el) el.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="neo-btn bg-lotus-dark text-white w-full sm:w-auto px-8 py-4 uppercase text-sm shadow-xl hover:-translate-y-1 transition-transform"
+            className="neo-btn bg-lotus-dark text-white w-full sm:w-auto px-8 py-4 uppercase text-sm shadow-xl hover:-translate-y-1 transition-transform cursor-pointer"
           >
             Ask the Tribe
           </button>
@@ -1121,7 +1262,7 @@ const FAQSection = () => {
       </div>
     </section>
   );
-}
+};
 
 const FeatureUnleash = () => {
   return (
@@ -1220,10 +1361,13 @@ export default function App() {
                 <Route path="lessons" element={<LMSCoursePlayer />} />
                 <Route path="courses/:courseId" element={<LMSCoursePlayer />} />
                 <Route path="achievements" element={<LMSAchievements />} />
+                <Route path="admin" element={<AdminDashboard />} />
              </Route>
           </Routes>
         </main>
         <Footer />
+        <PWAInstallBanner />
+        <OfflineIndicator />
         
         <style>{`
           /* Custom animations for the blobs and marquee */

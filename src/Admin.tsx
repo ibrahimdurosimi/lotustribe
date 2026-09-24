@@ -109,7 +109,7 @@ export const AdminDashboard = () => {
       const uq = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
       const tq = query(collectionGroup(db, 'transactions'), orderBy('createdAt', 'desc'));
       
-      const [cSnap, mSnap, eSnap, uSnap, tSnap] = await Promise.all([
+      const [cRes, mRes, eRes, uRes, tRes] = await Promise.allSettled([
         getDocs(cq), 
         getDocs(mq),
         getDocs(eq),
@@ -117,27 +117,35 @@ export const AdminDashboard = () => {
         getDocs(tq)
       ]);
       
-      setCourses(cSnap.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() })));
-      setModules(mSnap.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() })));
-      setEvents(eSnap.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() })));
-      setUsers(uSnap.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() })));
+      if (cRes.status === 'fulfilled') {
+        setCourses(cRes.value.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() })));
+      }
+      if (mRes.status === 'fulfilled') {
+        setModules(mRes.value.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() })));
+      }
+      if (eRes.status === 'fulfilled') {
+        setEvents(eRes.value.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() })));
+      }
+      const uSnap = uRes.status === 'fulfilled' ? uRes.value : null;
+      if (uSnap) {
+        setUsers(uSnap.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() })));
+      }
       
-      // Since transactions are in a collection group, we don't naturally have user email attached.
-      // We can grab the user uid from the reference if needed, but for now we just show the transaction.
-      const txs = tSnap.docs.map(doc => {
-         const data = doc.data();
-         // The document path for a transaction is /users/{userId}/transactions/{txId}
-         const userId = doc.ref.parent.parent?.id; 
-         const userObj = userId ? uSnap.docs.find(u => u.id === userId)?.data() : null;
-         return {
-            firestoreId: doc.id,
-            userId,
-            userEmail: userObj?.email || 'Unknown',
-            userName: userObj?.displayName || 'Unknown',
-            ...data
-         };
-      });
-      setTransactions(txs);
+      if (tRes.status === 'fulfilled') {
+        const txs = tRes.value.docs.map(doc => {
+           const data = doc.data();
+           const userId = doc.ref.parent.parent?.id; 
+           const userObj = (userId && uSnap) ? uSnap.docs.find(u => u.id === userId)?.data() : null;
+           return {
+              firestoreId: doc.id,
+              userId,
+              userEmail: userObj?.email || 'Unknown',
+              userName: userObj?.displayName || 'Unknown',
+              ...data
+           };
+        });
+        setTransactions(txs);
+      }
     } catch (err) {
       console.error(err);
       notify("Failed to fetch data", "error");
